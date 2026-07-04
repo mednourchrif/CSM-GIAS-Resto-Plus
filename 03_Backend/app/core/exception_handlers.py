@@ -25,7 +25,7 @@ async def application_exception_handler(
             error_code=exc.error_code,
             message=exc.message,
             details=exc.details,
-        ).model_dump(),
+        ).model_dump(mode="json"),
     )
 
 
@@ -44,8 +44,8 @@ async def validation_exception_handler(
         content=ErrorResponse(
             error_code="VALIDATION_ERROR",
             message="Erreur de validation des données envoyées",
-            details=errors,
-        ).model_dump(),
+            details={"errors": errors},
+        ).model_dump(mode="json"),
     )
 
 
@@ -62,7 +62,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException) 
         content=ErrorResponse(
             error_code=f"HTTP_{exc.status_code}",
             message=str(exc.detail),
-        ).model_dump(),
+        ).model_dump(mode="json"),
     )
 
 
@@ -78,5 +78,5 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
         content=ErrorResponse(
             error_code="INTERNAL_ERROR",
             message="Une erreur interne est survenue. Veuillez réessayer plus tard.",
-        ).model_dump(),
+        ).model_dump(mode="json"),
     )

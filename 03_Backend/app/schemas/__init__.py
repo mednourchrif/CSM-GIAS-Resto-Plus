@@ -13,6 +13,7 @@ from app.schemas.admin import (
     ReceptionistResponse,
     ReceptionistUpdate,
 )
+from app.schemas.auth import AdminSummary, LoginRequest, TokenResponse
 from app.schemas.base import BaseResponse, BaseSchema
 from app.schemas.employee import (
     EmployeeCreate,
@@ -23,6 +24,13 @@ from app.schemas.intern import (
     InternCreate,
     InternResponse,
     InternUpdate,
+)
+from app.schemas.qr_code import (
+    QrCodeResponse,
+    QrGenerateResponse,
+    QrValidateRequest,
+    QrValidationResponse,
+    ValidationStatut,
 )
 from app.schemas.response import (
     ErrorResponse,
@@ -47,6 +55,10 @@ from app.schemas.visitor import (
 )
 
 __all__ = [
+    # Auth
+    "LoginRequest",
+    "TokenResponse",
+    "AdminSummary",
     # Base
     "BaseSchema",
     "BaseResponse",
@@ -72,6 +84,13 @@ __all__ = [
     "EmployeeResponse",
     "EmployeeUpdate",
     "InternCreate",
+    "InternResponse",
+    "InternUpdate",
+    "QrCodeResponse",
+    "QrGenerateResponse",
+    "QrValidateRequest",
+    "QrValidationResponse",
+    "ValidationStatut",
     "InternResponse",
     "InternUpdate",
     "VisitorCreate",

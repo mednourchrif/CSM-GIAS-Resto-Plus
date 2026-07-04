@@ -14,6 +14,7 @@ from app.models.employee import Employee, StatutEnrolement
 from app.models.intern import Intern
 
 # Identity Domain
+from app.models.qr_code import QrCode
 from app.models.role import Role
 from app.models.user import Langue, StatutUtilisateur, TypeUtilisateur, User
 from app.models.visitor import Visitor
@@ -32,5 +33,6 @@ __all__ = [
     "Employee",
     "StatutEnrolement",
     "Intern",
+    "QrCode",
     "Visitor",
 ]

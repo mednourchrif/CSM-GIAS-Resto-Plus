@@ -23,6 +23,8 @@ dependencies = [
     "loguru>=0.7.3",
     "python-multipart>=0.0.18",
     "httptools>=0.6.4",
+    "qrcode[pil]>=8.2.0",
+    "Pillow>=12.0.0",
 ]
 
 [project.optional-dependencies]
@@ -83,6 +85,9 @@ ignore = ["PLR0913", "PLR2004"]
 "app/api/v1/health.py" = ["B008"]
 "app/schemas/response.py" = ["UP017"]
 "app/database/mixins.py" = ["UP017"]
+"app/api/v1/*.py" = ["B008"]
+"app/security/dependencies.py" = ["B008"]
+"app/core/dependencies.py" = ["B008"]
 "tests/*.py" = ["PLR0913", "PLR2004"]
 
 [tool.ruff.format]

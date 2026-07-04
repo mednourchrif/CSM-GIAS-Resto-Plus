@@ -6,9 +6,9 @@ design decisions are:
 * **SQLite in-memory** — tests run against an isolated SQLite database
   that is created from scratch for each session.  No MySQL required.
 * **Dependency override** — the FastAPI ``get_db`` dependency is
-  overridden so that every endpoint receives the test session.
-* **Transaction rollback** (optional) — use the ``db_session`` fixture
-  for per-test isolation; the transaction is rolled back after each test.
+  overridden so that every request receives the test session.
+* **Per-test isolation** — each test gets a fresh database session via
+  the ``db_session`` fixture; changes are rolled back after the test.
 """
 
 from collections.abc import Generator
@@ -21,8 +21,8 @@ from loguru import logger as loguru_logger
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
+from app.core.dependencies import get_db as production_get_db
 from app.database.base import Base
-from app.database.session import get_db as production_get_db
 from app.main import create_app
 
 # Bind a default ``request_id`` to all log records so that the file
@@ -34,24 +34,23 @@ loguru_logger = loguru_logger.bind(request_id="test")
 # SQLite in-memory engine & session factory for tests
 # ---------------------------------------------------------------------------
 
-TEST_DATABASE_URL = "sqlite://"  # in-memory, no file needed
 
 _test_engine: Engine = create_engine(
-    TEST_DATABASE_URL,
+    "sqlite:///file::memory:?cache=shared&uri=true",
     echo=False,
     connect_args={"check_same_thread": False},
 )
 
 _test_session_factory: sessionmaker[Session] = sessionmaker(
     autocommit=False,
-    autoflush=False,
+    autoflush=True,
     bind=_test_engine,
     expire_on_commit=False,
 )
 
 
 # ---------------------------------------------------------------------------
-# Module-level event: create all tables once per test run
+# Tables
 # ---------------------------------------------------------------------------
 
 
@@ -78,28 +77,38 @@ def app() -> FastAPI:
     test in the session.
     """
     _create_tables()
-    yield create_app()
+    app_instance = create_app()
+    yield app_instance
     _drop_tables()
 
 
-@pytest.fixture(scope="session")
-def client(app: FastAPI) -> Generator[TestClient, Any, None]:
-    """Provide a FastAPI TestClient bound to the in-memory database.
+@pytest.fixture(scope="function")
+def db_session() -> Generator[Session, Any]:
+    """Provide a clean database session with per-test isolation.
 
-    The ``get_db`` dependency is overridden so that every request uses
-    the test session factory instead of the production MySQL connection.
+    The session is rolled back after each test, ensuring no test
+    pollutes the state of another.
+    """
+    session = _test_session_factory()
+    try:
+        yield session
+    finally:
+        session.rollback()
+        session.close()
+
+
+@pytest.fixture(scope="function")
+def client(app: FastAPI, db_session: Session) -> Generator[TestClient, Any]:
+    """Provide a FastAPI TestClient with per-test database isolation.
+
+    The ``get_db`` dependency is overridden to return the same session
+    used by ``db_session``, so data seeded in the test is visible to
+    every request within that test.
     """
 
-    def _override_get_db() -> Generator[Session, Any, None]:
-        """Override that provides a test session."""
-        db = _test_session_factory()
-        try:
-            yield db
-        except Exception:
-            db.rollback()
-            raise
-        finally:
-            db.close()
+    def _override_get_db() -> Generator[Session, Any]:
+        """Override that returns the per-test session."""
+        yield db_session
 
     app.dependency_overrides[production_get_db] = _override_get_db
 
@@ -110,32 +119,15 @@ def client(app: FastAPI) -> Generator[TestClient, Any, None]:
 
 
 @pytest.fixture(scope="function")
-def db_session() -> Generator[Session, Any, None]:
-    """Provide a clean database session with per-test isolation.
-
-    The session is rolled back after each test, ensuring no test
-    pollutes the state of another.
-    """
-    connection = _test_engine.connect()
-    transaction = connection.begin()
-    session = _test_session_factory(bind=connection)
-
-    yield session
-
-    session.close()
-    transaction.rollback()
-    connection.close()
-
-
-@pytest.fixture(scope="function")
 def override_get_db(db_session: Session) -> Any:
     """Return a ``get_db`` override that injects the per-test session.
 
     Use this fixture when you need fine-grained control over the
-    session lifecycle (e.g. for testing transaction rollback).
+    session lifecycle (e.g. for testing transaction rollback outside
+    of the default ``client`` fixture).
     """
 
-    def _get_db() -> Generator[Session, Any, None]:
+    def _get_db() -> Generator[Session, Any]:
         yield db_session
 
     return _get_db

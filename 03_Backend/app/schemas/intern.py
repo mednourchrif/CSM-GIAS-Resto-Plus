@@ -1,34 +1,36 @@
 """Intern schemas."""
 
-from datetime import date
+from datetime import date, datetime
 
 from pydantic import Field
 
+from app.models.user import Langue, StatutUtilisateur
 from app.schemas.base import BaseResponse, BaseSchema
 
 
 class InternCreate(BaseSchema):
     """Payload for creating an intern."""
 
-    matricule: str = Field(
-        ...,
-        min_length=1,
-        max_length=20,
-        description="Unique HR intern number.",
-    )
-    date_debut_stage: date = Field(
-        ...,
-        description="First day of the internship.",
-    )
-    date_fin_stage: date = Field(
-        ...,
-        description="Last day of the internship.",
-    )
+    nom: str = Field(..., min_length=1, max_length=100)
+    prenom: str = Field(..., min_length=1, max_length=100)
+    email: str | None = Field(None, max_length=255)
+    mot_de_passe: str | None = Field(None, min_length=8, max_length=128)
+    statut: StatutUtilisateur = StatutUtilisateur.ACTIF
+    langue: Langue | None = None
+    matricule: str = Field(..., min_length=1, max_length=20)
+    date_debut_stage: date
+    date_fin_stage: date
 
 
 class InternUpdate(BaseSchema):
-    """Payload for updating an intern."""
+    """Payload for updating an intern (all fields optional)."""
 
+    nom: str | None = Field(None, min_length=1, max_length=100)
+    prenom: str | None = Field(None, min_length=1, max_length=100)
+    email: str | None = Field(None, max_length=255)
+    mot_de_passe: str | None = Field(None, min_length=8, max_length=128)
+    statut: StatutUtilisateur | None = None
+    langue: Langue | None = None
     matricule: str | None = Field(None, min_length=1, max_length=20)
     date_debut_stage: date | None = None
     date_fin_stage: date | None = None
@@ -43,3 +45,6 @@ class InternResponse(BaseResponse):
     matricule: str
     date_debut_stage: date
     date_fin_stage: date
+    statut: StatutUtilisateur = StatutUtilisateur.ACTIF
+    langue: Langue | None = None
+    date_suppression: datetime | None = None

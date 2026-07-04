@@ -50,6 +50,7 @@ from sqlalchemy import Enum as SAEnum
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column
 
+from app.database.mixins import AuditMixin
 from app.models.base import BaseModel
 
 # ===========================================================================
@@ -91,7 +92,7 @@ class Langue(StrEnum):
 # ===========================================================================
 
 
-class User(BaseModel):
+class User(AuditMixin, BaseModel):
     """A person registered in the restaurant management system.
 
     This is the **base table** for all user profiles.  Concrete sub-types

@@ -1,6 +1,12 @@
 from fastapi import APIRouter
 
-from app.api.v1 import health
+from app.api.v1 import auth, employees, health, interns, qr_codes, receptionists, visitors
 
 router = APIRouter()
 router.include_router(health.router, tags=["health"])
+router.include_router(auth.router)
+router.include_router(employees.router)
+router.include_router(interns.router)
+router.include_router(visitors.router)
+router.include_router(receptionists.router)
+router.include_router(qr_codes.router)

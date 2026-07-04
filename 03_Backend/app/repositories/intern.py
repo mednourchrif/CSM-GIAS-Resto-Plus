@@ -2,7 +2,7 @@
 
 from datetime import date
 
-from sqlalchemy import select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.models.intern import Intern
@@ -10,7 +10,7 @@ from app.repositories.base import BaseRepository
 
 
 class InternRepository(BaseRepository[Intern]):
-    """CRUD operations for the ``stagiaire`` extension table."""
+    """CRUD operations for the stagiaire extension table."""
 
     def __init__(self) -> None:
         super().__init__(Intern)
@@ -33,3 +33,41 @@ class InternRepository(BaseRepository[Intern]):
         today = date.today()
         stmt = select(Intern).where(Intern.date_fin_stage < today)
         return list(db.execute(stmt).scalars().all())
+
+    def search_paginated(
+        self,
+        db: Session,
+        *,
+        search: str | None = None,
+        sort: str | None = None,
+        order: str = "asc",
+        page: int = 1,
+        page_size: int = 20,
+    ) -> tuple[list[Intern], int]:
+        """Search interns with pagination, sorting, and optional search."""
+        base_stmt = select(Intern)
+
+        if search:
+            pattern = f"%{search}%"
+            base_stmt = base_stmt.where(
+                or_(
+                    Intern.matricule.ilike(pattern),
+                    Intern.nom.ilike(pattern),
+                    Intern.prenom.ilike(pattern),
+                )
+            )
+
+        count_stmt = select(func.count()).select_from(base_stmt.subquery())
+        total = db.execute(count_stmt).scalar() or 0
+
+        if sort and hasattr(Intern, sort):
+            sort_col = getattr(Intern, sort)
+            base_stmt = base_stmt.order_by(sort_col.asc() if order == "asc" else sort_col.desc())
+        else:
+            base_stmt = base_stmt.order_by(Intern.id.desc())
+
+        offset = (page - 1) * page_size
+        base_stmt = base_stmt.offset(offset).limit(page_size)
+
+        items = list(db.execute(base_stmt).scalars().all())
+        return items, total

@@ -2,7 +2,6 @@
 
 from sqlalchemy.orm import Session
 
-from app.models.role import Role
 from app.repositories.role import RoleRepository
 
 

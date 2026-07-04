@@ -4,20 +4,14 @@ from datetime import datetime
 
 from pydantic import Field
 
+from app.models.user import Langue, StatutUtilisateur
 from app.schemas.base import BaseResponse, BaseSchema
 
 
 class AdminCreate(BaseSchema):
-    """Payload for creating an admin user.
+    """Payload for creating an admin user."""
 
-    ``role_id`` links the admin to an operational tier (super-admin,
-    manager, auditor).  If omitted the admin has no default role.
-    """
-
-    role_id: int | None = Field(
-        None,
-        description="FK to the ``role`` table.",
-    )
+    role_id: int | None = Field(None, description="FK to the role table.")
 
 
 class AdminUpdate(BaseSchema):
@@ -38,19 +32,25 @@ class AdminResponse(BaseResponse):
 
 
 class ReceptionistCreate(BaseSchema):
-    """Payload for creating a receptionist user.
+    """Payload for creating a receptionist."""
 
-    The reception table is minimal—no additional columns are required
-    beyond what ``utilisateur`` provides.
-    """
-
-    pass
+    nom: str = Field(..., min_length=1, max_length=100)
+    prenom: str = Field(..., min_length=1, max_length=100)
+    email: str | None = Field(None, max_length=255)
+    mot_de_passe: str | None = Field(None, min_length=8, max_length=128)
+    statut: StatutUtilisateur = StatutUtilisateur.ACTIF
+    langue: Langue | None = None
 
 
 class ReceptionistUpdate(BaseSchema):
-    """Payload for updating a receptionist."""
+    """Payload for updating a receptionist (all fields optional)."""
 
-    pass
+    nom: str | None = Field(None, min_length=1, max_length=100)
+    prenom: str | None = Field(None, min_length=1, max_length=100)
+    email: str | None = Field(None, max_length=255)
+    mot_de_passe: str | None = Field(None, min_length=8, max_length=128)
+    statut: StatutUtilisateur | None = None
+    langue: Langue | None = None
 
 
 class ReceptionistResponse(BaseResponse):
@@ -59,3 +59,6 @@ class ReceptionistResponse(BaseResponse):
     nom: str
     prenom: str
     email: str | None = None
+    statut: StatutUtilisateur = StatutUtilisateur.ACTIF
+    langue: Langue | None = None
+    date_suppression: datetime | None = None

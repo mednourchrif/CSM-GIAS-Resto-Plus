@@ -5,7 +5,7 @@ These helpers abstract away the ``datetime`` module details so that the
 rest of the codebase works with a consistent time model.
 """
 
-from datetime import UTC, date, datetime, time
+from datetime import UTC, date, datetime, time, timezone
 
 
 def now_utc() -> datetime:
@@ -36,6 +36,18 @@ def format_datetime(dt: datetime | None) -> str | None:
     return dt.strftime("%Y-%m-%d %H:%M:%S")
 
 
+def _ensure_aware(dt: datetime) -> datetime:
+    """If *dt* is offset-naive, assume UTC and attach timezone info.
+
+    SQLite does not preserve timezone information, so datetimes stored
+    with ``DateTime(timezone=True)`` are read back as naive.  This helper
+    makes them aware so that comparisons with aware timestamps work.
+    """
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=UTC)
+    return dt
+
+
 def is_expired(dt: datetime | None, reference: datetime | None = None) -> bool:
     """Check whether a given timestamp is in the past.
 
@@ -46,7 +58,9 @@ def is_expired(dt: datetime | None, reference: datetime | None = None) -> bool:
     """
     if dt is None:
         return True
-    return dt < (reference or now_utc())
+    dt = _ensure_aware(dt)
+    ref = _ensure_aware(reference or now_utc())
+    return dt < ref
 
 
 def end_of_day(dt: date | None = None) -> datetime:
