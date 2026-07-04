@@ -71,11 +71,18 @@ target-version = "py313"
 line-length = 100
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "N", "UP", "B", "SIM", "ARG", "PTH", "PD", "PL"]
+# NOTE: ``I`` (isort) is intentionally excluded — isort handles import
+# sorting via ``[tool.isort]`` below.  Including ``I`` here would produce
+# noisy conflicts between the two formatters.
+select = ["E", "F", "W", "N", "UP", "B", "SIM", "ARG", "PTH", "PD", "PL"]
 ignore = ["PLR0913", "PLR2004"]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
+"app/core/exceptions.py" = ["N818"]
+"app/api/v1/health.py" = ["B008"]
+"app/schemas/response.py" = ["UP017"]
+"app/database/mixins.py" = ["UP017"]
 "tests/*.py" = ["PLR0913", "PLR2004"]
 
 [tool.ruff.format]
