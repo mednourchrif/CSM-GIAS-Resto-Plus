@@ -16,7 +16,9 @@ final class AuthInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    if (!options.path.contains('/auth/login')) {
+    final isPublic = options.path.contains('/auth/login') ||
+        options.path.contains('/meals/register');
+    if (!isPublic) {
       final token = await _storageService.read(key: _tokenKey);
       if (token != null && token.isNotEmpty) {
         options.headers['Authorization'] = 'Bearer $token';

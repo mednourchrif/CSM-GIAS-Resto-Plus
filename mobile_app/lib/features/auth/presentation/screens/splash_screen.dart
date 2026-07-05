@@ -1,24 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/spacing.dart';
-import '../providers/auth_provider.dart';
-import '../providers/auth_state.dart';
 
 class SplashScreen extends ConsumerWidget {
   const SplashScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(authStateProvider);
-
-    ref.listen<AuthState>(authStateProvider, (_, next) {
-      if (!next.isLoading) {
-        context.go(next.isAuthenticated ? '/dashboard' : '/login');
-      }
-    });
-
     final theme = Theme.of(context);
     return Scaffold(
       body: Center(

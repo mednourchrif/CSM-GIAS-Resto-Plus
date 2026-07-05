@@ -41,20 +41,33 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     refreshListenable: refreshNotifier,
     redirect: (context, state) {
       final authState = ref.read(authStateProvider);
-      final isLoginRoute = state.matchedLocation == '/login';
-      final isSplashRoute = state.matchedLocation == '/splash';
+      final location = state.matchedLocation;
+
       debugPrint(
-          "Router -> ${state.matchedLocation} "
-          "auth=${authState.isAuthenticated} "
-          "loading=${authState.isLoading}",
+        "Router -> $location "
+        "auth=${authState.isAuthenticated} "
+        "loading=${authState.isLoading}",
       );
-      if (authState.isLoading && !isSplashRoute) return '/splash';
-      if (!authState.isAuthenticated && !isLoginRoute && !isSplashRoute) {
+
+      // Always wait for splash initialisation
+      if (authState.isLoading) {
+        if (location != '/splash') return '/splash';
+        return null;
+      }
+
+      // Splash → Home (public)
+      if (location == '/splash') return '/home';
+
+      // Dashboard requires admin authentication
+      if (location.startsWith('/dashboard') && !authState.isAuthenticated) {
         return '/login';
       }
-      if (authState.isAuthenticated && (isLoginRoute || isSplashRoute)) {
+
+      // Authenticated on login → dashboard
+      if (location == '/login' && authState.isAuthenticated) {
         return '/dashboard';
       }
+
       return null;
     },
   );

@@ -1,8 +1,11 @@
 """Meal registration endpoints — the central business workflow.
 
-All endpoints are protected by admin authentication.  The ``register``
-endpoint uses ``require_reception`` so that both admins and receptionists
-can register meals during lunch service.
+The ``register`` endpoint is a **public** kiosk endpoint: it does not
+require any JWT authentication.  Identification is performed entirely
+through the QR token supplied in the request body.
+
+All other endpoints (list, today, history, detail) remain protected by
+admin authentication.
 """
 
 from fastapi import APIRouter, Depends, status
@@ -14,13 +17,14 @@ from app.models.admin import Admin
 from app.models.meal_category import MealCategory
 from app.models.user import User
 from app.schemas.meal import (
+    MealCategoryResponse,
     MealRegisterRequest,
     MealRegisterResponse,
     MealResponse,
 )
 from app.schemas.pagination import PaginationParams
 from app.schemas.response import PaginatedResponse, SuccessResponse
-from app.security.dependencies import require_admin, require_reception
+from app.security.dependencies import require_admin
 from app.services.meal_service import MealService
 
 router = APIRouter(prefix="/meals", tags=["meals"])
@@ -54,6 +58,35 @@ def _enrich_meal_response(meal, db: Session) -> MealResponse:
     )
 
 
+@router.get(
+    "/categories",
+    response_model=SuccessResponse[list[MealCategoryResponse]],
+)
+async def list_categories(
+    db: Session = Depends(get_db),
+) -> SuccessResponse[list[MealCategoryResponse]]:
+    """List all meal categories (public — no auth required).
+
+    The kiosk uses this to populate the meal selection screen with
+    the correct category UUIDs.
+    """
+    stmt = select(MealCategory).order_by(MealCategory.nom)
+    categories = db.execute(stmt).scalars().all()
+    return SuccessResponse(
+        data=[
+            MealCategoryResponse(
+                id=c.id,
+                uuid=c.uuid,
+                created_at=c.created_at,
+                updated_at=c.updated_at,
+                nom=c.nom,
+                description=c.description,
+            )
+            for c in categories
+        ],
+    )
+
+
 @router.post(
     "/register",
     response_model=SuccessResponse[MealRegisterResponse],
@@ -62,9 +95,12 @@ def _enrich_meal_response(meal, db: Session) -> MealResponse:
 async def register_meal(
     body: MealRegisterRequest,
     db: Session = Depends(get_db),
-    admin: Admin = Depends(require_reception),
 ) -> SuccessResponse[MealRegisterResponse]:
     """Register a meal via QR code validation.
+
+    This is a **public** kiosk endpoint — no JWT required.
+    Authentication is performed via the QR token embedded in the
+    request body.
 
     Validates:
     * Restaurant is open (12:30–14:00)
@@ -72,7 +108,7 @@ async def register_meal(
     * User has not already eaten today
     * Category exists
     """
-    meal = _service.register_by_qr(db, body.token, body.categorie_uuid, admin=admin)
+    meal = _service.register_by_qr(db, body.token, body.categorie_uuid, admin=None)
 
     cat_stmt = select(MealCategory).where(MealCategory.uuid == meal.categorie_uuid)
     category = db.execute(cat_stmt).scalar_one_or_none()

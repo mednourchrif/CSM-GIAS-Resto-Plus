@@ -37,14 +37,14 @@ from app.utils.date_utils import today_utc
 # ---------------------------------------------------------------------------
 
 RESTAURANT_OPEN: time = time(12, 30)
-RESTAURANT_CLOSE: time = time(14, 0)
+RESTAURANT_CLOSE: time = time(23, 0)
 CASABLANCA_UTC_OFFSET: int = 1  # Africa/Casablanca standard time is UTC+1
 
 
 def is_restaurant_open(now: datetime | None = None) -> bool:
     """Check whether the restaurant is currently open.
 
-    Opening hours: 12:30–14:00 Africa/Casablanca local time (UTC+1).
+    Opening hours: 12:30–00:00 Africa/Casablanca local time (UTC+1).
     """
     ref = now or datetime.now(UTC)
     if ref.tzinfo is not None:
@@ -181,7 +181,7 @@ class MealService:
 
         if not is_restaurant_open(now):
             raise BusinessException(
-                message="Le restaurant est fermé. Service de 12h30 à 14h00.",
+                message="Le restaurant est fermé. Service de 12h30 à 00h00.",
                 details={"heure": now.strftime("%H:%M")},
             )
 
