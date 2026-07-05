@@ -15,12 +15,14 @@ abstract final class AppRouter {
   static GoRouter create({
     required String? Function(BuildContext context, GoRouterState state)
         redirect,
+    required Listenable refreshListenable,
   }) {
     return GoRouter(
       navigatorKey: _rootNavigatorKey,
       initialLocation: '/splash',
       debugLogDiagnostics: true,
       redirect: redirect,
+      refreshListenable: refreshListenable,
       routes: [
         GoRoute(
           path: '/splash',

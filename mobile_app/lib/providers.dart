@@ -38,11 +38,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
   });
 
   return AppRouter.create(
+    refreshListenable: refreshNotifier,
     redirect: (context, state) {
       final authState = ref.read(authStateProvider);
       final isLoginRoute = state.matchedLocation == '/login';
       final isSplashRoute = state.matchedLocation == '/splash';
-
+      debugPrint(
+          "Router -> ${state.matchedLocation} "
+          "auth=${authState.isAuthenticated} "
+          "loading=${authState.isLoading}",
+      );
       if (authState.isLoading && !isSplashRoute) return '/splash';
       if (!authState.isAuthenticated && !isLoginRoute && !isSplashRoute) {
         return '/login';
