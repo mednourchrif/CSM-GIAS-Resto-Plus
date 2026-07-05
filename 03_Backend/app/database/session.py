@@ -47,9 +47,9 @@ SessionLocal = sessionmaker(
 def get_db() -> Generator[Session]:
     """FastAPI dependency that yields a database session.
 
-    The session is auto-closed when the request finishes.
-    If an exception propagates out of the ``with`` block the transaction is
-    rolled back before the session is returned to the pool.
+    The session is committed on success and closed when the request
+    finishes.  If an exception propagates out of the ``with`` block the
+    transaction is rolled back before the session is returned to the pool.
 
     Usage::
 
@@ -60,6 +60,7 @@ def get_db() -> Generator[Session]:
     db = SessionLocal()
     try:
         yield db
+        db.commit()
     except Exception:
         db.rollback()
         raise

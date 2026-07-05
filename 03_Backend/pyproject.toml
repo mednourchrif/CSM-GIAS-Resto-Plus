@@ -25,6 +25,8 @@ dependencies = [
     "httptools>=0.6.4",
     "qrcode[pil]>=8.2.0",
     "Pillow>=12.0.0",
+    "tzdata>=2026.0",
+    "numpy>=2.0.0",
 ]
 
 [project.optional-dependencies]

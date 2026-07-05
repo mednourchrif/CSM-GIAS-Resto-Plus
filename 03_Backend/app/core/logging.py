@@ -46,13 +46,21 @@ def configure_logging() -> None:
         "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> | "
         "<level>{message}</level>"
     )
-    file_format = (
-        "{time:YYYY-MM-DD HH:mm:ss} | "
-        "{level: <8} | "
-        "{name}:{function}:{line} | "
-        "{extra[request_id]: <36} | "
-        "{message}"
-    )
+    def _file_format(record: dict) -> str:
+        """Return the file format string, ensuring a default request_id.
+
+        Startup logs, background tasks, and CLI commands fire before the
+        HTTP middleware binds a ``request_id``.  Without this default the
+        ``{extra[request_id]}`` placeholder raises ``KeyError``.
+        """
+        record["extra"].setdefault("request_id", "-")
+        return (
+            "{time:YYYY-MM-DD HH:mm:ss} | "
+            "{level: <8} | "
+            "{name}:{function}:{line} | "
+            "{extra[request_id]: <36} | "
+            "{message}"
+        )
 
     if settings.is_development:
         logger.add(
@@ -77,7 +85,7 @@ def configure_logging() -> None:
     log_path.parent.mkdir(parents=True, exist_ok=True)
     logger.add(
         str(log_path),
-        format=file_format,
+        format=_file_format,
         level=settings.LOG_LEVEL,
         rotation=settings.LOG_ROTATION,
         retention=settings.LOG_RETENTION,

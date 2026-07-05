@@ -32,6 +32,7 @@ class QrCode(BaseModel):
     )
 
     proprietaire_uuid: Mapped[str] = mapped_column(
+        String(36),
         ForeignKey("utilisateur.uuid"),
         index=True,
     )
@@ -49,6 +50,7 @@ class QrCode(BaseModel):
     )
 
     cree_par_uuid: Mapped[str | None] = mapped_column(
+        String(36),
         ForeignKey("utilisateur.uuid"),
         default=None,
     )
@@ -59,6 +61,7 @@ class QrCode(BaseModel):
     )
 
     revoque_par_uuid: Mapped[str | None] = mapped_column(
+        String(36),
         ForeignKey("utilisateur.uuid"),
         default=None,
     )

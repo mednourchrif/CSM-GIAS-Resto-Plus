@@ -17,6 +17,7 @@ from app.core.constants import (
     JWT_MIN_EXPIRE_MINUTES,
     Environment,
 )
+from app.core.exceptions import ConfigurationException
 
 
 class BaseAppSettings(BaseSettings):
@@ -183,11 +184,66 @@ class SettingsFactory:
     }
 
     @classmethod
+    def _read_env_file(cls) -> dict[str, str]:
+        """Read the .env file and return a {key: value} map.
+
+        This allows the factory to peek at APP_ENVIRONMENT before any
+        Pydantic model is constructed, avoiding the chicken-and-egg
+        problem of needing to know the environment to pick the right
+        settings class.
+        """
+        env_path = Path(".env")
+        if not env_path.exists():
+            return {}
+        result: dict[str, str] = {}
+        for line in env_path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, value = line.partition("=")
+            result[key.strip()] = value.strip().strip('"').strip("'")
+        return result
+
+    @classmethod
+    def _resolve_environment(cls) -> Environment:
+        """Resolve APP_ENVIRONMENT from OS environ or .env file.
+
+        Priority: OS environment > .env file > default ``development``.
+
+        :raises ConfigurationException: If the value is not one of the
+            valid ``Environment`` members.
+        """
+        env_name = os.environ.get("APP_ENVIRONMENT")
+
+        if env_name is None:
+            env_file = cls._read_env_file()
+            env_name = env_file.get("APP_ENVIRONMENT")
+
+        if env_name is None:
+            env_name = "development"
+
+        valid_values = [e.value for e in Environment]
+
+        if env_name not in valid_values:
+            raise ConfigurationException(
+                message=(
+                    f"Invalid APP_ENVIRONMENT='{env_name}'. "
+                    f"Must be one of: {', '.join(valid_values)}. "
+                    f"Check your .env file or OS environment variable."
+                ),
+                details={
+                    "provided": env_name,
+                    "valid_values": valid_values,
+                },
+            )
+
+        return Environment(env_name)
+
+    @classmethod
     def create(cls) -> BaseAppSettings:
-        """Read APP_ENVIRONMENT from OS environ and return the matching settings."""
-        env_name = os.environ.get("APP_ENVIRONMENT", "development")
-        env = Environment(env_name)
-        settings_class = cls._environments.get(env, DevelopmentSettings)
+        """Read APP_ENVIRONMENT and return the matching settings class instance."""
+        env = cls._resolve_environment()
+        settings_class = cls._environments[env]
         return settings_class()
 
 

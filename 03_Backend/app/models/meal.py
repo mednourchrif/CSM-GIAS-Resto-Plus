@@ -39,17 +39,20 @@ class Meal(BaseModel):
     )
 
     utilisateur_uuid: Mapped[str] = mapped_column(
+        String(36),
         ForeignKey("utilisateur.uuid"),
         index=True,
     )
 
     qr_uuid: Mapped[str | None] = mapped_column(
+        String(36),
         ForeignKey("qr_code.uuid"),
         default=None,
         index=True,
     )
 
     categorie_uuid: Mapped[str] = mapped_column(
+        String(36),
         ForeignKey("categorie_repas.uuid"),
         index=True,
     )
@@ -69,6 +72,7 @@ class Meal(BaseModel):
     )
 
     enregistre_par_uuid: Mapped[str | None] = mapped_column(
+        String(36),
         ForeignKey("utilisateur.uuid"),
         default=None,
     )

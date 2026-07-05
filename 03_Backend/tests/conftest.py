@@ -7,9 +7,16 @@ design decisions are:
   that is created from scratch for each session.  No MySQL required.
 * **Dependency override** — the FastAPI ``get_db`` dependency is
   overridden so that every request receives the test session.
-* **Per-test isolation** — each test gets a fresh database session via
+* **Per-test isolation** -- each test gets a fresh database session via
   the ``db_session`` fixture; changes are rolled back after the test.
 """
+
+import os
+
+# Set APP_ENVIRONMENT to testing before any application code is imported.
+# This ensures the ``TestingSettings`` class is used and the health
+# endpoint reports ``environment: "testing"`` correctly.
+os.environ.setdefault("APP_ENVIRONMENT", "testing")
 
 from collections.abc import Generator
 from typing import Any
@@ -116,6 +123,22 @@ def client(app: FastAPI, db_session: Session) -> Generator[TestClient, Any]:
         yield tc
 
     app.dependency_overrides.clear()
+
+
+@pytest.fixture(scope="function", autouse=True)
+def _mock_restaurant_hours() -> Generator[None]:
+    """Mock restaurant hours to be open for all API-level tests.
+
+    The ``from app.services.meal_service import is_restaurant_open``
+    statement in ``test_meals.py`` creates a *local* reference to the
+    original function, so ``TestRestaurantHours`` still tests the real
+    function.  Calls that look up ``app.services.meal_service.is_restaurant_open``
+    dynamically (e.g. inside ``MealService._register``) find the mock.
+    """
+    from unittest.mock import patch
+
+    with patch("app.services.meal_service.is_restaurant_open", return_value=True):
+        yield
 
 
 @pytest.fixture(scope="function")

@@ -25,6 +25,12 @@ from app.schemas.intern import (
     InternResponse,
     InternUpdate,
 )
+from app.schemas.meal import (
+    MealCategoryResponse,
+    MealRegisterRequest,
+    MealRegisterResponse,
+    MealResponse,
+)
 from app.schemas.qr_code import (
     QrCodeResponse,
     QrGenerateResponse,
@@ -86,6 +92,10 @@ __all__ = [
     "InternCreate",
     "InternResponse",
     "InternUpdate",
+    "MealCategoryResponse",
+    "MealRegisterRequest",
+    "MealRegisterResponse",
+    "MealResponse",
     "QrCodeResponse",
     "QrGenerateResponse",
     "QrValidateRequest",

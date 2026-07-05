@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.core.dependencies import get_db
 from app.models.admin import Admin
-from app.schemas.auth import AdminSummary, LoginRequest, TokenResponse
+from app.schemas.auth import AdminSummary, LoginRequest, LoginResponse, TokenResponse
 from app.schemas.response import SuccessResponse
 from app.security.dependencies import get_current_admin
 from app.services.auth_service import AuthService
@@ -32,12 +32,12 @@ _service = AuthService()
         "Retourne un token JWT à utiliser dans l'en-tête ``Authorization`` "
         "pour les requêtes ultérieures."
     ),
-    response_model=SuccessResponse[dict],
+    response_model=SuccessResponse[LoginResponse],
 )
 async def login(
     body: LoginRequest,
     db: Session = Depends(get_db),
-) -> SuccessResponse[dict]:
+) -> SuccessResponse[LoginResponse]:
     """Authenticate an administrator and return a JWT token.
 
     The token must be sent as ``Authorization: Bearer <token>`` in
@@ -52,13 +52,13 @@ async def login(
     role_name = admin.role.nom if admin.role else None
 
     return SuccessResponse(
-        data={
-            "token": TokenResponse(
+        data=LoginResponse(
+            token=TokenResponse(
                 access_token=token,
                 token_type="bearer",
                 expires_in=expires_in,
-            ).model_dump(),
-            "admin": AdminSummary(
+            ),
+            admin=AdminSummary(
                 id=admin.id,
                 uuid=admin.uuid,
                 nom=admin.nom,
@@ -66,8 +66,8 @@ async def login(
                 email=admin.email,
                 role=role_name,
                 derniere_connexion=admin.derniere_connexion,
-            ).model_dump(),
-        }
+            ),
+        )
     )
 
 

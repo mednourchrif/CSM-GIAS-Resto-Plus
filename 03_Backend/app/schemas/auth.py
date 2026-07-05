@@ -58,3 +58,10 @@ class AdminSummary(BaseSchema):
         default=None,
         description="Date de la dernière connexion réussie.",
     )
+
+
+class LoginResponse(BaseSchema):
+    """Full response returned on successful authentication."""
+
+    token: TokenResponse
+    admin: AdminSummary

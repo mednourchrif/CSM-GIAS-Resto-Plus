@@ -95,6 +95,7 @@ class MealService:
         token: str,
         categorie_uuid: str,
         admin: Admin | None = None,
+        _now: datetime | None = None,
     ) -> Meal:
         """Register a meal using QR-code identification.
 
@@ -123,6 +124,7 @@ class MealService:
             qr_uuid=validation.qr_uuid,
             type_identification="QR",
             admin=admin,
+            _now=_now,
         )
 
     def register_by_user_uuid(
@@ -132,6 +134,7 @@ class MealService:
         categorie_uuid: str,
         type_identification: str = "FACE",
         admin: Admin | None = None,
+        _now: datetime | None = None,
     ) -> Meal:
         """Register a meal for a user identified directly by UUID.
 
@@ -152,6 +155,7 @@ class MealService:
             qr_uuid=None,
             type_identification=type_identification,
             admin=admin,
+            _now=_now,
         )
 
     def _register(
@@ -162,6 +166,7 @@ class MealService:
         qr_uuid: str | None = None,
         type_identification: str = "QR",
         admin: Admin | None = None,
+        _now: datetime | None = None,
     ) -> Meal:
         """Core registration logic — shared by QR and future Face identification.
 
@@ -169,8 +174,10 @@ class MealService:
         1. Restaurant is open.
         2. Category exists.
         3. User has not already eaten today.
+
+        :param _now: Internal override for testing time-dependent logic.
         """
-        now = datetime.now(UTC)
+        now = _now or datetime.now(UTC)
 
         if not is_restaurant_open(now):
             raise BusinessException(

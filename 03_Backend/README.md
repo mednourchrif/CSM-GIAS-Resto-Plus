@@ -68,7 +68,10 @@ docker-compose up -d
 # 7. Exécuter les migrations
 alembic upgrade head
 
-# 8. Démarrer le serveur de développement
+# 8. (Optionnel) Initialiser la base de données
+python scripts/seed.py
+
+# 9. Démarrer le serveur de développement
 uvicorn app.main:create_app --reload
 ```
 

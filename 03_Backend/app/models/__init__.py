@@ -13,11 +13,18 @@ from app.models.base import BaseModel
 from app.models.employee import Employee, StatutEnrolement
 from app.models.intern import Intern
 
+# Meal Domain
+from app.models.meal import Meal
+
 # Identity Domain
+from app.models.meal_category import MealCategory
 from app.models.qr_code import QrCode
 from app.models.role import Role
 from app.models.user import Langue, StatutUtilisateur, TypeUtilisateur, User
 from app.models.visitor import Visitor
+
+# Face Recognition
+from app.models.face_embedding import FaceEmbedding
 
 __all__ = [
     # Base
@@ -33,6 +40,10 @@ __all__ = [
     "Employee",
     "StatutEnrolement",
     "Intern",
+    "Meal",
+    "MealCategory",
     "QrCode",
     "Visitor",
+    # Face Recognition
+    "FaceEmbedding",
 ]

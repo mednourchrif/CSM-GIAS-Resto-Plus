@@ -14,6 +14,7 @@ from app.utils.date_utils import (
     today_utc,
 )
 from app.utils.password import hash_password, verify_password
+from app.utils.image import decode_base64_image, validate_image_format
 from app.utils.validators import (
     sanitize_search_query,
     validate_date_range,
@@ -22,6 +23,9 @@ from app.utils.validators import (
 )
 
 __all__ = [
+    # Image
+    "decode_base64_image",
+    "validate_image_format",
     # Date utils
     "end_of_day",
     "format_datetime",

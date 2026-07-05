@@ -5,13 +5,15 @@ endpoint uses ``require_reception`` so that both admins and receptionists
 can register meals during lunch service.
 """
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, status
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.dependencies import get_db
 from app.models.admin import Admin
+from app.models.meal_category import MealCategory
+from app.models.user import User
 from app.schemas.meal import (
-    MealCategoryResponse,
     MealRegisterRequest,
     MealRegisterResponse,
     MealResponse,
@@ -26,36 +28,8 @@ router = APIRouter(prefix="/meals", tags=["meals"])
 _service = MealService()
 
 
-def _to_meal_response(meal) -> MealResponse:
-    """Build a MealResponse, resolving the category name and user name."""
-    from sqlalchemy import select
-
-    from app.models.meal_category import MealCategory
-    from app.models.user import User
-
-    db = None  # resolved in the endpoint
-    return MealResponse(
-        id=meal.id,
-        uuid=meal.uuid,
-        created_at=meal.created_at,
-        updated_at=meal.updated_at,
-        utilisateur_uuid=meal.utilisateur_uuid,
-        qr_uuid=meal.qr_uuid,
-        categorie_uuid=meal.categorie_uuid,
-        type_identification=meal.type_identification,
-        date_repas=meal.date_repas,
-        heure_repas=meal.heure_repas,
-        enregistre_par_uuid=meal.enregistre_par_uuid,
-    )
-
-
 def _enrich_meal_response(meal, db: Session) -> MealResponse:
     """Enrich a MealResponse with category name and user name."""
-    from sqlalchemy import select
-
-    from app.models.meal_category import MealCategory
-    from app.models.user import User
-
     cat_stmt = select(MealCategory).where(MealCategory.uuid == meal.categorie_uuid)
     category = db.execute(cat_stmt).scalar_one_or_none()
 
@@ -100,10 +74,6 @@ async def register_meal(
     """
     meal = _service.register_by_qr(db, body.token, body.categorie_uuid, admin=admin)
 
-    from sqlalchemy import select
-
-    from app.models.meal_category import MealCategory
-
     cat_stmt = select(MealCategory).where(MealCategory.uuid == meal.categorie_uuid)
     category = db.execute(cat_stmt).scalar_one_or_none()
 
@@ -147,17 +117,18 @@ async def list_meals(
 
 
 @router.get(
-    "/{uuid}",
-    response_model=SuccessResponse[MealResponse],
+    "/today",
+    response_model=SuccessResponse[list[MealResponse]],
 )
-async def get_meal(
-    uuid: str,
+async def get_today_meals(
     db: Session = Depends(get_db),
     admin: Admin = Depends(require_admin),
-) -> SuccessResponse[MealResponse]:
-    """Get a single meal by UUID."""
-    meal = _service.get(db, uuid)
-    return SuccessResponse(data=_enrich_meal_response(meal, db))
+) -> SuccessResponse[list[MealResponse]]:
+    """Get all meals registered today."""
+    meals = _service.get_today(db)
+    return SuccessResponse(
+        data=[_enrich_meal_response(m, db) for m in meals],
+    )
 
 
 @router.get(
@@ -177,15 +148,14 @@ async def get_meal_history(
 
 
 @router.get(
-    "/today",
-    response_model=SuccessResponse[list[MealResponse]],
+    "/{uuid}",
+    response_model=SuccessResponse[MealResponse],
 )
-async def get_today_meals(
+async def get_meal(
+    uuid: str,
     db: Session = Depends(get_db),
     admin: Admin = Depends(require_admin),
-) -> SuccessResponse[list[MealResponse]]:
-    """Get all meals registered today."""
-    meals = _service.get_today(db)
-    return SuccessResponse(
-        data=[_enrich_meal_response(m, db) for m in meals],
-    )
+) -> SuccessResponse[MealResponse]:
+    """Get a single meal by UUID."""
+    meal = _service.get(db, uuid)
+    return SuccessResponse(data=_enrich_meal_response(meal, db))

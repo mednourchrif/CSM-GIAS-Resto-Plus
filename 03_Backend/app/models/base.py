@@ -20,7 +20,7 @@ Concrete models override ``__tablename__`` and add domain-specific columns::
 
 import uuid as _uuid
 
-from sqlalchemy import BigInteger, Integer
+from sqlalchemy import BigInteger, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database.base import Base
@@ -57,6 +57,7 @@ class BaseModel(Base, TimestampMixin):
     )
 
     uuid: Mapped[str] = mapped_column(
+        String(36),
         unique=True,
         index=True,
         default=new_uuid,
