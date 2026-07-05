@@ -33,6 +33,12 @@ _service = QrCodeService()
 
 @router.post(
     "/generate/intern/{uuid}",
+    summary="Générer un QR pour un stagiaire",
+    description=(
+        "Génère un nouveau code QR pour un stagiaire.  Le QR expire à "
+        "23:59:59 le jour de fin de stage.  Tout QR actif précédent est "
+        "révoqué automatiquement."
+    ),
     response_model=SuccessResponse[QrGenerateResponse],
     status_code=201,
 )
@@ -67,6 +73,12 @@ async def generate_intern_qr(
 
 @router.post(
     "/generate/visitor/{uuid}",
+    summary="Générer un QR pour un visiteur",
+    description=(
+        "Génère un nouveau code QR pour un visiteur.  Le QR expire à "
+        "23:59:59 le jour de la visite.  Tout QR actif précédent est "
+        "révoqué automatiquement."
+    ),
     response_model=SuccessResponse[QrGenerateResponse],
     status_code=201,
 )
@@ -101,6 +113,12 @@ async def generate_visitor_qr(
 
 @router.post(
     "/validate",
+    summary="Valider un token QR",
+    description=(
+        "Valide un token QR brut.  Retourne un statut parmi : ``VALID``, "
+        "``EXPIRED``, ``REVOKED``, ``NOT_FOUND``, ``OWNER_DISABLED``, "
+        "``INVALID``."
+    ),
     response_model=SuccessResponse[QrValidationResponse],
 )
 async def validate_qr(
@@ -125,6 +143,11 @@ async def validate_qr(
 
 @router.post(
     "/revoke/{uuid}",
+    summary="Révoquer un QR code",
+    description=(
+        "Révoque un code QR actif.  Motifs possibles : ``Perdu``, "
+        "``Regénération``, ``Stage terminé``, ``Visite annulée``."
+    ),
     response_model=SuccessResponse[QrCodeResponse],
 )
 async def revoke_qr(
@@ -163,6 +186,12 @@ async def revoke_qr(
 
 @router.post(
     "/regenerate/{uuid}",
+    summary="Régénérer un QR code",
+    description=(
+        "Révoque le QR actif d'un propriétaire et en génère un nouveau. "
+        "Utiliser le paramètre ``owner_type`` — ``STAGIAIRE`` (défaut) "
+        "ou ``VISITEUR``."
+    ),
     response_model=SuccessResponse[QrGenerateResponse],
     status_code=201,
 )
@@ -199,6 +228,8 @@ async def regenerate_qr(
 
 @router.get(
     "/{uuid}",
+    summary="Obtenir un QR code",
+    description="Retourne les détails d'un code QR à partir de son UUID.",
     response_model=SuccessResponse[QrCodeResponse],
 )
 async def get_qr(
@@ -237,6 +268,11 @@ async def get_qr(
 
 @router.get(
     "/download/{uuid}",
+    summary="Télécharger un QR code en PNG",
+    description=(
+        "Télécharge l'image PNG du code QR.  Le token brut n'est "
+        "disponible qu'immédiatement après génération."
+    ),
 )
 async def download_qr(
     uuid: str,
@@ -260,6 +296,8 @@ async def download_qr(
 
 @router.get(
     "/history/{owner_uuid}",
+    summary="Historique des QR d'un propriétaire",
+    description="Retourne tous les codes QR émis pour un propriétaire (du plus récent au plus ancien).",
     response_model=SuccessResponse[list[QrCodeResponse]],
 )
 async def get_qr_history(

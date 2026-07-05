@@ -11,13 +11,13 @@ from app.schemas.base import BaseResponse, BaseSchema
 class VisitorCreate(BaseSchema):
     """Payload for creating a visitor."""
 
-    nom: str = Field(..., min_length=1, max_length=100)
-    prenom: str = Field(..., min_length=1, max_length=100)
-    email: str | None = Field(None, max_length=255)
-    mot_de_passe: str | None = Field(None, min_length=8, max_length=128)
+    nom: str = Field(..., min_length=1, max_length=100, examples=["Lefebvre"])
+    prenom: str = Field(..., min_length=1, max_length=100, examples=["Pierre"])
+    email: str | None = Field(None, max_length=255, examples=["pierre.lefebvre@fournisseur.com"])
+    mot_de_passe: str | None = Field(None, min_length=8, max_length=128, examples=["visiteur2024"])
     statut: StatutUtilisateur = StatutUtilisateur.ACTIF
     langue: Langue | None = None
-    societe: str | None = Field(None, max_length=255)
+    societe: str | None = Field(None, max_length=255, examples=["Fournitures Industrielles SA"])
     date_visite: date
 
 

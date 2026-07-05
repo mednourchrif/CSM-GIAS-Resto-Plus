@@ -38,7 +38,11 @@ class ValidationStatut(StrEnum):
 class QrValidateRequest(BaseSchema):
     """Request body for QR validation."""
 
-    token: str = Field(..., description="Raw QR token to validate")
+    token: str = Field(
+        ...,
+        description="Raw QR token to validate",
+        examples=["a1b2c3d4-e5f6-7890-abcd-ef1234567890"],
+    )
 
 
 # ---------------------------------------------------------------------------

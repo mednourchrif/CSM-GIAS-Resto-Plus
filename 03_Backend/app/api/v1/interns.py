@@ -19,7 +19,12 @@ router = APIRouter(prefix="/interns", tags=["interns"])
 _service = InternService()
 
 
-@router.get("", response_model=PaginatedResponse[InternResponse])
+@router.get(
+    "",
+    summary="Lister les stagiaires",
+    description="Retourne la liste paginée des stagiaires avec possibilité de tri et recherche.",
+    response_model=PaginatedResponse[InternResponse],
+)
 async def list_interns(
     params: PaginationParams = Depends(),
     db: Session = Depends(get_db),
@@ -37,7 +42,12 @@ async def list_interns(
     )
 
 
-@router.get("/{uuid}", response_model=SuccessResponse[InternResponse])
+@router.get(
+    "/{uuid}",
+    summary="Obtenir un stagiaire",
+    description="Retourne les détails d'un stagiaire à partir de son UUID.",
+    response_model=SuccessResponse[InternResponse],
+)
 async def get_intern(
     uuid: str,
     db: Session = Depends(get_db),
@@ -48,7 +58,13 @@ async def get_intern(
     return SuccessResponse(data=InternResponse.model_validate(intern))
 
 
-@router.post("", response_model=SuccessResponse[InternResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    summary="Créer un stagiaire",
+    description="Ajoute un nouveau stagiaire dans le système.",
+    response_model=SuccessResponse[InternResponse],
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_intern(
     body: InternCreate,
     db: Session = Depends(get_db),
@@ -59,7 +75,12 @@ async def create_intern(
     return SuccessResponse(data=InternResponse.model_validate(intern))
 
 
-@router.put("/{uuid}", response_model=SuccessResponse[InternResponse])
+@router.put(
+    "/{uuid}",
+    summary="Remplacer un stagiaire",
+    description="Remplace l'intégralité des données d'un stagiaire.",
+    response_model=SuccessResponse[InternResponse],
+)
 async def update_intern(
     uuid: str,
     body: InternUpdate,
@@ -71,7 +92,12 @@ async def update_intern(
     return SuccessResponse(data=InternResponse.model_validate(intern))
 
 
-@router.patch("/{uuid}", response_model=SuccessResponse[InternResponse])
+@router.patch(
+    "/{uuid}",
+    summary="Modifier partiellement un stagiaire",
+    description="Met à jour partiellement les données d'un stagiaire (champs fournis uniquement).",
+    response_model=SuccessResponse[InternResponse],
+)
 async def patch_intern(
     uuid: str,
     body: InternUpdate,
@@ -83,7 +109,12 @@ async def patch_intern(
     return SuccessResponse(data=InternResponse.model_validate(intern))
 
 
-@router.delete("/{uuid}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{uuid}",
+    summary="Supprimer un stagiaire",
+    description="Désactive un stagiaire (soft-delete).",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
 async def delete_intern(
     uuid: str,
     db: Session = Depends(get_db),

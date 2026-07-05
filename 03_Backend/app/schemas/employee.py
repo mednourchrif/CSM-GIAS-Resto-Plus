@@ -12,13 +12,13 @@ from app.schemas.base import BaseResponse, BaseSchema
 class EmployeeCreate(BaseSchema):
     """Payload for creating an employee."""
 
-    nom: str = Field(..., min_length=1, max_length=100)
-    prenom: str = Field(..., min_length=1, max_length=100)
-    email: str | None = Field(None, max_length=255)
-    mot_de_passe: str | None = Field(None, min_length=8, max_length=128)
+    nom: str = Field(..., min_length=1, max_length=100, examples=["Dupont"])
+    prenom: str = Field(..., min_length=1, max_length=100, examples=["Jean"])
+    email: str | None = Field(None, max_length=255, examples=["jean.dupont@entreprise.com"])
+    mot_de_passe: str | None = Field(None, min_length=8, max_length=128, examples=["s3cur3P@ss"])
     statut: StatutUtilisateur = StatutUtilisateur.ACTIF
     langue: Langue | None = None
-    matricule: str = Field(..., min_length=1, max_length=20)
+    matricule: str = Field(..., min_length=1, max_length=20, examples=["EMP-2024-001"])
     photo_path: str | None = Field(None, max_length=500)
 
 

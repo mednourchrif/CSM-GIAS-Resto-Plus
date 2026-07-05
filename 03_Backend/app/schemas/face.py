@@ -6,6 +6,8 @@ endpoints.
 
 from enum import StrEnum
 
+from pydantic import Field
+
 from app.schemas.base import BaseResponse, BaseSchema
 
 
@@ -24,24 +26,56 @@ class FaceStatut(StrEnum):
 class FaceEnrollRequest(BaseSchema):
     """Enroll a face embedding for a user."""
 
-    image_base64: str
-    utilisateur_uuid: str
-    categorie_uuid: str | None = None
+    image_base64: str = Field(
+        ...,
+        description="Image JPEG/PNG encodée en Base64.",
+        examples=["/9j/4AAQSkZJRg...<base64-encoded-image>..."],
+    )
+    utilisateur_uuid: str = Field(
+        ...,
+        description="UUID de l'utilisateur à enrôler.",
+        examples=["f47ac10b-58cc-4372-a567-0e02b2c3d479"],
+    )
+    categorie_uuid: str | None = Field(
+        None,
+        description="UUID optionnel de la catégorie de repas (enrôlement + repas automatique).",
+        examples=None,
+    )
 
 
 class FaceVerifyRequest(BaseSchema):
     """Verify a user by face against their stored embedding."""
 
-    image_base64: str
-    utilisateur_uuid: str
-    categorie_uuid: str | None = None
+    image_base64: str = Field(
+        ...,
+        description="Image JPEG/PNG encodée en Base64.",
+        examples=["/9j/4AAQSkZJRg...<base64-encoded-image>..."],
+    )
+    utilisateur_uuid: str = Field(
+        ...,
+        description="UUID de l'utilisateur présumé.",
+        examples=["f47ac10b-58cc-4372-a567-0e02b2c3d479"],
+    )
+    categorie_uuid: str | None = Field(
+        None,
+        description="UUID optionnel de la catégorie de repas (vérification + repas automatique).",
+        examples=None,
+    )
 
 
 class FaceIdentifyRequest(BaseSchema):
     """Identify a user by face against all stored embeddings."""
 
-    image_base64: str
-    categorie_uuid: str | None = None
+    image_base64: str = Field(
+        ...,
+        description="Image JPEG/PNG encodée en Base64.",
+        examples=["/9j/4AAQSkZJRg...<base64-encoded-image>..."],
+    )
+    categorie_uuid: str | None = Field(
+        None,
+        description="UUID optionnel de la catégorie de repas (identification + repas automatique).",
+        examples=None,
+    )
 
 
 # -- Responses ----------------------------------------------------------------

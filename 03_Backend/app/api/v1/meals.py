@@ -97,6 +97,8 @@ async def register_meal(
 
 @router.get(
     "",
+    summary="Lister les repas",
+    description="Retourne la liste paginée des repas avec possibilité de tri et recherche.",
     response_model=PaginatedResponse[MealResponse],
 )
 async def list_meals(
@@ -118,6 +120,8 @@ async def list_meals(
 
 @router.get(
     "/today",
+    summary="Repas du jour",
+    description="Retourne tous les repas enregistrés aujourd'hui.",
     response_model=SuccessResponse[list[MealResponse]],
 )
 async def get_today_meals(
@@ -133,6 +137,8 @@ async def get_today_meals(
 
 @router.get(
     "/history/{user_uuid}",
+    summary="Historique des repas d'un utilisateur",
+    description="Retourne tous les repas d'un utilisateur (du plus récent au plus ancien).",
     response_model=SuccessResponse[list[MealResponse]],
 )
 async def get_meal_history(
@@ -149,6 +155,8 @@ async def get_meal_history(
 
 @router.get(
     "/{uuid}",
+    summary="Obtenir un repas",
+    description="Retourne les détails d'un repas à partir de son UUID.",
     response_model=SuccessResponse[MealResponse],
 )
 async def get_meal(

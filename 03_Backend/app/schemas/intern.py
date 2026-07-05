@@ -11,13 +11,13 @@ from app.schemas.base import BaseResponse, BaseSchema
 class InternCreate(BaseSchema):
     """Payload for creating an intern."""
 
-    nom: str = Field(..., min_length=1, max_length=100)
-    prenom: str = Field(..., min_length=1, max_length=100)
-    email: str | None = Field(None, max_length=255)
-    mot_de_passe: str | None = Field(None, min_length=8, max_length=128)
+    nom: str = Field(..., min_length=1, max_length=100, examples=["Martin"])
+    prenom: str = Field(..., min_length=1, max_length=100, examples=["Sophie"])
+    email: str | None = Field(None, max_length=255, examples=["sophie.martin@etudiant.com"])
+    mot_de_passe: str | None = Field(None, min_length=8, max_length=128, examples=["st@ge2024!"])
     statut: StatutUtilisateur = StatutUtilisateur.ACTIF
     langue: Langue | None = None
-    matricule: str = Field(..., min_length=1, max_length=20)
+    matricule: str = Field(..., min_length=1, max_length=20, examples=["STG-2024-045"])
     date_debut_stage: date
     date_fin_stage: date
 

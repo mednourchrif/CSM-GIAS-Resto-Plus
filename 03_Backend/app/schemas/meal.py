@@ -26,8 +26,16 @@ class MealRegisterRequest(BaseSchema):
     schema or call the service directly.
     """
 
-    token: str = Field(..., description="Raw QR token to validate and register")
-    categorie_uuid: str = Field(..., description="UUID of the meal category")
+    token: str = Field(
+        ...,
+        description="Raw QR token to validate and register",
+        examples=["a1b2c3d4-e5f6-7890-abcd-ef1234567890"],
+    )
+    categorie_uuid: str = Field(
+        ...,
+        description="UUID of the meal category",
+        examples=["f47ac10b-58cc-4372-a567-0e02b2c3d479"],
+    )
 
 
 class MealRegisterResponse(BaseResponse):

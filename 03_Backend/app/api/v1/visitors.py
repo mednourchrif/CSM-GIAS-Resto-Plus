@@ -19,7 +19,12 @@ router = APIRouter(prefix="/visitors", tags=["visitors"])
 _service = VisitorService()
 
 
-@router.get("", response_model=PaginatedResponse[VisitorResponse])
+@router.get(
+    "",
+    summary="Lister les visiteurs",
+    description="Retourne la liste paginée des visiteurs avec possibilité de tri et recherche.",
+    response_model=PaginatedResponse[VisitorResponse],
+)
 async def list_visitors(
     params: PaginationParams = Depends(),
     db: Session = Depends(get_db),
@@ -37,7 +42,12 @@ async def list_visitors(
     )
 
 
-@router.get("/{uuid}", response_model=SuccessResponse[VisitorResponse])
+@router.get(
+    "/{uuid}",
+    summary="Obtenir un visiteur",
+    description="Retourne les détails d'un visiteur à partir de son UUID.",
+    response_model=SuccessResponse[VisitorResponse],
+)
 async def get_visitor(
     uuid: str,
     db: Session = Depends(get_db),
@@ -48,7 +58,13 @@ async def get_visitor(
     return SuccessResponse(data=VisitorResponse.model_validate(visitor))
 
 
-@router.post("", response_model=SuccessResponse[VisitorResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    summary="Créer un visiteur",
+    description="Ajoute un nouveau visiteur dans le système.",
+    response_model=SuccessResponse[VisitorResponse],
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_visitor(
     body: VisitorCreate,
     db: Session = Depends(get_db),
@@ -59,7 +75,12 @@ async def create_visitor(
     return SuccessResponse(data=VisitorResponse.model_validate(visitor))
 
 
-@router.put("/{uuid}", response_model=SuccessResponse[VisitorResponse])
+@router.put(
+    "/{uuid}",
+    summary="Remplacer un visiteur",
+    description="Remplace l'intégralité des données d'un visiteur.",
+    response_model=SuccessResponse[VisitorResponse],
+)
 async def update_visitor(
     uuid: str,
     body: VisitorUpdate,
@@ -71,7 +92,12 @@ async def update_visitor(
     return SuccessResponse(data=VisitorResponse.model_validate(visitor))
 
 
-@router.patch("/{uuid}", response_model=SuccessResponse[VisitorResponse])
+@router.patch(
+    "/{uuid}",
+    summary="Modifier partiellement un visiteur",
+    description="Met à jour partiellement les données d'un visiteur (champs fournis uniquement).",
+    response_model=SuccessResponse[VisitorResponse],
+)
 async def patch_visitor(
     uuid: str,
     body: VisitorUpdate,
@@ -83,7 +109,12 @@ async def patch_visitor(
     return SuccessResponse(data=VisitorResponse.model_validate(visitor))
 
 
-@router.delete("/{uuid}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{uuid}",
+    summary="Supprimer un visiteur",
+    description="Désactive un visiteur (soft-delete).",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
 async def delete_visitor(
     uuid: str,
     db: Session = Depends(get_db),

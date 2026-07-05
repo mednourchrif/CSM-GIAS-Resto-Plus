@@ -19,7 +19,12 @@ router = APIRouter(prefix="/employees", tags=["employees"])
 _service = EmployeeService()
 
 
-@router.get("", response_model=PaginatedResponse[EmployeeResponse])
+@router.get(
+    "",
+    summary="Lister les employés",
+    description="Retourne la liste paginée des employés avec possibilité de tri et recherche.",
+    response_model=PaginatedResponse[EmployeeResponse],
+)
 async def list_employees(
     params: PaginationParams = Depends(),
     db: Session = Depends(get_db),
@@ -37,7 +42,12 @@ async def list_employees(
     )
 
 
-@router.get("/{uuid}", response_model=SuccessResponse[EmployeeResponse])
+@router.get(
+    "/{uuid}",
+    summary="Obtenir un employé",
+    description="Retourne les détails d'un employé à partir de son UUID.",
+    response_model=SuccessResponse[EmployeeResponse],
+)
 async def get_employee(
     uuid: str,
     db: Session = Depends(get_db),
@@ -59,7 +69,12 @@ async def create_employee(
     return SuccessResponse(data=EmployeeResponse.model_validate(employee))
 
 
-@router.put("/{uuid}", response_model=SuccessResponse[EmployeeResponse])
+@router.put(
+    "/{uuid}",
+    summary="Remplacer un employé",
+    description="Remplace l'intégralité des données d'un employé.",
+    response_model=SuccessResponse[EmployeeResponse],
+)
 async def update_employee(
     uuid: str,
     body: EmployeeUpdate,
@@ -71,7 +86,12 @@ async def update_employee(
     return SuccessResponse(data=EmployeeResponse.model_validate(employee))
 
 
-@router.patch("/{uuid}", response_model=SuccessResponse[EmployeeResponse])
+@router.patch(
+    "/{uuid}",
+    summary="Modifier partiellement un employé",
+    description="Met à jour partiellement les données d'un employé (champs fournis uniquement).",
+    response_model=SuccessResponse[EmployeeResponse],
+)
 async def patch_employee(
     uuid: str,
     body: EmployeeUpdate,
@@ -83,7 +103,12 @@ async def patch_employee(
     return SuccessResponse(data=EmployeeResponse.model_validate(employee))
 
 
-@router.delete("/{uuid}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{uuid}",
+    summary="Supprimer un employé",
+    description="Désactive un employé (soft-delete).",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
 async def delete_employee(
     uuid: str,
     db: Session = Depends(get_db),

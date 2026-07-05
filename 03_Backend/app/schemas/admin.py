@@ -34,10 +34,10 @@ class AdminResponse(BaseResponse):
 class ReceptionistCreate(BaseSchema):
     """Payload for creating a receptionist."""
 
-    nom: str = Field(..., min_length=1, max_length=100)
-    prenom: str = Field(..., min_length=1, max_length=100)
-    email: str | None = Field(None, max_length=255)
-    mot_de_passe: str | None = Field(None, min_length=8, max_length=128)
+    nom: str = Field(..., min_length=1, max_length=100, examples=["Bernard"])
+    prenom: str = Field(..., min_length=1, max_length=100, examples=["Marie"])
+    email: str | None = Field(None, max_length=255, examples=["marie.bernard@csm-gias.resto"])
+    mot_de_passe: str | None = Field(None, min_length=8, max_length=128, examples=["accuei1R3sto"])
     statut: StatutUtilisateur = StatutUtilisateur.ACTIF
     langue: Langue | None = None
 

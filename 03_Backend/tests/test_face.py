@@ -395,7 +395,7 @@ class TestFaceAPI:
             f"/api/v1/face/{embedding_uuid}",
             headers=_auth_header(token),
         )
-        assert resp.status_code == 200
+        assert resp.status_code == 204
 
         get_resp = client.get(
             f"/api/v1/face/{embedding_uuid}",
