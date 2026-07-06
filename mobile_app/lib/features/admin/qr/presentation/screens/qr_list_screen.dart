@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/theme/spacing.dart';
 import '../../../../../shared/services/download_service.dart';
+import '../../../../../shared/services/share_service.dart';
 import '../../../../../shared/widgets/detail_row.dart';
 import '../../domain/entities/qr_code.dart';
 import '../providers/qr_provider.dart';
@@ -434,6 +435,7 @@ class _QrDetailScreenState extends ConsumerState<_QrDetailScreen> {
               itemBuilder: (_) => [
                 const PopupMenuItem(value: 'download', child: Text('Télécharger')),
                 const PopupMenuItem(value: 'print', child: Text('Imprimer')),
+                const PopupMenuItem(value: 'share', child: Text('Partager')),
                 const PopupMenuItem(value: 'regenerate', child: Text('Régénérer')),
                 const PopupMenuItem(
                   value: 'revoke',
@@ -492,12 +494,20 @@ class _QrDetailScreenState extends ConsumerState<_QrDetailScreen> {
                         label: const Text('Télécharger'),
                       ),
                     ),
-                    const SizedBox(width: Spacing.md),
+                    const SizedBox(width: Spacing.sm),
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () => _handleAction(context, ref, qr, 'print'),
                         icon: const Icon(Icons.print_rounded),
                         label: const Text('Imprimer'),
+                      ),
+                    ),
+                    const SizedBox(width: Spacing.sm),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => _handleAction(context, ref, qr, 'share'),
+                        icon: const Icon(Icons.share_rounded),
+                        label: const Text('Partager'),
                       ),
                     ),
                   ],
@@ -586,6 +596,8 @@ class _QrDetailScreenState extends ConsumerState<_QrDetailScreen> {
         _download(context, qr);
       case 'print':
         _showPrintPreview(context, qr.uuid);
+      case 'share':
+        _share(context, qr);
       case 'regenerate':
         _confirmRegenerate(context, ref, qr);
       case 'revoke':
@@ -621,6 +633,37 @@ class _QrDetailScreenState extends ConsumerState<_QrDetailScreen> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Erreur lors de la sauvegarde du QR.')),
+      );
+    }
+  }
+
+  Future<void> _share(BuildContext context, QrCode qr) async {
+    final base64 = qr.qrBase64;
+    if (base64 == null || base64.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Aucune image QR disponible.')),
+      );
+      return;
+    }
+
+    try {
+      final success = await ShareService.shareQrImage(
+        base64Image: base64,
+        ownerName: qr.proprietaireFullName,
+        typeLabel: qr.typeLabel,
+      );
+
+      if (!context.mounted) return;
+
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('QR partagé avec succès.')),
+        );
+      }
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erreur lors du partage : ${e.toString()}')),
       );
     }
   }

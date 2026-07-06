@@ -37,6 +37,9 @@ dependencies:
   # QR Scanning
   mobile_scanner: ^5.2.3
 
+  # Share
+  share_plus: ^10.1.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
