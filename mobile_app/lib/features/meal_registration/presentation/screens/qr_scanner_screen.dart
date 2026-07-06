@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -47,44 +50,84 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen>
     super.dispose();
   }
 
-  void _onDetect(BarcodeCapture capture) {
-    if (_isProcessing) return;
-
-    final barcodes = capture.barcodes;
-    if (barcodes.isEmpty) return;
-
-    final barcode = barcodes.first;
-    if (barcode.rawValue == null) return;
-
-    final qrToken = barcode.rawValue!.trim();
-    if (qrToken.isEmpty) return;
-
-    _isProcessing = true;
-    HapticFeedback.heavyImpact();
-
-    _scannerController.stop();
-
-    final categorieUuid = ref.read(selectedCategoryUuidProvider);
-    if (categorieUuid == null || !mounted) {
-      context.go('/home');
+  Future<void> _onDetect(BarcodeCapture capture) async {
+    if (_isProcessing) {
+      debugPrint('[Scanner] ⏭ Already processing — ignoring');
       return;
     }
 
-    ref
-        .read(mealRegistrationProvider.notifier)
-        .registerMeal(
-          qrToken: qrToken,
-          categorieUuid: categorieUuid,
-        )
-        .then((_) {
-      if (!mounted) return;
-      final state = ref.read(mealRegistrationProvider);
-      if (state.result != null) {
-        context.pushReplacement('/success');
-      } else if (state.error != null) {
-        _showErrorDialog(state.error!);
+    final barcodes = capture.barcodes;
+    if (barcodes.isEmpty) {
+      debugPrint('[Scanner] ⏭ No barcodes');
+      return;
+    }
+
+    final barcode = barcodes.first;
+    final rawValue = barcode.rawValue;
+    if (rawValue == null) {
+      debugPrint('[Scanner] ⏭ null rawValue');
+      return;
+    }
+
+    final qrToken = rawValue.trim();
+    if (qrToken.isEmpty) {
+      debugPrint('[Scanner] ⏭ empty token');
+      return;
+    }
+
+    debugPrint('[Scanner] ✅ QR detected: $qrToken');
+    _isProcessing = true;
+    unawaited(HapticFeedback.heavyImpact());
+
+    _scannerController.stop();
+    debugPrint('[Scanner] 🛑 Scanner stopped');
+
+    final categorieUuid = ref.read(selectedCategoryUuidProvider);
+    if (categorieUuid == null) {
+      debugPrint('[Scanner] ❌ No category UUID — navigating home');
+      if (mounted) context.go('/home');
+      return;
+    }
+
+    if (!mounted) {
+      debugPrint('[Scanner] ⚠️ Not mounted before request');
+      return;
+    }
+
+    try {
+      debugPrint('[Scanner] 📤 Sending POST /meals/register...');
+      await ref.read(mealRegistrationProvider.notifier).registerMeal(
+        qrToken: qrToken,
+        categorieUuid: categorieUuid,
+      );
+      debugPrint('[Scanner] 📥 Response received');
+
+      if (!mounted) {
+        debugPrint('[Scanner] ⚠️ Not mounted after response');
+        return;
       }
-    });
+
+      final state = ref.read(mealRegistrationProvider);
+
+      if (state.result != null) {
+        debugPrint('[Scanner] ✅ Success — navigating to /success');
+        context.pushReplacement('/success');
+        debugPrint('[Scanner] ✅ Navigation done');
+      } else if (state.error != null) {
+        debugPrint('[Scanner] ❌ Error: ${state.error}');
+        _showErrorDialog(state.error!);
+      } else {
+        debugPrint('[Scanner] ⚠️ No result and no error');
+        _isProcessing = false;
+        _scannerController.start();
+      }
+    } catch (e, stackTrace) {
+      debugPrint('[Scanner] 💥 Exception: $e');
+      debugPrint('[Scanner] Stack trace: $stackTrace');
+      if (mounted) {
+        _showErrorDialog('Erreur inattendue : ${e.toString()}');
+      }
+    }
   }
 
   void _showErrorDialog(String message) {

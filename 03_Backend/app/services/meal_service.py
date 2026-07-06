@@ -37,7 +37,7 @@ from app.utils.date_utils import today_utc
 # ---------------------------------------------------------------------------
 
 RESTAURANT_OPEN: time = time(12, 30)
-RESTAURANT_CLOSE: time = time(23, 0)
+RESTAURANT_CLOSE: time = time(22, 0)
 CASABLANCA_UTC_OFFSET: int = 1  # Africa/Casablanca standard time is UTC+1
 
 
