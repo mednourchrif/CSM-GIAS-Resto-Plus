@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/spacing.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../admin/employees/presentation/screens/employee_list_screen.dart';
 import '../../domain/enums/admin_section.dart';
 import '../widgets/admin_drawer.dart';
 import '../widgets/admin_navigation_rail.dart';
@@ -47,6 +48,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     Widget body;
     if (_isOnDashboard) {
       body = _buildDashboardGrid(theme, sections);
+    } else if (_selectedIndex == 0) {
+      body = const EmployeeListScreen();
     } else {
       body = AdminPlaceholderScreen(section: sections[_selectedIndex]);
     }

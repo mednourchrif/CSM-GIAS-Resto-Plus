@@ -38,8 +38,11 @@ class EmployeeRepository(BaseRepository[Employee]):
         page: int = 1,
         page_size: int = 20,
     ) -> tuple[list[Employee], int]:
-        """Search employees with pagination, sorting, and optional search."""
-        base_stmt = select(Employee)
+        """Search employees with pagination, sorting, and optional search.
+
+        Excludes soft-deleted employees (date_suppression IS NULL).
+        """
+        base_stmt = select(Employee).where(Employee.date_suppression.is_(None))
 
         if search:
             pattern = f"%{search}%"
