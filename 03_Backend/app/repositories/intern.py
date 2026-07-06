@@ -44,8 +44,11 @@ class InternRepository(BaseRepository[Intern]):
         page: int = 1,
         page_size: int = 20,
     ) -> tuple[list[Intern], int]:
-        """Search interns with pagination, sorting, and optional search."""
-        base_stmt = select(Intern)
+        """Search interns with pagination, sorting, and optional search.
+
+        Excludes soft-deleted interns (date_suppression IS NULL).
+        """
+        base_stmt = select(Intern).where(Intern.date_suppression.is_(None))
 
         if search:
             pattern = f"%{search}%"

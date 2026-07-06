@@ -2,21 +2,20 @@ import 'package:dio/dio.dart';
 
 import '../../../../../core/errors/failures.dart';
 import '../../../../../shared/models/result.dart';
-import '../../../../../shared/utils/dio_error_mapper.dart';
-import '../../domain/entities/employee.dart';
-import '../../domain/repositories/employee_repository.dart';
-import '../datasources/employee_remote_datasource.dart';
-import '../dto/create_employee_request_dto.dart';
-import '../dto/update_employee_request_dto.dart';
+import '../../domain/entities/intern.dart';
+import '../../domain/repositories/intern_repository.dart';
+import '../datasources/intern_remote_datasource.dart';
+import '../dto/create_intern_request_dto.dart';
+import '../dto/update_intern_request_dto.dart';
 
-class EmployeeRepositoryImpl implements EmployeeRepository {
-  final EmployeeRemoteDataSource _dataSource;
+class InternRepositoryImpl implements InternRepository {
+  final InternRemoteDataSource _dataSource;
 
-  EmployeeRepositoryImpl({required EmployeeRemoteDataSource dataSource})
+  InternRepositoryImpl({required InternRemoteDataSource dataSource})
       : _dataSource = dataSource;
 
   @override
-  Future<Result<PaginatedEmployees>> getEmployees({
+  Future<Result<PaginatedInterns>> getInterns({
     required int page,
     required int pageSize,
     String? search,
@@ -24,14 +23,14 @@ class EmployeeRepositoryImpl implements EmployeeRepository {
     String? order,
   }) async {
     try {
-      final response = await _dataSource.getEmployees(
+      final response = await _dataSource.getInterns(
         page: page,
         pageSize: pageSize,
         search: search,
         sort: sort,
         order: order,
       );
-      return Success(PaginatedEmployees(
+      return Success(PaginatedInterns(
         items: response.items.map((e) => e.toDomain()).toList(),
         total: response.total,
         page: response.page,
@@ -41,79 +40,93 @@ class EmployeeRepositoryImpl implements EmployeeRepository {
     } on DioException catch (e) {
       return Fail(_mapError(e));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors du chargement des employés.'));
+      return Fail(ApiFailure(message: 'Erreur lors du chargement des stagiaires.'));
     }
   }
 
   @override
-  Future<Result<Employee>> getEmployee(String uuid) async {
+  Future<Result<Intern>> getIntern(String uuid) async {
     try {
-      final dto = await _dataSource.getEmployee(uuid);
+      final dto = await _dataSource.getIntern(uuid);
       return Success(dto.toDomain());
     } on DioException catch (e) {
       return Fail(_mapError(e));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors du chargement de l\'employé.'));
+      return Fail(ApiFailure(message: 'Erreur lors du chargement du stagiaire.'));
     }
   }
 
   @override
-  Future<Result<Employee>> createEmployee({
+  Future<Result<Intern>> createIntern({
     required String nom,
     required String prenom,
     required String matricule,
+    required DateTime dateDebutStage,
+    required DateTime dateFinStage,
     String? statut,
   }) async {
     try {
-      final request = CreateEmployeeRequestDto(
+      final request = CreateInternRequestDto(
         nom: nom,
         prenom: prenom,
         matricule: matricule,
+        dateDebutStage: _formatDate(dateDebutStage),
+        dateFinStage: _formatDate(dateFinStage),
         statut: statut,
       );
-      final dto = await _dataSource.createEmployee(request);
+      final dto = await _dataSource.createIntern(request);
       return Success(dto.toDomain());
     } on DioException catch (e) {
       return Fail(_mapError(e));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors de la création de l\'employé.'));
+      return Fail(ApiFailure(message: 'Erreur lors de la création du stagiaire.'));
     }
   }
 
   @override
-  Future<Result<Employee>> updateEmployee(
+  Future<Result<Intern>> updateIntern(
     String uuid, {
     String? nom,
     String? prenom,
     String? matricule,
+    DateTime? dateDebutStage,
+    DateTime? dateFinStage,
     String? statut,
   }) async {
     try {
-      final request = UpdateEmployeeRequestDto(
+      final request = UpdateInternRequestDto(
         nom: nom,
         prenom: prenom,
         matricule: matricule,
+        dateDebutStage: dateDebutStage != null ? _formatDate(dateDebutStage) : null,
+        dateFinStage: dateFinStage != null ? _formatDate(dateFinStage) : null,
         statut: statut,
       );
-      final dto = await _dataSource.updateEmployee(uuid, request);
+      final dto = await _dataSource.updateIntern(uuid, request);
       return Success(dto.toDomain());
     } on DioException catch (e) {
       return Fail(_mapError(e));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors de la modification de l\'employé.'));
+      return Fail(ApiFailure(message: 'Erreur lors de la modification du stagiaire.'));
     }
   }
 
   @override
-  Future<Result<void>> deleteEmployee(String uuid) async {
+  Future<Result<void>> deleteIntern(String uuid) async {
     try {
-      await _dataSource.deleteEmployee(uuid);
+      await _dataSource.deleteIntern(uuid);
       return const Success(null);
     } on DioException catch (e) {
       return Fail(_mapError(e));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors de la suppression de l\'employé.'));
+      return Fail(ApiFailure(message: 'Erreur lors de la suppression du stagiaire.'));
     }
+  }
+
+  String _formatDate(DateTime dt) {
+    return '${dt.year.toString().padLeft(4, '0')}-'
+        '${dt.month.toString().padLeft(2, '0')}-'
+        '${dt.day.toString().padLeft(2, '0')}';
   }
 
   Failure _mapError(DioException e) {
@@ -135,12 +148,12 @@ class EmployeeRepositoryImpl implements EmployeeRepository {
     }
 
     if (statusCode == 404) {
-      return NotFoundFailure(message: message ?? 'Employé introuvable.');
+      return NotFoundFailure(message: message ?? 'Stagiaire introuvable.');
     }
 
     if (statusCode == 409) {
       return ApiFailure(
-        message: message ?? 'Conflit: cet employé existe déjà.',
+        message: message ?? 'Conflit: ce stagiaire existe déjà.',
         statusCode: statusCode,
       );
     }

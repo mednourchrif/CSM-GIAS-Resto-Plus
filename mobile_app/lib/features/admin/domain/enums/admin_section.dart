@@ -22,7 +22,7 @@ enum AdminSection {
       case AdminSection.employees:
         return 'La gestion des employés sera implémentée ici.';
       case AdminSection.interns:
-        return 'La gestion des stagiaires sera implémentée ici.';
+        return 'Gestion des stagiaires: inscription, suivi, et période de stage.';
       case AdminSection.visitors:
         return 'La gestion des visiteurs sera implémentée ici.';
       case AdminSection.qrCodes:

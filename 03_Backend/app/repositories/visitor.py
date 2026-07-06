@@ -34,8 +34,11 @@ class VisitorRepository(BaseRepository[Visitor]):
         page: int = 1,
         page_size: int = 20,
     ) -> tuple[list[Visitor], int]:
-        """Search visitors with pagination, sorting, and optional search."""
-        base_stmt = select(Visitor)
+        """Search visitors with pagination, sorting, and optional search.
+
+        Excludes soft-deleted visitors (date_suppression IS NULL).
+        """
+        base_stmt = select(Visitor).where(Visitor.date_suppression.is_(None))
 
         if search:
             pattern = f"%{search}%"
@@ -43,6 +46,7 @@ class VisitorRepository(BaseRepository[Visitor]):
                 or_(
                     Visitor.nom.ilike(pattern),
                     Visitor.prenom.ilike(pattern),
+                    Visitor.email.ilike(pattern),
                     Visitor.societe.ilike(pattern),
                 )
             )
