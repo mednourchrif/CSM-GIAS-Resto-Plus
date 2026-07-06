@@ -1,14 +1,17 @@
 class RegisterMealRequestDto {
-  final String token;
+  final String? token;
+  final String? userUuid;
   final String categorieUuid;
 
   const RegisterMealRequestDto({
-    required this.token,
+    this.token,
+    this.userUuid,
     required this.categorieUuid,
   });
 
   Map<String, dynamic> toJson() => {
-        'token': token,
+        if (token != null) 'token': token,
+        if (userUuid != null) 'utilisateur_uuid': userUuid,
         'categorie_uuid': categorieUuid,
       };
 }

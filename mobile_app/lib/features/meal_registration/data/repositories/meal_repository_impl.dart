@@ -15,12 +15,14 @@ class MealRepositoryImpl implements MealRepository {
 
   @override
   Future<Result<MealRegistration>> registerMeal({
-    required String qrToken,
+    String? qrToken,
+    String? userUuid,
     required String categorieUuid,
   }) async {
     try {
       final response = await _remoteDataSource.registerMeal(
         qrToken: qrToken,
+        userUuid: userUuid,
         categorieUuid: categorieUuid,
       );
       return Success(response.toDomain());
@@ -64,14 +66,7 @@ class MealRepositoryImpl implements MealRepository {
 
     if (statusCode == 400) {
       return ValidationFailure(
-        message: message ?? 'QR code invalide.',
-      );
-    }
-
-    if (statusCode == 410) {
-      return ApiFailure(
-        message: message ?? 'Ce QR code a expiré.',
-        statusCode: statusCode,
+        message: message ?? 'Requête invalide.',
       );
     }
 

@@ -11,11 +11,13 @@ class MealRemoteDataSource {
   MealRemoteDataSource({required Dio dio}) : _dio = dio;
 
   Future<RegisterMealResponseDto> registerMeal({
-    required String qrToken,
+    String? qrToken,
+    String? userUuid,
     required String categorieUuid,
   }) async {
     final request = RegisterMealRequestDto(
       token: qrToken,
+      userUuid: userUuid,
       categorieUuid: categorieUuid,
     );
 

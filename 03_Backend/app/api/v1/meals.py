@@ -96,19 +96,31 @@ async def register_meal(
     body: MealRegisterRequest,
     db: Session = Depends(get_db),
 ) -> SuccessResponse[MealRegisterResponse]:
-    """Register a meal via QR code validation.
+    """Register a meal via QR token OR direct user UUID.
 
     This is a **public** kiosk endpoint — no JWT required.
-    Authentication is performed via the QR token embedded in the
-    request body.
+    Authentication is performed via the QR token or the user UUID.
+
+    When ``utilisateur_uuid`` is provided (Face Recognition flow),
+    the meal is registered directly without QR validation.
 
     Validates:
-    * Restaurant is open (12:30–14:00)
-    * QR token is valid
-    * User has not already eaten today
+    * Restaurant is open (12:30–00:00)
     * Category exists
+    * User has not already eaten today
     """
-    meal = _service.register_by_qr(db, body.token, body.categorie_uuid, admin=None)
+    if body.token:
+        meal = _service.register_by_qr(db, body.token, body.categorie_uuid, admin=None)
+    elif body.utilisateur_uuid:
+        meal = _service.register_by_user_uuid(
+            db, body.utilisateur_uuid, body.categorie_uuid, type_identification="FACE",
+        )
+    else:
+        from fastapi import HTTPException
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Fournir 'token' (QR) ou 'utilisateur_uuid' (reconnaissance faciale).",
+        )
 
     cat_stmt = select(MealCategory).where(MealCategory.uuid == meal.categorie_uuid)
     category = db.execute(cat_stmt).scalar_one_or_none()

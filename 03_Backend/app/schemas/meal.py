@@ -20,16 +20,22 @@ class MealCategoryResponse(BaseResponse):
 
 
 class MealRegisterRequest(BaseSchema):
-    """Register a meal using a QR token.
+    """Register a meal via QR token OR direct user UUID.
 
-    Future identification methods (Face Recognition) will use a different
-    schema or call the service directly.
+    Either ``token`` (QR flow) or ``utilisateur_uuid`` (Face Recognition
+    flow) must be provided.  When both are supplied ``token`` takes
+    precedence and ``utilisateur_uuid`` is ignored.
     """
 
-    token: str = Field(
-        ...,
+    token: str | None = Field(
+        None,
         description="Raw QR token to validate and register",
         examples=["a1b2c3d4-e5f6-7890-abcd-ef1234567890"],
+    )
+    utilisateur_uuid: str | None = Field(
+        None,
+        description="Direct user UUID (Face Recognition flow, no QR needed)",
+        examples=["f47ac10b-58cc-4372-a567-0e02b2c3d479"],
     )
     categorie_uuid: str = Field(
         ...,

@@ -47,13 +47,18 @@ class MealRegistrationNotifier extends StateNotifier<MealRegistrationState> {
   MealRegistrationNotifier(this._ref) : super(const MealRegistrationState());
 
   Future<void> registerMeal({
-    required String qrToken,
+    String? qrToken,
+    String? userUuid,
     required String categorieUuid,
   }) async {
     state = state.copyWith(isLoading: true, clearError: true);
 
     final useCase = _ref.read(registerMealUseCaseProvider);
-    final result = await useCase(qrToken: qrToken, categorieUuid: categorieUuid);
+    final result = await useCase(
+      qrToken: qrToken,
+      userUuid: userUuid,
+      categorieUuid: categorieUuid,
+    );
 
     result.when(
       success: (registration) {

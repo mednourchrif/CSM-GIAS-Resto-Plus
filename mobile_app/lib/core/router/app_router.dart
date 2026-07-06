@@ -8,7 +8,7 @@ import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/identification/presentation/screens/identification_method_screen.dart';
 import '../../features/meal_registration/presentation/screens/qr_scanner_screen.dart';
-import '../../features/recognition/presentation/screens/face_placeholder_screen.dart';
+import '../../features/face_recognition/presentation/screens/face_recognition_screen.dart';
 import '../../features/recognition/presentation/screens/processing_screen.dart';
 import '../../features/recognition/presentation/screens/success_screen.dart';
 
@@ -54,7 +54,7 @@ abstract final class AppRouter {
         GoRoute(
           path: '/face',
           name: RouteNames.face,
-          builder: (context, state) => const FacePlaceholderScreen(),
+          builder: (context, state) => const FaceRecognitionScreen(),
         ),
         GoRoute(
           path: '/qr',
