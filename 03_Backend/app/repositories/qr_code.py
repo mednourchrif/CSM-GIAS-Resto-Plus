@@ -4,6 +4,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.models.qr_code import QrCode
+from app.models.user import User
 from app.repositories.base import BaseRepository
 
 
@@ -49,23 +50,42 @@ class QrCodeRepository(BaseRepository[QrCode]):
         db: Session,
         *,
         search: str | None = None,
+        type_filter: str | None = None,
+        status_filter: str | None = None,
         sort: str | None = None,
         order: str = "asc",
         page: int = 1,
         page_size: int = 20,
-    ) -> tuple[list[QrCode], int]:
-        """Search QR codes with pagination, sorting, and optional search."""
-        base_stmt = select(QrCode)
+    ) -> tuple[list[tuple[QrCode, str | None, str | None]], int]:
+        """Search QR codes with pagination, sorting, and optional search.
+
+        Joins with the ``utilisateur`` table to support searching by
+        owner name and returning owner names in results.
+
+        Returns ``(items, total)`` where each item is a tuple of
+        ``(QrCode, nom, prenom)``.
+        """
+        base_stmt = select(QrCode, User.nom, User.prenom).join(
+            User, QrCode.proprietaire_uuid == User.uuid, isouter=True
+        )
 
         if search:
             pattern = f"%{search}%"
             base_stmt = base_stmt.where(
                 or_(
-                    QrCode.proprietaire_uuid.ilike(pattern),
+                    User.nom.ilike(pattern),
+                    User.prenom.ilike(pattern),
                     QrCode.type_proprietaire.ilike(pattern),
                     QrCode.statut.ilike(pattern),
+                    QrCode.proprietaire_uuid.ilike(pattern),
                 )
             )
+
+        if type_filter:
+            base_stmt = base_stmt.where(QrCode.type_proprietaire == type_filter)
+
+        if status_filter:
+            base_stmt = base_stmt.where(QrCode.statut == status_filter)
 
         count_stmt = select(func.count()).select_from(base_stmt.subquery())
         total = db.execute(count_stmt).scalar() or 0
@@ -79,5 +99,6 @@ class QrCodeRepository(BaseRepository[QrCode]):
         offset = (page - 1) * page_size
         base_stmt = base_stmt.offset(offset).limit(page_size)
 
-        items = list(db.execute(base_stmt).scalars().all())
+        rows = db.execute(base_stmt).all()
+        items = [(row.QrCode, row.nom, row.prenom) for row in rows]
         return items, total

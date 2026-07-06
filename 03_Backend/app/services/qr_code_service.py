@@ -22,10 +22,11 @@ from app.core.exceptions import BusinessException, NotFoundException
 from app.models.admin import Admin
 from app.models.intern import Intern
 from app.models.qr_code import QrCode
-from app.models.user import StatutUtilisateur
+from app.models.user import StatutUtilisateur, User
 from app.models.visitor import Visitor
 from app.repositories.qr_code import QrCodeRepository
 from app.repositories.user import UserRepository
+from app.schemas.pagination import PaginatedResult
 from app.schemas.qr_code import QrValidationResponse, ValidationStatut
 from app.utils.date_utils import end_of_day, is_expired, now_utc
 from app.utils.qr_code import generate_qr_base64, generate_qr_image, generate_token, hash_token
@@ -280,6 +281,38 @@ class QrCodeService:
         if owner is None:
             raise NotFoundException(message=f"Utilisateur {owner_uuid} introuvable.")
         return self._qr_repo.get_history_by_owner(db, owner_uuid)
+
+    def get_list(
+        self,
+        db: Session,
+        *,
+        search: str | None = None,
+        type_filter: str | None = None,
+        status_filter: str | None = None,
+        sort: str | None = None,
+        order: str = "asc",
+        page: int = 1,
+        page_size: int = 20,
+    ) -> PaginatedResult[tuple[QrCode, str | None, str | None]]:
+        """Return a paginated list of QR codes with owner names."""
+        items, total = self._qr_repo.search_paginated(
+            db,
+            search=search,
+            type_filter=type_filter,
+            status_filter=status_filter,
+            sort=sort,
+            order=order,
+            page=page,
+            page_size=page_size,
+        )
+        total_pages = max(1, (total + page_size - 1) // page_size)
+        return PaginatedResult(
+            items=items,
+            total=total,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
+        )
 
     # ==================================================================
     # Internal helpers

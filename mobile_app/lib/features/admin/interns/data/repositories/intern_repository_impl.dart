@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../../../../../core/errors/failures.dart';
 import '../../../../../shared/models/result.dart';
+import '../../../../../shared/utils/dio_error_mapper.dart';
 import '../../domain/entities/intern.dart';
 import '../../domain/repositories/intern_repository.dart';
 import '../datasources/intern_remote_datasource.dart';
@@ -38,7 +39,7 @@ class InternRepositoryImpl implements InternRepository {
         totalPages: response.totalPages,
       ));
     } on DioException catch (e) {
-      return Fail(_mapError(e));
+      return Fail(mapDioError(e, resourceName: 'stagiaire'));
     } catch (e) {
       return Fail(ApiFailure(message: 'Erreur lors du chargement des stagiaires.'));
     }
@@ -50,7 +51,7 @@ class InternRepositoryImpl implements InternRepository {
       final dto = await _dataSource.getIntern(uuid);
       return Success(dto.toDomain());
     } on DioException catch (e) {
-      return Fail(_mapError(e));
+      return Fail(mapDioError(e, resourceName: 'stagiaire'));
     } catch (e) {
       return Fail(ApiFailure(message: 'Erreur lors du chargement du stagiaire.'));
     }
@@ -77,7 +78,7 @@ class InternRepositoryImpl implements InternRepository {
       final dto = await _dataSource.createIntern(request);
       return Success(dto.toDomain());
     } on DioException catch (e) {
-      return Fail(_mapError(e));
+      return Fail(mapDioError(e, resourceName: 'stagiaire'));
     } catch (e) {
       return Fail(ApiFailure(message: 'Erreur lors de la création du stagiaire.'));
     }
@@ -105,7 +106,7 @@ class InternRepositoryImpl implements InternRepository {
       final dto = await _dataSource.updateIntern(uuid, request);
       return Success(dto.toDomain());
     } on DioException catch (e) {
-      return Fail(_mapError(e));
+      return Fail(mapDioError(e, resourceName: 'stagiaire'));
     } catch (e) {
       return Fail(ApiFailure(message: 'Erreur lors de la modification du stagiaire.'));
     }
@@ -117,7 +118,7 @@ class InternRepositoryImpl implements InternRepository {
       await _dataSource.deleteIntern(uuid);
       return const Success(null);
     } on DioException catch (e) {
-      return Fail(_mapError(e));
+      return Fail(mapDioError(e, resourceName: 'stagiaire'));
     } catch (e) {
       return Fail(ApiFailure(message: 'Erreur lors de la suppression du stagiaire.'));
     }
@@ -127,58 +128,5 @@ class InternRepositoryImpl implements InternRepository {
     return '${dt.year.toString().padLeft(4, '0')}-'
         '${dt.month.toString().padLeft(2, '0')}-'
         '${dt.day.toString().padLeft(2, '0')}';
-  }
-
-  Failure _mapError(DioException e) {
-    final statusCode = e.response?.statusCode;
-    final data = e.response?.data;
-    final message = data is Map ? (data['message'] as String?) : null;
-
-    if (e.type == DioExceptionType.connectionError ||
-        e.type == DioExceptionType.connectionTimeout ||
-        e.type == DioExceptionType.receiveTimeout ||
-        e.type == DioExceptionType.sendTimeout) {
-      return const NetworkFailure(
-        message: 'Impossible de contacter le serveur.',
-      );
-    }
-
-    if (statusCode == 401) {
-      return const UnauthorizedFailure();
-    }
-
-    if (statusCode == 404) {
-      return NotFoundFailure(message: message ?? 'Stagiaire introuvable.');
-    }
-
-    if (statusCode == 409) {
-      return ApiFailure(
-        message: message ?? 'Conflit: ce stagiaire existe déjà.',
-        statusCode: statusCode,
-      );
-    }
-
-    if (statusCode == 422) {
-      final errors = data is Map ? data['errors'] as Map<String, dynamic>? : null;
-      return ValidationFailure(
-        message: message ?? 'Données invalides.',
-        fieldErrors: errors?.map(
-              (k, v) => MapEntry(k, v is List ? v.join(', ') : v.toString()),
-            ) ??
-            {},
-      );
-    }
-
-    if (statusCode != null && statusCode >= 500) {
-      return ServerFailure(
-        message: message ?? 'Erreur interne du serveur.',
-        statusCode: statusCode,
-      );
-    }
-
-    return ApiFailure(
-      message: message ?? 'Erreur lors de la communication avec le serveur.',
-      statusCode: statusCode,
-    );
   }
 }

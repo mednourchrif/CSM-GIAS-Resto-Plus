@@ -24,9 +24,9 @@ enum AdminSection {
       case AdminSection.interns:
         return 'Gestion des stagiaires: inscription, suivi, et période de stage.';
       case AdminSection.visitors:
-        return 'La gestion des visiteurs sera implémentée ici.';
+        return 'Gestion des visiteurs: enregistrement, suivi, et visite.';
       case AdminSection.qrCodes:
-        return 'La gestion des QR codes sera implémentée ici.';
+        return 'Gestion des QR codes: génération, révocation, et impression.';
       case AdminSection.faceEnrollment:
         return "L'inscription des visages sera implémentée ici.";
       case AdminSection.mealHistory:

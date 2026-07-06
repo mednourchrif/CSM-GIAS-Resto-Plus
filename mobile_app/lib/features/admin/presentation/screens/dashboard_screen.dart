@@ -6,6 +6,8 @@ import '../../../../core/theme/spacing.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../admin/employees/presentation/screens/employee_list_screen.dart';
 import '../../../admin/interns/presentation/screens/intern_list_screen.dart';
+import '../../../admin/qr/presentation/screens/qr_list_screen.dart';
+import '../../../admin/visitors/presentation/screens/visitor_list_screen.dart';
 import '../../domain/enums/admin_section.dart';
 import '../widgets/admin_drawer.dart';
 import '../widgets/admin_navigation_rail.dart';
@@ -53,6 +55,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       body = const EmployeeListScreen();
     } else if (_selectedIndex == 1) {
       body = const InternListScreen();
+    } else if (_selectedIndex == 2) {
+      body = const VisitorListScreen();
+    } else if (_selectedIndex == 3) {
+      body = const QrListScreen();
     } else {
       body = AdminPlaceholderScreen(section: sections[_selectedIndex]);
     }

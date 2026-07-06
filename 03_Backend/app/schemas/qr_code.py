@@ -66,6 +66,8 @@ class QrCodeResponse(BaseResponse):
     nombre_validations: int = 0
     metadata_json: str | None = None
     qr_base64: str | None = None
+    proprietaire_nom: str | None = None
+    proprietaire_prenom: str | None = None
 
 
 class QrGenerateResponse(BaseResponse):

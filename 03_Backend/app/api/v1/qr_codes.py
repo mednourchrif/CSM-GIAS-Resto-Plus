@@ -15,13 +15,14 @@ from sqlalchemy.orm import Session
 
 from app.core.dependencies import get_db
 from app.models.admin import Admin
+from app.schemas.pagination import PaginationParams
 from app.schemas.qr_code import (
     QrCodeResponse,
     QrGenerateResponse,
     QrValidateRequest,
     QrValidationResponse,
 )
-from app.schemas.response import SuccessResponse
+from app.schemas.response import PaginatedResponse, SuccessResponse
 from app.security.dependencies import require_admin, require_reception
 from app.services.qr_code_service import QrCodeService
 from app.utils.qr_code import generate_qr_base64
@@ -29,6 +30,65 @@ from app.utils.qr_code import generate_qr_base64
 router = APIRouter(prefix="/qr", tags=["qr-codes"])
 
 _service = QrCodeService()
+
+
+@router.get(
+    "",
+    summary="Lister les QR codes",
+    description=(
+        "Retourne la liste paginée des codes QR avec possibilité de "
+        "recherche, filtre par type et statut."
+    ),
+    response_model=PaginatedResponse[QrCodeResponse],
+)
+async def list_qr_codes(
+    params: PaginationParams = Depends(),
+    type: str | None = None,
+    status: str | None = None,
+    db: Session = Depends(get_db),
+    admin: Admin = Depends(require_admin),
+) -> PaginatedResponse[QrCodeResponse]:
+    """List QR codes with pagination, search, and optional filters."""
+    result = _service.get_list(
+        db,
+        search=params.search,
+        type_filter=type,
+        status_filter=status,
+        sort=params.sort,
+        order=params.order,
+        page=params.page,
+        page_size=params.page_size,
+    )
+    return PaginatedResponse(
+        success=True,
+        data=[
+            QrCodeResponse(
+                id=qr.id,
+                uuid=qr.uuid,
+                created_at=qr.created_at,
+                updated_at=qr.updated_at,
+                qr_hash=qr.qr_hash,
+                proprietaire_uuid=qr.proprietaire_uuid,
+                type_proprietaire=qr.type_proprietaire,
+                statut=qr.statut,
+                date_expiration=qr.date_expiration,
+                cree_par_uuid=qr.cree_par_uuid,
+                date_revocation=qr.date_revocation,
+                revoque_par_uuid=qr.revoque_par_uuid,
+                motif_revocation=qr.motif_revocation,
+                derniere_validation=qr.derniere_validation,
+                nombre_validations=qr.nombre_validations,
+                metadata_json=qr.metadata_json,
+                proprietaire_nom=nom,
+                proprietaire_prenom=prenom,
+            )
+            for qr, nom, prenom in result.items
+        ],
+        total=result.total,
+        page=result.page,
+        page_size=result.page_size,
+        total_pages=result.total_pages,
+    )
 
 
 @router.post(
@@ -243,6 +303,10 @@ async def get_qr(
     """
     qr = _service.get(db, uuid)
 
+    from app.repositories.user import UserRepository
+
+    owner = UserRepository().get_by_uuid(db, qr.proprietaire_uuid)
+
     return SuccessResponse(
         data=QrCodeResponse(
             id=qr.id,
@@ -262,6 +326,8 @@ async def get_qr(
             nombre_validations=qr.nombre_validations,
             metadata_json=qr.metadata_json,
             qr_base64=qr.metadata_json,
+            proprietaire_nom=owner.nom if owner else None,
+            proprietaire_prenom=owner.prenom if owner else None,
         ),
     )
 
