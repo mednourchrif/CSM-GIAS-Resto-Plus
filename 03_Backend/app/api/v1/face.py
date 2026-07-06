@@ -17,7 +17,7 @@ match — this integrates with the existing meal registration system
 without leaking face-recognition knowledge into :class:`MealService`.
 """
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, File, Form, Response, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.core.dependencies import get_db
@@ -187,3 +187,45 @@ async def delete_embedding(
     """Soft-delete a face embedding by UUID."""
     _service.delete_embedding(db, uuid)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post(
+    "/enroll-multiple",
+    summary="Enrôler avec plusieurs images",
+    description=(
+        "Enrôle une empreinte faciale à partir de plusieurs images "
+        "téléversées via multipart/form-data.  Chaque image est "
+        "analysée et la meilleure est conservée."
+    ),
+    status_code=status.HTTP_201_CREATED,
+)
+async def enroll_multiple(
+    utilisateur_uuid: str = Form(...),
+    images: list[UploadFile] = File(..., min_length=5, max_length=10),
+    db: Session = Depends(get_db),
+    admin: Admin = Depends(require_admin),
+):
+    """Enroll a face using multiple uploaded images."""
+    embeddings = []
+    for image in images:
+        content = await image.read()
+        import base64
+        mime_type = image.content_type or "image/png"
+
+        b64 = (
+            f"data:{image.content_type};base64,"
+            + base64.b64encode(content).decode("utf-8")
+        )
+        embedding, _ = _service.enroll(
+            db=db,
+            image_base64=b64,
+            user_uuid=utilisateur_uuid,
+        )
+        embeddings.append(embedding)
+    return SuccessResponse(
+        data={
+            "utilisateur_uuid": utilisateur_uuid,
+            "images_processed": len(embeddings),
+            "active_embedding_uuid": embeddings[-1].uuid,
+        },
+    )

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/theme/spacing.dart';
+import '../../../../admin/face_enrollment/presentation/providers/face_enrollment_provider.dart';
+import '../../../../admin/face_enrollment/presentation/screens/face_enrollment_screen.dart';
 import '../../domain/entities/employee.dart';
 import '../providers/employee_provider.dart';
 import '../widgets/employee_status_badge.dart';
@@ -87,6 +89,11 @@ class EmployeeDetailScreen extends ConsumerWidget {
                   label: 'Date d\'enrôlement',
                   value: _formatDate(employee.dateEnrolement!),
                 ),
+              if (employee.dateSuppression != null)
+                _DetailRow(
+                  label: 'Date de suppression',
+                  value: _formatDate(employee.dateSuppression!),
+                ),
               const SizedBox(height: Spacing.xxl),
               Row(
                 children: [
@@ -127,13 +134,17 @@ class EmployeeDetailScreen extends ConsumerWidget {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Enrôlement facial à venir.')),
-                    );
-                  },
-                  icon: const Icon(Icons.face_rounded),
-                  label: const Text('Enrôler le visage'),
+                  onPressed: () => _openFaceEnrollment(context, ref),
+                  icon: Icon(
+                    employee.isEnrolled
+                        ? Icons.face_rounded
+                        : Icons.face_retouching_natural_rounded,
+                  ),
+                  label: Text(
+                    employee.isEnrolled
+                        ? 'Mettre à jour le visage'
+                        : 'Enrôler le visage',
+                  ),
                 ),
               ),
             ],
@@ -148,6 +159,19 @@ class EmployeeDetailScreen extends ConsumerWidget {
       context: context,
       builder: (_) => EmployeeFormScreen(employee: employee),
     );
+  }
+
+  void _openFaceEnrollment(BuildContext context, WidgetRef ref) {
+    ref.read(faceEnrollmentProvider.notifier).reset();
+    Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => FaceEnrollmentScreen(employee: employee),
+      ),
+    ).then((enrolled) {
+      if (enrolled == true && context.mounted) {
+        ref.read(employeeProvider.notifier).refresh();
+      }
+    });
   }
 
   void _confirmDelete(BuildContext context, WidgetRef ref) {
