@@ -26,6 +26,9 @@ from app.models.visitor import Visitor
 # Face Recognition
 from app.models.face_embedding import FaceEmbedding
 
+# Settings
+from app.models.setting import Setting
+
 __all__ = [
     # Base
     "BaseModel",
@@ -46,4 +49,6 @@ __all__ = [
     "Visitor",
     # Face Recognition
     "FaceEmbedding",
+    # Settings
+    "Setting",
 ]

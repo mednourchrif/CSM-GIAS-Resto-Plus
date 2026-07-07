@@ -4,7 +4,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../../core/theme/colors.dart';
 import '../../../../../core/theme/spacing.dart';
+import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../shared/services/download_service.dart';
 import '../../../../../shared/services/share_service.dart';
 import '../../../../../shared/widgets/detail_row.dart';
@@ -348,16 +350,17 @@ class _FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final chipColor = selected ? (color ?? Theme.of(context).colorScheme.primary) : null;
+    final theme = Theme.of(context);
+    final chipColor = selected ? (color ?? theme.colorScheme.primary) : null;
     return FilterChip(
       label: Text(label),
       selected: selected,
       onSelected: (_) => onSelected(),
       selectedColor: chipColor?.withAlpha(25),
       checkmarkColor: chipColor,
-      labelStyle: TextStyle(
+      labelStyle: theme.textTheme.labelMedium?.copyWith(
         color: selected ? chipColor : null,
-        fontWeight: selected ? FontWeight.w600 : null,
+        fontWeight: selected ? FontWeight.bold : FontWeight.normal,
       ),
     );
   }
@@ -439,7 +442,7 @@ class _QrDetailScreenState extends ConsumerState<_QrDetailScreen> {
                 const PopupMenuItem(value: 'regenerate', child: Text('Régénérer')),
                 const PopupMenuItem(
                   value: 'revoke',
-                  child: Text('Révoquer', style: TextStyle(color: Colors.red)),
+                  child: Text('Révoquer', style: TextStyle(color: AppColors.error)),
                 ),
               ],
             ),
@@ -850,21 +853,15 @@ class _PrintPreviewScreenState extends ConsumerState<_PrintPreviewScreen> {
           padding: const EdgeInsets.all(Spacing.lg),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withAlpha(25),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
+            borderRadius: BorderRadius.circular(Spacing.radiusSm),
+            boxShadow: AppShadows.sm,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               if (qr.qrBase64 != null)
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(Spacing.radiusXs),
                   child: Image.memory(
                     base64Decode(
                       qr.qrBase64!.contains(',')
@@ -890,34 +887,31 @@ class _PrintPreviewScreenState extends ConsumerState<_PrintPreviewScreen> {
               const SizedBox(height: Spacing.md),
               Text(
                 qr.proprietaireFullName,
-                style: const TextStyle(
-                  fontSize: 16,
+                style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.black,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: Spacing.xs),
               Text(
                 qr.typeLabel,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: Colors.black87,
                 ),
               ),
               const SizedBox(height: Spacing.sm),
               Text(
                 'UUID: ${qr.uuid}',
-                style: TextStyle(
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: Colors.black54,
                   fontSize: 10,
-                  color: Colors.grey[400],
                 ),
               ),
               const SizedBox(height: Spacing.md),
               Text(
                 _formatDate(qr.dateExpiration),
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[500],
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: Colors.black54,
                 ),
               ),
             ],

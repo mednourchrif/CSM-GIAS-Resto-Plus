@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../../core/theme/spacing.dart';
+
 class MealHistoryFilters extends ConsumerStatefulWidget {
   final String? currentDateFrom;
   final String? currentDateTo;
@@ -57,7 +59,7 @@ class _MealHistoryFiltersState extends ConsumerState<MealHistoryFilters> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(Spacing.md),
       child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -67,9 +69,9 @@ class _MealHistoryFiltersState extends ConsumerState<MealHistoryFilters> {
               'Filtres',
               style: theme.textTheme.titleLarge,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: Spacing.md),
             Text('Période', style: theme.textTheme.labelLarge),
-            const SizedBox(height: 8),
+            const SizedBox(height: Spacing.sm),
             Row(
               children: [
                 Expanded(
@@ -78,9 +80,9 @@ class _MealHistoryFiltersState extends ConsumerState<MealHistoryFilters> {
                     decoration: InputDecoration(
                       labelText: 'Date début',
                       hintText: 'YYYY-MM-DD',
-                      prefixIcon: const Icon(Icons.calendar_today, size: 18),
+                      prefixIcon: const Icon(Icons.calendar_today, size: Spacing.iconSm),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(Spacing.radiusSm),
                       ),
                       isDense: true,
                     ),
@@ -88,16 +90,16 @@ class _MealHistoryFiltersState extends ConsumerState<MealHistoryFilters> {
                     onTap: () => _pickDate(_dateFromCtrl),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: Spacing.sm),
                 Expanded(
                   child: TextField(
                     controller: _dateToCtrl,
                     decoration: InputDecoration(
                       labelText: 'Date fin',
                       hintText: 'YYYY-MM-DD',
-                      prefixIcon: const Icon(Icons.calendar_today, size: 18),
+                      prefixIcon: const Icon(Icons.calendar_today, size: Spacing.iconSm),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(Spacing.radiusSm),
                       ),
                       isDense: true,
                     ),
@@ -107,9 +109,9 @@ class _MealHistoryFiltersState extends ConsumerState<MealHistoryFilters> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: Spacing.md),
             Text('Type d\'identification', style: theme.textTheme.labelLarge),
-            const SizedBox(height: 8),
+            const SizedBox(height: Spacing.sm),
             SegmentedButton<String?>(
               segments: const [
                 ButtonSegment(value: null, label: Text('Tous')),
@@ -122,9 +124,9 @@ class _MealHistoryFiltersState extends ConsumerState<MealHistoryFilters> {
               },
               showSelectedIcon: false,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: Spacing.md),
             Text('Type d\'utilisateur', style: theme.textTheme.labelLarge),
-            const SizedBox(height: 8),
+            const SizedBox(height: Spacing.sm),
             SegmentedButton<String?>(
               segments: const [
                 ButtonSegment(value: null, label: Text('Tous')),
@@ -138,7 +140,7 @@ class _MealHistoryFiltersState extends ConsumerState<MealHistoryFilters> {
               },
               showSelectedIcon: false,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: Spacing.lg),
             Row(
               children: [
                 OutlinedButton.icon(

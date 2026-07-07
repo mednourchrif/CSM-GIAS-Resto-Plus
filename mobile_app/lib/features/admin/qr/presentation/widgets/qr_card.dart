@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../core/theme/colors.dart';
 import '../../../../../core/theme/spacing.dart';
+import '../../../../../core/theme/typography.dart';
 import '../../domain/entities/qr_code.dart';
 
 class QrStatusBadge extends StatelessWidget {
@@ -11,22 +13,22 @@ class QrStatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (Color color, String label) = switch (status.toUpperCase()) {
-      'ACTIF' => (Colors.green, 'Actif'),
-      'EXPIRE' => (Colors.red, 'Expiré'),
-      'REVOQUE' => (Colors.orange, 'Révoqué'),
-      _ => (Colors.grey, status),
+      'ACTIF' => (AppColors.success, 'Actif'),
+      'EXPIRE' => (AppColors.error, 'Expiré'),
+      'REVOQUE' => (AppColors.warning, 'Révoqué'),
+      _ => (AppColors.outline, status),
     };
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: Spacing.sm, vertical: Spacing.xxs + 1),
       decoration: BoxDecoration(
         color: color.withAlpha(25),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(Spacing.radiusSm),
         border: Border.all(color: color.withAlpha(76)),
       ),
       child: Text(
         label,
-        style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w600),
+        style: AppTypography.badgeLabel.copyWith(color: color),
       ),
     );
   }
@@ -40,26 +42,26 @@ class QrTypeBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (Color color, IconData icon, String label) = switch (type.toUpperCase()) {
-      'STAGIAIRE' => (Colors.blue, Icons.school_rounded, 'Stagiaire'),
-      'VISITEUR' => (Colors.purple, Icons.group_rounded, 'Visiteur'),
-      _ => (Colors.grey, Icons.help_outline_rounded, type),
+      'STAGIAIRE' => (AppColors.info, Icons.school_rounded, 'Stagiaire'),
+      'VISITEUR' => (AppColors.tertiary, Icons.group_rounded, 'Visiteur'),
+      _ => (AppColors.outline, Icons.help_outline_rounded, type),
     };
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: Spacing.sm, vertical: Spacing.xxs + 1),
       decoration: BoxDecoration(
         color: color.withAlpha(25),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(Spacing.radiusSm),
         border: Border.all(color: color.withAlpha(76)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
+          Icon(icon, size: 11, color: color),
+          const SizedBox(width: 3),
           Text(
             label,
-            style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w600),
+            style: AppTypography.badgeLabel.copyWith(color: color),
           ),
         ],
       ),
@@ -91,7 +93,7 @@ class QrCard extends StatelessWidget {
                 child: Text(
                   '${qrCode.proprietairePrenom?[0] ?? '?'}'
                   '${qrCode.proprietaireNom?[0] ?? ''}',
-                  style: TextStyle(
+                  style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: theme.colorScheme.onPrimaryContainer,
                   ),

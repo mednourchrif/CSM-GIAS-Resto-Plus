@@ -27,7 +27,7 @@ class VisitorCard extends StatelessWidget {
                 backgroundColor: theme.colorScheme.primaryContainer,
                 child: Text(
                   '${visitor.prenom[0]}${visitor.nom[0]}',
-                  style: TextStyle(
+                  style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: theme.colorScheme.onPrimaryContainer,
                   ),

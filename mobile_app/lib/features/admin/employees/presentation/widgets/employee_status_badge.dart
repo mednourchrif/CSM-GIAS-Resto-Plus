@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../core/theme/colors.dart';
+import '../../../../../core/theme/spacing.dart';
+import '../../../../../core/theme/typography.dart';
+
 class EmployeeStatusBadge extends StatelessWidget {
   final String status;
 
@@ -8,25 +12,25 @@ class EmployeeStatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (Color color, String label) = switch (status.toUpperCase()) {
-      'ACTIF' => (Colors.green, 'Actif'),
-      'INACTIF' => (Colors.orange, 'Inactif'),
-      'SUPPRIME' => (Colors.red, 'Supprimé'),
-      'NON_ENROLE' => (Colors.grey, 'Non enrolé'),
-      'ENROLE' => (Colors.blue, 'Enrolé'),
-      'ENROLEMENT_ECHOUE' => (Colors.red, 'Échec enrôlement'),
-      _ => (Colors.grey, status),
+      'ACTIF' => (AppColors.success, 'Actif'),
+      'INACTIF' => (AppColors.warning, 'Inactif'),
+      'SUPPRIME' => (AppColors.error, 'Supprimé'),
+      'NON_ENROLE' => (AppColors.outline, 'Non enrolé'),
+      'ENROLE' => (AppColors.info, 'Enrolé'),
+      'ENROLEMENT_ECHOUE' => (AppColors.error, 'Échec enrôlement'),
+      _ => (AppColors.outline, status),
     };
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: Spacing.sm, vertical: Spacing.xxs + 1),
       decoration: BoxDecoration(
         color: color.withAlpha(25),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(Spacing.radiusSm),
         border: Border.all(color: color.withAlpha(76)),
       ),
       child: Text(
         label,
-        style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w600),
+        style: AppTypography.badgeLabel.copyWith(color: color),
       ),
     );
   }

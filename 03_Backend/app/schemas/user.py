@@ -17,6 +17,55 @@ from app.models.user import (
 from app.schemas.base import BaseResponse, BaseSchema
 
 
+class UserAdminCreate(BaseSchema):
+    """Payload for creating an admin or receptionist user."""
+
+    nom: str = Field(..., min_length=1, max_length=100)
+    prenom: str = Field(..., min_length=1, max_length=100)
+    email: str = Field(..., max_length=255)
+    mot_de_passe: str = Field(..., min_length=8, max_length=128)
+    type: TypeUtilisateur = Field(
+        ...,
+        description="ADMINISTRATEUR or RECEPTION",
+    )
+    statut: StatutUtilisateur = StatutUtilisateur.ACTIF
+    role_id: int | None = Field(None, description="FK to role table (admins only)")
+
+
+class UserAdminUpdate(BaseSchema):
+    """Payload for updating an admin or receptionist user (all fields optional)."""
+
+    nom: str | None = Field(None, min_length=1, max_length=100)
+    prenom: str | None = Field(None, min_length=1, max_length=100)
+    email: str | None = Field(None, max_length=255)
+    statut: StatutUtilisateur | None = None
+    role_id: int | None = Field(None, description="FK to role table (admins only)")
+
+
+class UserAdminPasswordReset(BaseSchema):
+    """Payload for resetting a user's password."""
+
+    mot_de_passe: str = Field(..., min_length=8, max_length=128)
+
+
+class UserAdminResponse(BaseSchema):
+    """Response schema for admin/receptionist user management."""
+
+    id: int
+    uuid: str
+    nom: str
+    prenom: str
+    email: str | None = None
+    type: str
+    statut: str
+    role_name: str | None = Field(None, description="Role name for admins")
+    derniere_connexion: datetime | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+    created_by_id: str | None = None
+    updated_by_id: str | None = None
+
+
 class UserCreate(BaseSchema):
     """Payload for creating a new user.
 

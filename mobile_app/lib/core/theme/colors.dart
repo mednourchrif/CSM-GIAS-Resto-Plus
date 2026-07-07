@@ -68,6 +68,10 @@ class AppColors {
   static const Color outlineDark = Color(0xFF8A9194);
   static const Color outlineVariantDark = Color(0xFF404749);
 
+  // ─── Outline ───────────────────────────────────────────────────────────────
+  /// Default outline color (light mode).
+  static const Color outline = outlineLight;
+
   // ─── Semantic Colors ──────────────────────────────────────────────────────
   /// Success — meal registered, active status.
   static const Color success = Color(0xFF1B8A1B);

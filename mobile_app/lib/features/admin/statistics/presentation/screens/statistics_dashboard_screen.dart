@@ -476,7 +476,7 @@ class _MealsPerDayChart extends StatelessWidget {
           leftTitles: AxisTitles(
             sideTitles: SideTitles(showTitles: true, reservedSize: 32,
                 getTitlesWidget: (v, _) =>
-                    Text('${v.toInt()}', style: const TextStyle(fontSize: 10))),
+                    Text('${v.toInt()}', style: Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 10))),
           ),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
@@ -493,7 +493,7 @@ class _MealsPerDayChart extends StatelessWidget {
                     : date;
                 return Padding(
                   padding: const EdgeInsets.only(top: 4),
-                  child: Text(label, style: const TextStyle(fontSize: 9)),
+                  child: Text(label, style: Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 9)),
                 );
               },
             ),
@@ -537,7 +537,7 @@ class _MealsPerDayChart extends StatelessWidget {
             getTooltipItems: (touchedSpots) => touchedSpots.map((s) {
               return LineTooltipItem(
                 '${s.y.toInt()} repas',
-                TextStyle(
+                Theme.of(context).textTheme.labelSmall!.copyWith(
                   color: Theme.of(context).colorScheme.onPrimary,
                   fontWeight: FontWeight.w600,
                   fontSize: 12,
@@ -582,7 +582,7 @@ class _DonutChart extends StatelessWidget {
                   color: _colors[e.key % _colors.length],
                   radius: 50,
                   title: '$pct%',
-                  titleStyle: const TextStyle(
+                  titleStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -600,7 +600,7 @@ class _DonutChart extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: items.asMap().entries.map((e) {
               return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
+                padding: const EdgeInsets.symmetric(vertical: Spacing.xxs),
                 child: Row(
                   children: [
                     Container(
@@ -615,7 +615,7 @@ class _DonutChart extends StatelessWidget {
                     Flexible(
                       child: Text(
                         '${e.value.name} (${e.value.count})',
-                        style: const TextStyle(fontSize: 12),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 12),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -654,7 +654,7 @@ class _UserTypeChart extends StatelessWidget {
       children: items.asMap().entries.map((e) {
         final ratio = maxCount > 0 ? e.value.count / maxCount : 0.0;
         return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6),
+          padding: const EdgeInsets.symmetric(vertical: Spacing.xs),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -662,16 +662,16 @@ class _UserTypeChart extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(e.value.type,
-                      style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13)),
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w500, fontSize: 13)),
                   Text('${e.value.count}',
-                      style: TextStyle(
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: _colors[e.key % _colors.length])),
                 ],
               ),
               const SizedBox(height: 4),
               ClipRRect(
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(Spacing.radiusXs),
                 child: LinearProgressIndicator(
                   value: ratio,
                   backgroundColor: Theme.of(context)
@@ -712,23 +712,23 @@ class _RegistrationMethodChart extends StatelessWidget {
         final ratio = maxCount > 0 ? e.value.count / maxCount : 0.0;
         final label = e.value.method == 'FACE' ? 'Reconnaissance faciale' : 'QR Code';
         return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(label, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13)),
+                  Text(label, style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w500, fontSize: 13)),
                   Text('${e.value.count}',
-                      style: TextStyle(
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: _colors[e.key % _colors.length])),
                 ],
               ),
               const SizedBox(height: 4),
               ClipRRect(
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(Spacing.radiusXs),
                 child: LinearProgressIndicator(
                   value: ratio,
                   backgroundColor: Theme.of(context)
@@ -773,7 +773,7 @@ class _PeakHoursChart extends StatelessWidget {
             getTooltipItem: (group, groupIndex, rod, rodIndex) =>
                 BarTooltipItem(
               '${rod.toY.toInt()} repas',
-              TextStyle(
+              Theme.of(context).textTheme.labelSmall!.copyWith(
                 color: Theme.of(context).colorScheme.onPrimary,
                 fontWeight: FontWeight.w600,
                 fontSize: 12,
@@ -791,7 +791,7 @@ class _PeakHoursChart extends StatelessWidget {
                 if (i < 0 || i >= sorted.length) return const SizedBox();
                 return Text(
                   '${sorted[i].hour}h',
-                  style: const TextStyle(fontSize: 10),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 10),
                 );
               },
               reservedSize: 28,
@@ -802,7 +802,7 @@ class _PeakHoursChart extends StatelessWidget {
               showTitles: true,
               reservedSize: 28,
               getTitlesWidget: (value, _) =>
-                  Text('${value.toInt()}', style: const TextStyle(fontSize: 10)),
+                  Text('${value.toInt()}', style: Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 10)),
             ),
           ),
           topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -826,7 +826,7 @@ class _PeakHoursChart extends StatelessWidget {
                 color: Theme.of(context).colorScheme.primary,
                 width: 20,
                 borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(4)),
+                    top: Radius.circular(Spacing.radiusXs)),
               ),
             ],
           );
@@ -849,7 +849,7 @@ class _RecentActivity extends StatelessWidget {
     if (items.isEmpty) {
       return Center(
         child: Text('Aucune activité récente',
-            style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
       );
     }
 
@@ -942,8 +942,8 @@ class _QuickActions extends StatelessWidget {
     return GridView.count(
       crossAxisCount: 2,
       childAspectRatio: 2,
-      mainAxisSpacing: 8,
-      crossAxisSpacing: 8,
+      mainAxisSpacing: Spacing.sm,
+      crossAxisSpacing: Spacing.sm,
       physics: const NeverScrollableScrollPhysics(),
       children: actions.map((a) {
         return InkWell(
@@ -988,6 +988,6 @@ class _ActionItem {
 
 Widget _emptyText(BuildContext context) => Center(
       child: Text('Aucune donnée disponible',
-          style: TextStyle(
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant)),
     );

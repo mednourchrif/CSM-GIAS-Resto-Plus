@@ -3,9 +3,9 @@
 Endpoints
 ---------
 * ``POST /api/v1/face/enroll``   — Enroll a face for a user (admin only).
-* ``POST /api/v1/face/verify``   — Verify a user by face (reception/admin).
-* ``POST /api/v1/face/identify`` — Identify a user by face (reception/admin).
-* ``GET  /api/v1/face/{uuid}``   — Get face embedding metadata (reception/admin).
+* ``POST /api/v1/face/verify``   — Verify a user by face (public — kiosk).
+* ``POST /api/v1/face/identify`` — Identify a user by face (public — kiosk).
+* ``GET  /api/v1/face/{uuid}``   — Get face embedding metadata (public — kiosk).
 * ``DELETE /api/v1/face/{uuid}`` — Soft-delete a face embedding (admin only).
 
 
@@ -32,7 +32,7 @@ from app.schemas.face import (
     FaceVerifyResponse,
 )
 from app.schemas.response import SuccessResponse
-from app.security.dependencies import require_admin, require_reception
+from app.security.dependencies import require_admin
 from app.services.face_service import FaceService
 
 router = APIRouter(prefix="/face", tags=["face"])
@@ -92,7 +92,6 @@ async def enroll(
 async def verify(
     body: FaceVerifyRequest,
     db: Session = Depends(get_db),
-    admin: Admin = Depends(require_reception),
 ) -> SuccessResponse[FaceVerifyResponse]:
     """Verify a user by comparing against their stored embedding."""
     result = _service.verify(
@@ -125,7 +124,6 @@ async def verify(
 async def identify(
     body: FaceIdentifyRequest,
     db: Session = Depends(get_db),
-    admin: Admin = Depends(require_reception),
 ) -> SuccessResponse[FaceIdentifyResponse]:
     """Identify a user by face against all stored embeddings."""
     result = _service.identify(
@@ -154,7 +152,6 @@ async def identify(
 async def get_embedding(
     uuid: str,
     db: Session = Depends(get_db),
-    admin: Admin = Depends(require_reception),
 ) -> SuccessResponse[FaceEmbeddingResponse]:
     """Get face embedding metadata by UUID."""
     embedding = _service.get_by_uuid(db, uuid)

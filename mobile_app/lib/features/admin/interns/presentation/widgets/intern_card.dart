@@ -27,7 +27,7 @@ class InternCard extends StatelessWidget {
                 backgroundColor: theme.colorScheme.primaryContainer,
                 child: Text(
                   '${intern.prenom[0]}${intern.nom[0]}',
-                  style: TextStyle(
+                  style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: theme.colorScheme.onPrimaryContainer,
                   ),

@@ -272,7 +272,7 @@ class _OverlayPainter extends CustomPainter {
         Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height)),
         Path()..addRRect(RRect.fromRectAndRadius(
           scanRect,
-          const Radius.circular(12),
+          const Radius.circular(Spacing.radiusMd),
         )),
       ),
       overlayPaint,
@@ -286,7 +286,7 @@ class _OverlayPainter extends CustomPainter {
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         scanRect,
-        const Radius.circular(12),
+        const Radius.circular(Spacing.radiusMd),
       ),
       borderPaint,
     );

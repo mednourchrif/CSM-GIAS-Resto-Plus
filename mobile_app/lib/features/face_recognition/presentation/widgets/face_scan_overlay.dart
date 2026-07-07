@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/colors.dart';
 import '../../../../core/theme/spacing.dart';
 
 class FaceScanOverlay extends StatelessWidget {
@@ -49,7 +50,7 @@ class _OverlayPainter extends CustomPainter {
     );
 
     final borderColor =
-        isDetected ? const Color(0xFF4CAF50) : Colors.white;
+        isDetected ? AppColors.success : Colors.white;
     final borderPaint = Paint()
       ..color = borderColor
       ..style = PaintingStyle.stroke

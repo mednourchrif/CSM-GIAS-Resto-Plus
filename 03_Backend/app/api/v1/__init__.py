@@ -9,7 +9,10 @@ from app.api.v1 import (
     meals,
     qr_codes,
     receptionists,
+    reports,
+    settings,
     stats,
+    users,
     visitors,
 )
 
@@ -24,3 +27,6 @@ router.include_router(qr_codes.router)
 router.include_router(face.router)
 router.include_router(meals.router)
 router.include_router(stats.router)
+router.include_router(reports.router)
+router.include_router(settings.router)
+router.include_router(users.router)

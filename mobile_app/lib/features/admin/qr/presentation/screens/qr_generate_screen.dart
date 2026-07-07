@@ -130,7 +130,7 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
                       border: Border.all(color: theme.dividerColor),
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(2),
+                      borderRadius: BorderRadius.circular(Spacing.radiusXs),
                       child: Image.memory(
                         base64Decode(
                           _generatedQrBase64!.contains(',')
@@ -157,10 +157,10 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
                   FilledButton(
                     onPressed: _selectedOwnerUuid == null || _isGenerating ? null : _generate,
                     child: _isGenerating
-                        ? const SizedBox(
+                        ? SizedBox(
                             width: 20,
                             height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            child: CircularProgressIndicator(strokeWidth: 2, color: theme.colorScheme.onPrimary),
                           )
                         : const Text('Générer'),
                   ),
@@ -196,7 +196,7 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
                 : theme.colorScheme.surfaceContainerHighest,
             child: Text(
               '${intern.prenom[0]}${intern.nom[0]}',
-              style: TextStyle(
+              style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: selected
                     ? theme.colorScheme.onPrimaryContainer
@@ -243,7 +243,7 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
                 : theme.colorScheme.surfaceContainerHighest,
             child: Text(
               '${visitor.prenom[0]}${visitor.nom[0]}',
-              style: TextStyle(
+              style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: selected
                     ? theme.colorScheme.onPrimaryContainer

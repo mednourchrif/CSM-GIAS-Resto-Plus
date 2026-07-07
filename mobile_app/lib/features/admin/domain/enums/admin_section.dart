@@ -8,6 +8,8 @@ enum AdminSection {
   faceEnrollment(Icons.face_rounded, 'Visages'),
   mealHistory(Icons.restaurant_menu_rounded, 'Repas'),
   statistics(Icons.bar_chart_rounded, 'Statistiques'),
+  reports(Icons.assessment_rounded, 'Rapports'),
+  users(Icons.admin_panel_settings_rounded, 'Utilisateurs'),
   settings(Icons.settings_rounded, 'Paramètres');
 
   final IconData icon;
@@ -33,8 +35,12 @@ enum AdminSection {
         return "L'historique des repas sera implémenté ici.";
       case AdminSection.statistics:
         return 'Statistiques et graphiques du restaurant.';
+      case AdminSection.reports:
+        return 'Rapports d\'activité du restaurant: génération et export.';
+      case AdminSection.users:
+        return 'Gestion des utilisateurs: administrateurs et réceptionnistes.';
       case AdminSection.settings:
-        return 'Les paramètres seront implémentés ici.';
+        return 'Configuration du système: restaurant, reconnaissance, QR codes, sécurité.';
     }
   }
 }

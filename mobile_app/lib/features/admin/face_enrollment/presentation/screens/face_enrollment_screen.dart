@@ -12,6 +12,7 @@ import '../../domain/entities/face_enrollment_data.dart';
 import '../providers/face_enrollment_provider.dart';
 import '../providers/face_enrollment_state.dart';
 
+import '../../../../../core/theme/colors.dart';
 import '../../../../../core/theme/spacing.dart';
 
 class FaceEnrollmentScreen extends ConsumerStatefulWidget {
@@ -409,15 +410,14 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
                 value: progress.clamp(0, 1),
                 strokeWidth: 3,
                 color: _captureCount >= _minImages
-                    ? Colors.green
+                    ? AppColors.success
                     : Colors.white,
                 backgroundColor: Colors.white24,
               ),
               Text(
                 '$_captureCount',
-                style: const TextStyle(
+                style: theme.textTheme.labelMedium?.copyWith(
                   color: Colors.white,
-                  fontSize: 12,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -465,7 +465,7 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
               Icon(
                 Icons.check_circle_rounded,
                 size: 80,
-                color: Colors.green,
+                color: AppColors.success,
               ),
               const SizedBox(height: Spacing.md),
               Text(
@@ -611,11 +611,11 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
                     const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: Colors.black54,
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(Spacing.radiusXs),
                 ),
                 child: Text(
                   '${index + 1}',
-                  style: const TextStyle(
+                  style: theme.textTheme.labelSmall?.copyWith(
                     color: Colors.white,
                     fontSize: 10,
                   ),
@@ -656,14 +656,14 @@ class _FaceOverlayPainter extends CustomPainter {
         Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height)),
         Path()..addRRect(RRect.fromRectAndRadius(
           scanRect,
-          const Radius.circular(16),
+          const Radius.circular(Spacing.radiusMd),
         )),
       ),
       overlayPaint,
     );
 
     final borderColor =
-        isDetected ? const Color(0xFF4CAF50) : Colors.white;
+        isDetected ? AppColors.success : Colors.white;
     final borderPaint = Paint()
       ..color = borderColor
       ..style = PaintingStyle.stroke
@@ -672,7 +672,7 @@ class _FaceOverlayPainter extends CustomPainter {
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         scanRect,
-        const Radius.circular(16),
+        const Radius.circular(Spacing.radiusMd),
       ),
       borderPaint,
     );

@@ -5,11 +5,14 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/spacing.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../admin/employees/presentation/screens/employee_list_screen.dart';
+import '../../../admin/reports/presentation/screens/report_screen.dart';
 import '../../domain/enums/admin_section.dart';
 import '../../../admin/interns/presentation/screens/intern_list_screen.dart';
 import '../../../admin/meals/presentation/screens/meal_history_list_screen.dart';
 import '../../../admin/qr/presentation/screens/qr_list_screen.dart';
 import '../../../admin/statistics/presentation/screens/statistics_dashboard_screen.dart';
+import '../../../admin/settings/presentation/screens/settings_screen.dart';
+import '../../../admin/users/presentation/screens/user_list_screen.dart';
 import '../../../admin/visitors/presentation/screens/visitor_list_screen.dart';
 import '../widgets/admin_drawer.dart';
 import '../widgets/admin_navigation_rail.dart';
@@ -61,6 +64,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         return const MealHistoryListScreen();
       case 6:
         return const StatisticsDashboardScreen();
+      case 7:
+        return const ReportScreen();
+      case 8:
+        return const UserListScreen();
+      case 9:
+        return const SettingsScreen();
       default:
         return AdminPlaceholderScreen(section: AdminSection.values[_selectedIndex]);
     }

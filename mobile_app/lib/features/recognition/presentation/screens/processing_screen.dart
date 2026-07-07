@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/theme/colors.dart';
 import '../../../../core/theme/spacing.dart';
 
 class ProcessingScreen extends StatefulWidget {
@@ -174,7 +175,7 @@ class _StepItem extends StatelessWidget {
     final isDone = state == _StepState.done;
 
     final color = isDone
-        ? const Color(0xFF1B8A1B)
+        ? AppColors.success
         : isActive
             ? theme.colorScheme.primary
             : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.35);

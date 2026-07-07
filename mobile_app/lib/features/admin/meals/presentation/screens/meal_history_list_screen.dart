@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../../core/theme/colors.dart';
+import '../../../../../core/theme/spacing.dart';
+import '../../../../../shared/widgets/app_dialog.dart';
 import '../../domain/entities/meal_history.dart';
 import '../providers/meal_history_provider.dart';
 import '../providers/meal_history_state.dart';
@@ -163,8 +166,8 @@ class _MealHistoryListScreenState
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 6,
+                horizontal: Spacing.md,
+                vertical: Spacing.sm,
               ),
               color: theme.colorScheme.primaryContainer,
               child: Row(
@@ -172,7 +175,7 @@ class _MealHistoryListScreenState
                   Icon(Icons.filter_alt,
                       size: 16,
                       color: theme.colorScheme.onPrimaryContainer),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: Spacing.sm),
                   Expanded(
                     child: Text(
                       'Filtres actifs',
@@ -195,7 +198,7 @@ class _MealHistoryListScreenState
               ),
             ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            padding: const EdgeInsets.fromLTRB(Spacing.md, Spacing.sm, Spacing.md, 0),
             child: TextField(
               controller: _searchController,
               onChanged: _onSearchChanged,
@@ -203,11 +206,11 @@ class _MealHistoryListScreenState
                 hintText: 'Rechercher par nom, email ou UUID...',
                 prefixIcon: const Icon(Icons.search_rounded),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(Spacing.radiusMd),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
+                  horizontal: Spacing.md,
+                  vertical: Spacing.md,
                 ),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
@@ -221,18 +224,18 @@ class _MealHistoryListScreenState
               ),
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: Spacing.xs),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
             child: MealHistoryStats(
               stats: state.stats,
               isLoading: state.isLoadingStats,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: Spacing.xs),
           if (state.totalCount > 0)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
               child: Row(
                 children: [
                   Text(
@@ -273,7 +276,7 @@ class _MealHistoryListScreenState
                 ],
               ),
             ),
-          const SizedBox(height: 4),
+          const SizedBox(height: Spacing.xs),
           Expanded(
             child: _buildBody(state, theme, isDesktop),
           ),
@@ -290,7 +293,7 @@ class _MealHistoryListScreenState
     if (state.error != null && state.meals.isEmpty) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(Spacing.xl),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -299,7 +302,7 @@ class _MealHistoryListScreenState
                 size: 64,
                 color: theme.colorScheme.error,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: Spacing.md),
               Text(
                 state.error!,
                 textAlign: TextAlign.center,
@@ -307,7 +310,7 @@ class _MealHistoryListScreenState
                   color: theme.colorScheme.error,
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: Spacing.xl),
               FilledButton(
                 onPressed: _onRefresh,
                 child: const Text('Réessayer'),
@@ -321,7 +324,7 @@ class _MealHistoryListScreenState
     if (state.meals.isEmpty) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(Spacing.xl),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -330,7 +333,7 @@ class _MealHistoryListScreenState
                 size: 64,
                 color: theme.colorScheme.onSurfaceVariant,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: Spacing.md),
               Text(
                 state.search != null
                     ? 'Aucun repas trouvé pour "${state.search}"'
@@ -359,12 +362,12 @@ class _MealHistoryListScreenState
       child: ListView.builder(
         controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
         itemCount: state.meals.length,
         itemBuilder: (context, index) {
           final meal = state.meals[index];
           return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.only(bottom: Spacing.sm),
             child: _MealCard(meal: meal, theme: theme),
           );
         },
@@ -376,7 +379,7 @@ class _MealHistoryListScreenState
     return RefreshIndicator(
       onRefresh: _onRefresh,
       child: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(Spacing.md),
         children: [
           DataTable(
             sortColumnIndex: 0,
@@ -442,18 +445,18 @@ class _MealCard extends StatelessWidget {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(Spacing.radiusMd),
         side: BorderSide(color: theme.colorScheme.outlineVariant),
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        contentPadding: const EdgeInsets.symmetric(horizontal: Spacing.md, vertical: Spacing.xs),
         leading: CircleAvatar(
           backgroundColor: meal.isFace
-              ? Colors.green.withValues(alpha: 0.15)
-              : Colors.blue.withValues(alpha: 0.15),
+              ? AppColors.success.withValues(alpha: 0.15)
+              : AppColors.info.withValues(alpha: 0.15),
           child: Icon(
             meal.isFace ? Icons.face : Icons.qr_code,
-            color: meal.isFace ? Colors.green : Colors.blue,
+            color: meal.isFace ? AppColors.success : AppColors.info,
           ),
         ),
         title: Text(
@@ -470,20 +473,20 @@ class _MealCard extends StatelessWidget {
               '${meal.dateRepas.year}',
               style: theme.textTheme.bodySmall,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: Spacing.sm),
             Text(
               meal.heureRepas,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: Spacing.sm),
             if (meal.categorieNom != null)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                padding: const EdgeInsets.symmetric(horizontal: Spacing.sm, vertical: Spacing.xs),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.secondaryContainer,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(Spacing.radiusSm),
                 ),
                 child: Text(
                   meal.categorieNom!,
@@ -518,16 +521,16 @@ class _MealDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Détail du repas')),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(Spacing.md),
         children: [
           Card(
             elevation: 0,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(Spacing.radiusMd),
               side: BorderSide(color: theme.colorScheme.outlineVariant),
             ),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(Spacing.md),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -579,7 +582,7 @@ class _MealDetailScreen extends StatelessWidget {
                   ),
                   const Divider(),
                   Wrap(
-                    spacing: 8,
+                    spacing: Spacing.sm,
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       Text(
@@ -615,7 +618,7 @@ class _DetailRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: Spacing.xs),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

@@ -60,6 +60,17 @@ from app.schemas.visitor import (
     VisitorUpdate,
 )
 
+# Settings
+from app.schemas.setting import (
+    DatabaseStatusResponse,
+    SettingResponse,
+    SettingsBatchUpdate,
+    SettingsGroupResponse,
+    SettingsResponse,
+    SettingUpdate,
+    VersionInfoResponse,
+)
+
 __all__ = [
     # Auth
     "LoginRequest",
@@ -106,4 +117,12 @@ __all__ = [
     "VisitorCreate",
     "VisitorResponse",
     "VisitorUpdate",
+    # Settings
+    "SettingResponse",
+    "SettingsBatchUpdate",
+    "SettingsGroupResponse",
+    "SettingsResponse",
+    "SettingUpdate",
+    "DatabaseStatusResponse",
+    "VersionInfoResponse",
 ]

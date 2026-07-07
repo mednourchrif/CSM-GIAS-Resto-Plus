@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../core/theme/colors.dart';
+import '../../../../../core/theme/spacing.dart';
+import '../../../../../shared/widgets/shimmer_loading.dart';
 import '../../domain/entities/meal_history.dart';
 
 class MealHistoryStats extends StatelessWidget {
@@ -13,9 +16,11 @@ class MealHistoryStats extends StatelessWidget {
     final theme = Theme.of(context);
 
     if (isLoading) {
-      return SizedBox(
-        height: 100,
-        child: Center(child: CircularProgressIndicator()),
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final crossAxisCount = constraints.maxWidth > 900 ? 6 : 3;
+          return ShimmerStatGrid(count: crossAxisCount);
+        },
       );
     }
 
@@ -32,31 +37,31 @@ class MealHistoryStats extends StatelessWidget {
         label: 'Employés',
         value: stats!.totalEmployees.toString(),
         icon: Icons.badge,
-        color: Colors.blue,
+        color: AppColors.chartColors[0],
       ),
       _StatCard(
         label: 'Stagiaires',
         value: stats!.totalInterns.toString(),
         icon: Icons.school,
-        color: Colors.orange,
+        color: AppColors.chartColors[1],
       ),
       _StatCard(
         label: 'Visiteurs',
         value: stats!.totalVisitors.toString(),
         icon: Icons.people,
-        color: Colors.purple,
+        color: AppColors.chartColors[2],
       ),
       _StatCard(
         label: 'Visage',
         value: stats!.faceRegistrations.toString(),
         icon: Icons.face,
-        color: Colors.green,
+        color: AppColors.chartColors[3],
       ),
       _StatCard(
         label: 'QR Code',
         value: stats!.qrRegistrations.toString(),
         icon: Icons.qr_code,
-        color: Colors.blue.shade700,
+        color: AppColors.chartColors[4],
       ),
     ];
 
@@ -69,8 +74,8 @@ class MealHistoryStats extends StatelessWidget {
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
             childAspectRatio: 1.5,
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
+            crossAxisSpacing: Spacing.sm,
+            mainAxisSpacing: Spacing.sm,
           ),
           itemCount: cards.length,
           itemBuilder: (_, i) => cards[i],
@@ -99,19 +104,19 @@ class _StatCard extends StatelessWidget {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(Spacing.radiusMd),
         side: BorderSide(color: theme.colorScheme.outlineVariant),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(Spacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Row(
               children: [
-                Icon(icon, size: 18, color: color),
-                const SizedBox(width: 6),
+                Icon(icon, size: Spacing.iconSm, color: color),
+                const SizedBox(width: Spacing.xs),
                 Flexible(
                   child: Text(
                     label,
