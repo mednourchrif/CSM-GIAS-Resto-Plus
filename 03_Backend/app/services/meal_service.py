@@ -16,7 +16,7 @@ hours, duplicate prevention, category validation) are enforced exactly
 once and never duplicated in future modules.
 """
 
-from datetime import UTC, datetime, time
+from datetime import UTC, date, datetime, time
 
 from loguru import logger
 from sqlalchemy import select
@@ -28,6 +28,7 @@ from app.models.meal import Meal
 from app.models.meal_category import MealCategory
 from app.repositories.meal import MealRepository
 from app.repositories.user import UserRepository
+from app.repositories.meal import MealStats
 from app.schemas.pagination import PaginatedResult, PaginationParams
 from app.services.qr_code_service import QrCodeService
 from app.utils.date_utils import today_utc
@@ -239,8 +240,18 @@ class MealService:
             raise NotFoundException(message=f"Utilisateur {user_uuid} introuvable.")
         return self._meal_repo.get_history_by_user(db, user_uuid)
 
-    def get_list(self, db: Session, params: PaginationParams) -> PaginatedResult[Meal]:
-        """List meals with pagination, sorting, and search."""
+    def get_list(
+        self,
+        db: Session,
+        params: PaginationParams,
+        *,
+        date_from: date | None = None,
+        date_to: date | None = None,
+        categorie_uuid: str | None = None,
+        type_identification: str | None = None,
+        user_type: str | None = None,
+    ) -> PaginatedResult[Meal]:
+        """List meals with pagination, sorting, search, and filters."""
         items, total = self._meal_repo.search_paginated(
             db,
             search=params.search,
@@ -248,6 +259,11 @@ class MealService:
             order=params.order,
             page=params.page,
             page_size=params.page_size,
+            date_from=date_from,
+            date_to=date_to,
+            categorie_uuid=categorie_uuid,
+            type_identification=type_identification,
+            user_type=user_type,
         )
         total_pages = max(1, (total + params.page_size - 1) // params.page_size)
         return PaginatedResult(
@@ -257,6 +273,16 @@ class MealService:
             page_size=params.page_size,
             total_pages=total_pages,
         )
+
+    def get_stats(
+        self,
+        db: Session,
+        *,
+        date_from: date | None = None,
+        date_to: date | None = None,
+    ) -> MealStats:
+        """Get meal statistics for a date range."""
+        return self._meal_repo.get_stats(db, date_from=date_from, date_to=date_to)
 
     # ==================================================================
     # Category helpers

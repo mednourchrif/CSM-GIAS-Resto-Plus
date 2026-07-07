@@ -15,8 +15,6 @@ final loggerProvider = Provider<Logger>((ref) {
       errorMethodCount: 5,
       lineLength: 120,
       colors: true,
-      printEmojis: false,
-      dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,
     ),
   );
 });
@@ -72,3 +70,4 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     },
   );
 });
+

@@ -8,6 +8,8 @@ All other endpoints (list, today, history, detail) remain protected by
 admin authentication.
 """
 
+from datetime import date
+
 from fastapi import APIRouter, Depends, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -22,7 +24,7 @@ from app.schemas.meal import (
     MealRegisterResponse,
     MealResponse,
 )
-from app.schemas.pagination import PaginationParams
+from app.schemas.pagination import MealFilterParams, PaginationParams
 from app.schemas.response import PaginatedResponse, SuccessResponse
 from app.security.dependencies import require_admin
 from app.services.meal_service import MealService
@@ -146,16 +148,28 @@ async def register_meal(
 @router.get(
     "",
     summary="Lister les repas",
-    description="Retourne la liste paginée des repas avec possibilité de tri et recherche.",
+    description=(
+        "Retourne la liste paginée des repas avec filtres. "
+        "Paramètres de filtre : date_from, date_to, categorie_uuid, "
+        "type_identification (QR|FACE), user_type (EMPLOYE|STAGIAIRE|VISITEUR)."
+    ),
     response_model=PaginatedResponse[MealResponse],
 )
 async def list_meals(
-    params: PaginationParams = Depends(),
+    params: MealFilterParams = Depends(),
     db: Session = Depends(get_db),
     admin: Admin = Depends(require_admin),
 ) -> PaginatedResponse[MealResponse]:
-    """List meals with pagination, sorting, and search."""
-    result = _service.get_list(db, params)
+    """List meals with pagination, filters, and search."""
+    result = _service.get_list(
+        db,
+        params,
+        date_from=params.date_from,
+        date_to=params.date_to,
+        categorie_uuid=params.categorie_uuid,
+        type_identification=params.type_identification,
+        user_type=params.user_type,
+    )
     return PaginatedResponse(
         success=True,
         data=[_enrich_meal_response(m, db) for m in result.items],
@@ -164,6 +178,29 @@ async def list_meals(
         page_size=result.page_size,
         total_pages=result.total_pages,
     )
+
+
+@router.get(
+    "/stats",
+    summary="Statistiques des repas",
+    description="Retourne les statistiques des repas pour une période.",
+)
+async def get_meal_stats(
+    date_from: date | None = None,
+    date_to: date | None = None,
+    db: Session = Depends(get_db),
+    admin: Admin = Depends(require_admin),
+) -> SuccessResponse:
+    """Get meal statistics for a date range."""
+    stats = _service.get_stats(db, date_from=date_from, date_to=date_to)
+    return SuccessResponse(data={
+        "total_meals": stats.total_meals,
+        "total_employees": stats.total_employees,
+        "total_interns": stats.total_interns,
+        "total_visitors": stats.total_visitors,
+        "face_registrations": stats.face_registrations,
+        "qr_registrations": stats.qr_registrations,
+    })
 
 
 @router.get(
