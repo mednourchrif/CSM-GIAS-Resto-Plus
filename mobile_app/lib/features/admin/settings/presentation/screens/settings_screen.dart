@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -8,11 +10,22 @@ import '../widgets/maintenance_section.dart';
 import '../widgets/settings_group_card.dart';
 import '../widgets/version_card.dart';
 
-class SettingsScreen extends ConsumerWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() => ref.read(settingsProvider.notifier).loadSettings());
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(settingsProvider);
     final theme = Theme.of(context);
 
@@ -53,11 +66,11 @@ class SettingsScreen extends ConsumerWidget {
             ),
         ],
       ),
-      body: _buildBody(context, theme, state, ref),
+      body: _buildBody(context, theme, state),
     );
   }
 
-  Widget _buildBody(BuildContext context, ThemeData theme, SettingsState state, WidgetRef ref) {
+  Widget _buildBody(BuildContext context, ThemeData theme, SettingsState state) {
     if (state.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -84,11 +97,10 @@ class SettingsScreen extends ConsumerWidget {
       );
     }
 
-    if (state.settings == null) {
+    final settings = state.settings;
+    if (settings == null) {
       return const Center(child: Text('Aucun paramètre disponible.'));
     }
-
-    final settings = state.settings!;
 
     return RefreshIndicator(
       onRefresh: () => ref.read(settingsProvider.notifier).loadSettings(),
