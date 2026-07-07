@@ -32,7 +32,7 @@ enum AdminSection {
       case AdminSection.mealHistory:
         return "L'historique des repas sera implémenté ici.";
       case AdminSection.statistics:
-        return 'Les statistiques seront implémentées ici.';
+        return 'Statistiques et graphiques du restaurant.';
       case AdminSection.settings:
         return 'Les paramètres seront implémentés ici.';
     }
