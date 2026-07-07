@@ -4,7 +4,10 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../../core/theme/colors.dart';
 import '../../../../../core/theme/spacing.dart';
+import '../../../../../shared/widgets/error_state.dart';
+import '../../../../../shared/widgets/shimmer_loading.dart';
 import '../../domain/entities/dashboard_stats.dart';
 import '../providers/statistics_provider.dart';
 import '../providers/statistics_state.dart';
@@ -47,28 +50,24 @@ class _StatisticsDashboardScreenState
 
   Widget _buildBody(StatisticsState state, ThemeData theme, bool isDesktop) {
     if (state.isLoading && state.stats == null) {
-      return const Center(child: CircularProgressIndicator());
+      return SingleChildScrollView(
+        padding: const EdgeInsets.all(Spacing.md),
+        child: Column(
+          children: [
+            const ShimmerStatGrid(count: 10),
+            const SizedBox(height: Spacing.md),
+            ShimmerCard(height: isDesktop ? 320 : 280),
+            ShimmerCard(height: 280),
+          ],
+        ),
+      );
     }
 
     if (state.error != null && state.stats == null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(Spacing.lg),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline_rounded,
-                  size: 64, color: theme.colorScheme.error),
-              const SizedBox(height: Spacing.md),
-              Text(state.error!,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodyLarge
-                      ?.copyWith(color: theme.colorScheme.error)),
-              const SizedBox(height: Spacing.lg),
-              FilledButton(onPressed: _onRefresh, child: const Text('Réessayer')),
-            ],
-          ),
-        ),
+      return ErrorState(
+        message: state.error!,
+        icon: Icons.bar_chart_outlined,
+        onRetry: _onRefresh,
       );
     }
 
@@ -260,62 +259,62 @@ class _OverviewCards extends StatelessWidget {
       _StatCard(
         label: 'Repas aujourd\'hui',
         value: stats.mealsToday.toString(),
-        icon: Icons.today,
-        color: Colors.green,
+        icon: Icons.today_rounded,
+        color: AppColors.success,
       ),
       _StatCard(
         label: 'Cette semaine',
         value: stats.mealsThisWeek.toString(),
-        icon: Icons.calendar_view_week,
-        color: Colors.teal,
+        icon: Icons.calendar_view_week_rounded,
+        color: AppColors.primary,
       ),
       _StatCard(
         label: 'Ce mois',
         value: stats.mealsThisMonth.toString(),
-        icon: Icons.calendar_month,
-        color: Colors.blue,
+        icon: Icons.calendar_month_rounded,
+        color: AppColors.info,
       ),
       _StatCard(
         label: 'Employés',
         value: stats.employees.toString(),
-        icon: Icons.badge,
-        color: Colors.indigo,
+        icon: Icons.badge_rounded,
+        color: AppColors.tertiary,
       ),
       _StatCard(
         label: 'Stagiaires',
         value: stats.interns.toString(),
-        icon: Icons.school,
-        color: Colors.orange,
+        icon: Icons.school_rounded,
+        color: AppColors.warning,
       ),
       _StatCard(
         label: 'Visiteurs',
         value: stats.visitors.toString(),
-        icon: Icons.people,
-        color: Colors.purple,
+        icon: Icons.people_rounded,
+        color: const Color(0xFF7B1FA2),
       ),
       _StatCard(
         label: 'QR aujourd\'hui',
         value: stats.qrToday.toString(),
-        icon: Icons.qr_code,
-        color: Colors.blue.shade700,
+        icon: Icons.qr_code_rounded,
+        color: AppColors.info,
       ),
       _StatCard(
         label: 'Visage aujourd\'hui',
         value: stats.faceToday.toString(),
-        icon: Icons.face,
-        color: Colors.green.shade700,
+        icon: Icons.face_rounded,
+        color: AppColors.success,
       ),
       _StatCard(
         label: 'QR codes actifs',
         value: stats.activeQrCodes.toString(),
-        icon: Icons.check_circle,
-        color: Colors.green,
+        icon: Icons.check_circle_rounded,
+        color: AppColors.success,
       ),
       _StatCard(
         label: 'QR codes expirés',
         value: stats.expiredQrCodes.toString(),
-        icon: Icons.timer_off,
-        color: Colors.red,
+        icon: Icons.timer_off_rounded,
+        color: AppColors.error,
       ),
     ];
 
@@ -359,11 +358,6 @@ class _StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(Spacing.radiusMd),
-        side: BorderSide(color: theme.colorScheme.outlineVariant),
-      ),
       child: Padding(
         padding: const EdgeInsets.all(Spacing.sm),
         child: Column(
@@ -372,24 +366,38 @@ class _StatCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(icon, size: 16, color: color),
-                const SizedBox(width: 4),
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(Spacing.radiusSm),
+                  ),
+                  child: Icon(icon, size: 15, color: color),
+                ),
+                const SizedBox(width: Spacing.xs),
                 Flexible(
-                  child: Text(label,
-                      style: theme.textTheme.labelSmall
-                          ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                      overflow: TextOverflow.ellipsis),
+                  child: Text(
+                    label,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
             const Spacer(),
             TweenAnimationBuilder<int>(
               tween: IntTween(begin: 0, end: int.tryParse(value) ?? 0),
-              duration: const Duration(milliseconds: 800),
+              duration: AppDurations.slowest,
+              curve: Curves.easeOutCubic,
               builder: (_, v, __) => Text(
                 v.toString(),
-                style: theme.textTheme.headlineSmall
-                    ?.copyWith(fontWeight: FontWeight.bold, color: color),
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: color,
+                ),
               ),
             ),
           ],
@@ -551,13 +559,7 @@ class _DonutChart extends StatelessWidget {
   final List<MealDistributionItem> items;
   const _DonutChart({required this.items});
 
-  static const _colors = [
-    Color(0xFF4CAF50),
-    Color(0xFFFF9800),
-    Color(0xFF2196F3),
-    Color(0xFF9C27B0),
-    Color(0xFFF44336),
-  ];
+  static final _colors = AppColors.chartColors;
 
   @override
   Widget build(BuildContext context) {
@@ -636,11 +638,7 @@ class _UserTypeChart extends StatelessWidget {
   final List<UserTypeDistributionItem> items;
   const _UserTypeChart({required this.items});
 
-  static const _colors = [
-    Color(0xFF4CAF50),
-    Color(0xFFFF9800),
-    Color(0xFF2196F3),
-  ];
+  static final _colors = AppColors.chartColors.take(3).toList();
 
   @override
   Widget build(BuildContext context) {
@@ -699,7 +697,7 @@ class _RegistrationMethodChart extends StatelessWidget {
   final List<RegistrationMethodItem> items;
   const _RegistrationMethodChart({required this.items});
 
-  static const _colors = [Color(0xFF2196F3), Color(0xFF4CAF50)];
+  static final _colors = [AppColors.info, AppColors.success];
 
   @override
   Widget build(BuildContext context) {
@@ -862,41 +860,56 @@ class _RecentActivity extends StatelessWidget {
         final item = items[index];
         final theme = Theme.of(context);
         final isFace = item.typeIdentification == 'FACE';
+        final methodColor = isFace ? AppColors.success : AppColors.info;
         return ListTile(
           dense: true,
-          contentPadding: EdgeInsets.zero,
-          leading: CircleAvatar(
-            radius: 16,
-            backgroundColor: isFace
-                ? Colors.green.withValues(alpha: 0.15)
-                : Colors.blue.withValues(alpha: 0.15),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: Spacing.xs,
+            vertical: Spacing.xxs,
+          ),
+          leading: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: methodColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(Spacing.radiusSm),
+            ),
             child: Icon(
-              isFace ? Icons.face : Icons.qr_code,
-              size: 16,
-              color: isFace ? Colors.green : Colors.blue,
+              isFace ? Icons.face_rounded : Icons.qr_code_rounded,
+              size: Spacing.iconSm,
+              color: methodColor,
             ),
           ),
           title: Text(
             item.displayName.isNotEmpty ? item.displayName : item.utilisateurUuid,
-            style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.onSurface,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           subtitle: Text(
             '${item.categorieNom ?? "Repas"} • ${item.heureRepas.length >= 19 ? item.heureRepas.substring(11, 19) : item.heureRepas}',
             style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant),
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
           trailing: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            padding: const EdgeInsets.symmetric(
+              horizontal: Spacing.xs + 2,
+              vertical: Spacing.xxs + 1,
+            ),
             decoration: BoxDecoration(
-              color: (isFace ? Colors.green : Colors.blue).withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(8),
+              color: methodColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(Spacing.radiusSm),
+              border: Border.all(color: methodColor.withValues(alpha: 0.3)),
             ),
             child: Text(
               isFace ? 'Visage' : 'QR',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: isFace ? Colors.green.shade700 : Colors.blue.shade700,
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: methodColor,
               ),
             ),
           ),

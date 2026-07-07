@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/theme/spacing.dart';
+import '../../../../../shared/widgets/empty_state.dart';
+import '../../../../../shared/widgets/error_state.dart';
+import '../../../../../shared/widgets/shimmer_loading.dart';
 import '../../../../../shared/widgets/status_badge.dart';
 import '../../domain/entities/visitor.dart';
 import '../providers/visitor_provider.dart';
@@ -141,72 +144,28 @@ class _VisitorListScreenState extends ConsumerState<VisitorListScreen> {
 
   Widget _buildBody(VisitorState state, ThemeData theme, bool isDesktop) {
     if (state.isLoading && state.visitors.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return isDesktop ? const ShimmerDataTable() : const ShimmerList();
     }
 
     if (state.error != null && state.visitors.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(Spacing.lg),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.error_outline_rounded,
-                size: 64,
-                color: theme.colorScheme.error,
-              ),
-              const SizedBox(height: Spacing.md),
-              Text(
-                state.error!,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: theme.colorScheme.error,
-                ),
-              ),
-              const SizedBox(height: Spacing.lg),
-              FilledButton(
-                onPressed: _onRefresh,
-                child: const Text('Réessayer'),
-              ),
-            ],
-          ),
-        ),
-      );
+      return ErrorState(message: state.error!, onRetry: _onRefresh);
     }
 
     if (state.visitors.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(Spacing.lg),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.group_outlined,
-                size: 64,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(height: Spacing.md),
-              Text(
-                state.searchQuery.isNotEmpty
-                    ? 'Aucun visiteur trouvé pour "${state.searchQuery}"'
-                    : 'Aucun visiteur',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-        ),
+      return EmptyState(
+        icon: Icons.group_outlined,
+        title: state.searchQuery.isNotEmpty
+            ? 'Aucun résultat pour "${state.searchQuery}"'
+            : 'Aucun visiteur',
+        subtitle: state.searchQuery.isEmpty
+            ? 'Ajoutez un visiteur pour commencer.'
+            : null,
+        actionLabel: state.searchQuery.isEmpty ? 'Ajouter' : null,
+        onAction: state.searchQuery.isEmpty ? _showCreateDialog : null,
       );
     }
 
-    if (isDesktop) {
-      return _buildDataTable(state, theme);
-    }
-
+    if (isDesktop) return _buildDataTable(state, theme);
     return _buildCardList(state);
   }
 

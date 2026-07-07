@@ -34,6 +34,12 @@ dependencies:
   # Platform detection
   universal_platform: ^1.1.0
 
+  # Typography
+  google_fonts: ^6.2.1
+
+  # Loading skeletons
+  shimmer: ^3.0.0
+
   # QR Scanning
   mobile_scanner: ^5.2.3
 

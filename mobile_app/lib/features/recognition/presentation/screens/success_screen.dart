@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/theme/colors.dart';
 import '../../../../core/theme/spacing.dart';
+import '../../../../core/theme/app_shadows.dart';
 import '../../../home/presentation/providers/selection_providers.dart';
 import '../../../meal_registration/presentation/providers/meal_registration_provider.dart';
 
@@ -14,32 +16,59 @@ class SuccessScreen extends ConsumerStatefulWidget {
 }
 
 class _SuccessScreenState extends ConsumerState<SuccessScreen>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _scaleAnim;
-  late final Animation<double> _opacityAnim;
+    with TickerProviderStateMixin {
+  late final AnimationController _checkController;
+  late final AnimationController _contentController;
+  late final AnimationController _countdownController;
+
+  late final Animation<double> _checkScale;
+  late final Animation<double> _ringExpand;
+  late final Animation<double> _contentOpacity;
+  late final Animation<Offset> _contentSlide;
+  late final Animation<double> _countdown;
+
+  static const _redirectDelay = AppDurations.successRedirect;
 
   @override
   void initState() {
     super.initState();
 
-    _controller = AnimationController(
+    _checkController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 600),
+      duration: const Duration(milliseconds: 700),
+    );
+    _contentController = AnimationController(
+      vsync: this,
+      duration: AppDurations.slow,
+    );
+    _countdownController = AnimationController(
+      vsync: this,
+      duration: _redirectDelay,
     );
 
-    _scaleAnim = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.elasticOut,
+    _checkScale = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _checkController, curve: AppCurves.bounce),
+    );
+    _ringExpand = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _checkController, curve: AppCurves.enter),
+    );
+    _contentOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _contentController, curve: AppCurves.enter),
+    );
+    _contentSlide = Tween<Offset>(
+      begin: const Offset(0, 20),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _contentController, curve: AppCurves.enter),
+    );
+    _countdown = Tween<double>(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(parent: _countdownController, curve: Curves.linear),
     );
 
-    _opacityAnim = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.3, 0.8)),
-    );
+    _checkController.forward().then((_) => _contentController.forward());
+    _countdownController.forward();
 
-    _controller.forward();
-
-    Future.delayed(const Duration(seconds: 3), () {
+    Future.delayed(_redirectDelay, () {
       if (!mounted) return;
       ref.read(selectedMealProvider.notifier).state = null;
       ref.read(selectedCategoryUuidProvider.notifier).state = null;
@@ -51,7 +80,9 @@ class _SuccessScreenState extends ConsumerState<SuccessScreen>
 
   @override
   void dispose() {
-    _controller.dispose();
+    _checkController.dispose();
+    _contentController.dispose();
+    _countdownController.dispose();
     super.dispose();
   }
 
@@ -76,99 +107,215 @@ class _SuccessScreenState extends ConsumerState<SuccessScreen>
     final method = registration?.identificationMethod;
 
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: Spacing.lg,
-              vertical: Spacing.xl,
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                AnimatedBuilder(
-                  animation: _scaleAnim,
-                  builder: (context, child) => Transform.scale(
-                    scale: _scaleAnim.value,
-                    child: child,
-                  ),
-                  child: Icon(
-                    Icons.check_circle_rounded,
-                    size: 96,
-                    color: Colors.green,
-                  ),
-                ),
-                const SizedBox(height: Spacing.lg),
-                AnimatedBuilder(
-                  animation: _opacityAnim,
-                  builder: (context, child) => Opacity(
-                    opacity: _opacityAnim.value,
-                    child: child,
-                  ),
-                  child: Column(
-                    children: [
-                      if (userName != null) ...[
-                        Text(
-                          'Bienvenue,',
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.onSurface,
-                          ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppColors.successContainer.withValues(alpha: 0.3),
+              theme.colorScheme.surface,
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: Spacing.xl,
+                vertical: Spacing.xl,
+              ),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                    maxWidth: Spacing.maxContentWidthNarrow),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Animated check icon
+                    AnimatedBuilder(
+                      animation: _checkController,
+                      builder: (context, child) {
+                        return Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            // Expanding ring
+                            Transform.scale(
+                              scale: _ringExpand.value * 1.4,
+                              child: Opacity(
+                                opacity: (1 - _ringExpand.value).clamp(0, 1),
+                                child: Container(
+                                  width: 120,
+                                  height: 120,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: AppColors.success
+                                          .withValues(alpha: 0.4),
+                                      width: 3,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            // Check icon
+                            Transform.scale(
+                              scale: _checkScale.value,
+                              child: child,
+                            ),
+                          ],
+                        );
+                      },
+                      child: Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: AppColors.success,
+                          shape: BoxShape.circle,
+                          boxShadow: AppShadows.successGlow,
                         ),
-                        const SizedBox(height: Spacing.xs),
-                        Text(
-                          userName,
-                          style: theme.textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.onSurface,
-                          ),
+                        child: const Icon(
+                          Icons.check_rounded,
+                          size: 56,
+                          color: Colors.white,
                         ),
-                        const SizedBox(height: Spacing.lg),
-                      ],
-                      Text(
-                        mealLabel != null
-                            ? 'Votre repas "$mealLabel" a été enregistré avec succès.'
-                            : 'Votre repas a été enregistré avec succès.',
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          color: theme.colorScheme.onSurface,
-                        ),
-                        textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: Spacing.md),
-                      Text(
-                        'Bon appétit !',
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: theme.colorScheme.primary,
-                        ),
-                      ),
-                      if (method != null) ...[
-                        const SizedBox(height: Spacing.lg),
-                        Text(
-                          'Identification : ${_identificationLabel(method)}',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                const SizedBox(height: Spacing.xxl),
-                AnimatedBuilder(
-                  animation: _opacityAnim,
-                  builder: (context, child) => Opacity(
-                    opacity: _opacityAnim.value,
-                    child: child,
-                  ),
-                  child: Text(
-                    'Retour à l\'accueil...',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
                     ),
-                  ),
+
+                    const SizedBox(height: Spacing.xl),
+
+                    // Content section
+                    AnimatedBuilder(
+                      animation: _contentController,
+                      builder: (context, child) => FadeTransition(
+                        opacity: _contentOpacity,
+                        child: Transform.translate(
+                          offset: _contentSlide.value,
+                          child: child,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          if (userName != null) ...[
+                            Text(
+                              'Bienvenue,',
+                              style: theme.textTheme.headlineSmall?.copyWith(
+                                color: theme.colorScheme.onSurface,
+                              ),
+                            ),
+                            const SizedBox(height: Spacing.xs),
+                            Text(
+                              userName,
+                              style: theme.textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.success,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: Spacing.lg),
+                          ],
+
+                          // Meal confirmation card
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(Spacing.lg),
+                            decoration: BoxDecoration(
+                              color: AppColors.successContainer
+                                  .withValues(alpha: 0.5),
+                              borderRadius:
+                                  BorderRadius.circular(Spacing.radiusLg),
+                              border: Border.all(
+                                color:
+                                    AppColors.success.withValues(alpha: 0.3),
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.restaurant_menu_rounded,
+                                  color: AppColors.success,
+                                  size: Spacing.iconMd,
+                                ),
+                                const SizedBox(height: Spacing.xs),
+                                Text(
+                                  mealLabel != null
+                                      ? 'Repas "$mealLabel" enregistré !'
+                                      : 'Repas enregistré avec succès !',
+                                  style:
+                                      theme.textTheme.titleMedium?.copyWith(
+                                    color: AppColors.onSuccessContainer,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: Spacing.xs),
+                                Text(
+                                  'Bon appétit ! 🎉',
+                                  style: theme.textTheme.bodyLarge?.copyWith(
+                                    color: theme.colorScheme.primary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          if (method != null) ...[
+                            const SizedBox(height: Spacing.md),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  method.toLowerCase() == 'qr'
+                                      ? Icons.qr_code_rounded
+                                      : Icons.face_rounded,
+                                  size: Spacing.iconXs + 2,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: Spacing.xs),
+                                Text(
+                                  'Identifié via ${_identificationLabel(method)}',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: Spacing.xxl),
+
+                    // Countdown indicator
+                    AnimatedBuilder(
+                      animation: _countdownController,
+                      builder: (context, _) => Column(
+                        children: [
+                          ClipRRect(
+                            borderRadius:
+                                BorderRadius.circular(Spacing.radiusFull),
+                            child: LinearProgressIndicator(
+                              value: _countdown.value,
+                              minHeight: 4,
+                              color: AppColors.success,
+                              backgroundColor:
+                                  AppColors.success.withValues(alpha: 0.15),
+                            ),
+                          ),
+                          const SizedBox(height: Spacing.xs),
+                          Text(
+                            'Retour à l\'accueil...',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),

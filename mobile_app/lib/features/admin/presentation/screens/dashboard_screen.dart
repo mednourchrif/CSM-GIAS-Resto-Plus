@@ -27,10 +27,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   void _onDestinationSelected(int index) {
     setState(() => _selectedIndex = index);
-    Navigator.of(context).maybePop();
   }
 
-  void _onLogout() async {
+  Future<void> _onLogout() async {
     await ref.read(authStateProvider.notifier).logout();
     if (!mounted) return;
     context.go('/login');
@@ -38,45 +37,49 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   bool get _isOnDashboard => _selectedIndex == -1;
 
+  String get _currentTitle {
+    if (_isOnDashboard) return 'Tableau de bord';
+    return AdminSection.values[_selectedIndex].label;
+  }
+
+  Widget get _body {
+    if (_isOnDashboard) {
+      return StatisticsDashboardScreen(
+        onSectionTap: (index) => setState(() => _selectedIndex = index),
+      );
+    }
+    switch (_selectedIndex) {
+      case 0:
+        return const EmployeeListScreen();
+      case 1:
+        return const InternListScreen();
+      case 2:
+        return const VisitorListScreen();
+      case 3:
+        return const QrListScreen();
+      case 5:
+        return const MealHistoryListScreen();
+      case 6:
+        return const StatisticsDashboardScreen();
+      default:
+        return AdminPlaceholderScreen(section: AdminSection.values[_selectedIndex]);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
     final theme = Theme.of(context);
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isDesktop = screenWidth >= 900;
-    final isMobile = screenWidth < 600;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isDesktop = screenWidth >= Spacing.tabletBreakpoint;
+    final isMobile = screenWidth < Spacing.mobileBreakpoint;
 
     final adminName = authState.user?.fullName ?? 'Administrateur';
-
-    Widget body;
-    if (_isOnDashboard) {
-      body = StatisticsDashboardScreen(
-        onSectionTap: (index) {
-          setState(() => _selectedIndex = index);
-        },
-      );
-    } else if (_selectedIndex == 0) {
-      body = const EmployeeListScreen();
-    } else if (_selectedIndex == 1) {
-      body = const InternListScreen();
-    } else if (_selectedIndex == 2) {
-      body = const VisitorListScreen();
-    } else if (_selectedIndex == 3) {
-      body = const QrListScreen();
-    } else if (_selectedIndex == 5) {
-      body = const MealHistoryListScreen();
-    } else if (_selectedIndex == 6) {
-      body = const StatisticsDashboardScreen();
-    } else {
-      body = AdminPlaceholderScreen(section: AdminSection.values[_selectedIndex]);
-    }
 
     if (isMobile) {
       return Scaffold(
         appBar: AppBar(
-          title: Text(
-            _isOnDashboard ? 'Tableau de bord' : AdminSection.values[_selectedIndex].label,
-          ),
+          title: Text(_currentTitle),
           actions: [
             IconButton(
               icon: const Icon(Icons.logout_rounded),
@@ -90,10 +93,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           onDestinationSelected: _onDestinationSelected,
           onLogout: _onLogout,
         ),
-        body: body,
+        body: _body,
       );
     }
 
+    // ── Tablet / Desktop layout with navigation rail ─────────────────────────
     return Scaffold(
       body: SafeArea(
         child: Row(
@@ -104,53 +108,108 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               onDestinationSelected: (index) {
                 setState(() => _selectedIndex = index - 1);
               },
+              extended: screenWidth >= Spacing.desktopBreakpoint,
             ),
-            const VerticalDivider(width: 1),
+
             Expanded(
               child: Column(
                 children: [
+                  // ── Top bar ──────────────────────────────────────────────
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: Spacing.lg,
-                      vertical: Spacing.sm,
+                      vertical: Spacing.sm + 2,
                     ),
                     decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
                       border: Border(
                         bottom: BorderSide(
-                          color: theme.dividerColor,
+                          color: theme.colorScheme.outlineVariant,
+                          width: 1,
                         ),
                       ),
                     ),
                     child: Row(
                       children: [
-                        Icon(
-                          Icons.person_rounded,
-                          size: 20,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: Spacing.sm),
-                        Text(
-                          adminName,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
+                        // Breadcrumb
+                        if (!_isOnDashboard) ...[
+                          InkWell(
+                            onTap: () => setState(() => _selectedIndex = -1),
+                            borderRadius: BorderRadius.circular(Spacing.radiusXs),
+                            child: Text(
+                              'Tableau de bord',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.primary,
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: Spacing.xs,
+                            ),
+                            child: Icon(
+                              Icons.chevron_right_rounded,
+                              size: Spacing.iconXs + 2,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                        Expanded(
+                          child: Text(
+                            _currentTitle,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const Spacer(),
-                        FilledButton.tonalIcon(
+                        // Admin info
+                        Icon(
+                          Icons.account_circle_rounded,
+                          size: Spacing.iconSm,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: Spacing.xs),
+                        Text(
+                          adminName,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(width: Spacing.md),
+                        FilledButton.tonal(
                           onPressed: _onLogout,
-                          icon: const Icon(Icons.logout_rounded, size: 18),
-                          label: const Text('Déconnexion'),
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size(0, 36),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: Spacing.md,
+                              vertical: Spacing.xs,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.logout_rounded, size: 16),
+                              const SizedBox(width: Spacing.xs),
+                              const Text('Déconnexion'),
+                            ],
+                          ),
                         ),
                       ],
                     ),
                   ),
+
+                  // ── Body ─────────────────────────────────────────────────
                   Expanded(
                     child: isDesktop
                         ? Padding(
                             padding: const EdgeInsets.all(Spacing.lg),
-                            child: body,
+                            child: _body,
                           )
-                        : body,
+                        : _body,
                   ),
                 ],
               ),
@@ -160,5 +219,4 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       ),
     );
   }
-
 }

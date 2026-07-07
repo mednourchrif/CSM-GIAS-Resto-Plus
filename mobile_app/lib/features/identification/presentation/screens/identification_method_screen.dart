@@ -13,57 +13,103 @@ class IdentificationMethodScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedMethod = ref.watch(selectedIdentificationProvider);
     final theme = Theme.of(context);
+    final isDesktop = MediaQuery.sizeOf(context).width >= Spacing.tabletBreakpoint;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Choix du mode d\'identification')),
+      appBar: AppBar(title: const Text('Mode d\'identification')),
       body: SafeArea(
         child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: Spacing.lg,
-              vertical: Spacing.xl,
-            ),
-            child: Column(
-              children: [
-                const Spacer(),
-                Text(
-                  'Comment souhaitez-vous vous identifier ?',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: Spacing.maxContentWidthMedium),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: Spacing.lg,
+                vertical: Spacing.xl,
+              ),
+              child: Column(
+                children: [
+                  const Spacer(),
+                  // Title
+                  Text(
+                    'Comment souhaitez-vous\nvous identifier ?',
+                    style: (isDesktop
+                            ? theme.textTheme.headlineSmall
+                            : theme.textTheme.titleLarge)
+                        ?.copyWith(fontWeight: FontWeight.w700),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: Spacing.xxl),
-                _MethodCard(
-                  method: IdentificationMethod.face,
-                  icon: Icons.face_rounded,
-                  isSelected: selectedMethod == IdentificationMethod.face,
-                ),
-                const SizedBox(height: Spacing.md),
-                _MethodCard(
-                  method: IdentificationMethod.qr,
-                  icon: Icons.qr_code_scanner_rounded,
-                  isSelected: selectedMethod == IdentificationMethod.qr,
-                ),
-                const Spacer(),
-                SizedBox(
-                  width: 280,
-                  height: 52,
-                  child: FilledButton(
-                    onPressed:
-                        selectedMethod != null
-                            ? () {
-                              final route = selectedMethod == IdentificationMethod.face
-                                  ? '/face'
-                                  : '/qr';
+                  const SizedBox(height: Spacing.xs),
+                  Text(
+                    'Choisissez votre méthode d\'identification préférée',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: Spacing.xxl),
+
+                  // Method cards — side by side on wide screens
+                  if (isDesktop)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _MethodCard(
+                            method: IdentificationMethod.face,
+                            icon: Icons.face_rounded,
+                            isSelected:
+                                selectedMethod == IdentificationMethod.face,
+                          ),
+                        ),
+                        const SizedBox(width: Spacing.md),
+                        Expanded(
+                          child: _MethodCard(
+                            method: IdentificationMethod.qr,
+                            icon: Icons.qr_code_scanner_rounded,
+                            isSelected:
+                                selectedMethod == IdentificationMethod.qr,
+                          ),
+                        ),
+                      ],
+                    )
+                  else ...[
+                    _MethodCard(
+                      method: IdentificationMethod.face,
+                      icon: Icons.face_rounded,
+                      isSelected:
+                          selectedMethod == IdentificationMethod.face,
+                    ),
+                    const SizedBox(height: Spacing.md),
+                    _MethodCard(
+                      method: IdentificationMethod.qr,
+                      icon: Icons.qr_code_scanner_rounded,
+                      isSelected:
+                          selectedMethod == IdentificationMethod.qr,
+                    ),
+                  ],
+
+                  const Spacer(),
+
+                  // Continue button
+                  SizedBox(
+                    width: 300,
+                    height: Spacing.minTouchTarget + 4,
+                    child: FilledButton.icon(
+                      onPressed: selectedMethod != null
+                          ? () {
+                              final route =
+                                  selectedMethod == IdentificationMethod.face
+                                      ? '/face'
+                                      : '/qr';
                               context.push(route);
                             }
-                            : null,
-                    child: const Text('Continuer'),
+                          : null,
+                      icon: const Icon(Icons.arrow_forward_rounded),
+                      label: const Text('Continuer'),
+                    ),
                   ),
-                ),
-                const SizedBox(height: Spacing.lg),
-              ],
+                  const SizedBox(height: Spacing.lg),
+                ],
+              ),
             ),
           ),
         ),
@@ -71,6 +117,8 @@ class IdentificationMethodScreen extends ConsumerWidget {
     );
   }
 }
+
+// ─── Method Card ─────────────────────────────────────────────────────────────
 
 class _MethodCard extends ConsumerWidget {
   final IdentificationMethod method;
@@ -86,79 +134,149 @@ class _MethodCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-
-    final bgColor = isSelected
-        ? theme.colorScheme.primaryContainer
-        : theme.colorScheme.surface;
-    final borderColor = isSelected
-        ? theme.colorScheme.primary
-        : theme.colorScheme.outlineVariant;
-    final elevation = isSelected ? 4.0 : 2.0;
+    final isDesktop = MediaQuery.sizeOf(context).width >= Spacing.tabletBreakpoint;
 
     return AnimatedScale(
       scale: isSelected ? 1.02 : 1.0,
-      duration: const Duration(milliseconds: 200),
-      child: SizedBox(
-        width: double.infinity,
-        child: Card(
-          clipBehavior: Clip.antiAlias,
-          elevation: elevation,
-          color: bgColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(Spacing.radiusLg),
-            side: BorderSide(color: borderColor, width: isSelected ? 2 : 1),
+      duration: AppDurations.fast,
+      child: AnimatedContainer(
+        duration: AppDurations.fast,
+        decoration: BoxDecoration(
+          color: isSelected
+              ? theme.colorScheme.primaryContainer
+              : theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(Spacing.radiusLg),
+          border: Border.all(
+            color: isSelected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.outlineVariant,
+            width: isSelected ? 2.0 : 1.0,
           ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  )
+                ]
+              : [],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(Spacing.radiusLg),
           child: InkWell(
             onTap: () {
               ref.read(selectedIdentificationProvider.notifier).state = method;
             },
             borderRadius: BorderRadius.circular(Spacing.radiusLg),
-            hoverColor: theme.colorScheme.primaryContainer.withAlpha(60),
+            splashColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+            highlightColor: theme.colorScheme.primary.withValues(alpha: 0.05),
             child: Semantics(
               button: true,
               label: method.label,
               selected: isSelected,
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: Spacing.xl,
-                  horizontal: Spacing.lg,
-                ),
-                child: Row(
-                  children: [
-                    Icon(icon, size: 40, color: theme.colorScheme.primary),
-                    const SizedBox(width: Spacing.md),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            method.label,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.onSurface,
-                            ),
-                          ),
-                          const SizedBox(height: Spacing.xxs),
-                          Text(
-                            method.subtitle,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (isSelected)
-                      Icon(
-                        Icons.check_circle_rounded,
-                        color: theme.colorScheme.primary,
-                      ),
-                  ],
-                ),
+                padding: EdgeInsets.all(isDesktop ? Spacing.xl : Spacing.lg),
+                child: isDesktop
+                    ? _buildVertical(theme)
+                    : _buildHorizontal(theme),
               ),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildVertical(ThemeData theme) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _iconContainer(theme, size: 64),
+        const SizedBox(height: Spacing.md),
+        Text(
+          method.label,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: isSelected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurface,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: Spacing.xxs),
+        Text(
+          method.subtitle,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        if (isSelected) ...[
+          const SizedBox(height: Spacing.md),
+          Icon(Icons.check_circle_rounded,
+              color: theme.colorScheme.primary, size: Spacing.iconSm),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildHorizontal(ThemeData theme) {
+    return Row(
+      children: [
+        _iconContainer(theme, size: 52),
+        const SizedBox(width: Spacing.md),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                method.label,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: isSelected
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: Spacing.xxs),
+              Text(
+                method.subtitle,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (isSelected)
+          Padding(
+            padding: const EdgeInsets.only(left: Spacing.sm),
+            child: Icon(Icons.check_circle_rounded,
+                color: theme.colorScheme.primary),
+          ),
+      ],
+    );
+  }
+
+  Widget _iconContainer(ThemeData theme, {required double size}) {
+    return AnimatedContainer(
+      duration: AppDurations.fast,
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: isSelected
+            ? theme.colorScheme.primary
+            : theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(Spacing.radiusMd),
+      ),
+      child: Icon(
+        icon,
+        size: size * 0.55,
+        color: isSelected
+            ? theme.colorScheme.onPrimary
+            : theme.colorScheme.primary,
       ),
     );
   }

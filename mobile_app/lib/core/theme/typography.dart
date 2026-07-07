@@ -1,97 +1,147 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
+/// Typography system for CSM-GIAS Resto+.
+///
+/// Uses Inter as the primary typeface — a highly legible, enterprise-grade
+/// sans-serif optimized for screen rendering and UI interfaces.
 class AppTypography {
   AppTypography._();
 
-  static const String _fontFamily = '';
-
   static TextTheme get textTheme {
-    const family = _fontFamily;
-    return const TextTheme(
-      displayLarge: TextStyle(
+    return TextTheme(
+      // ── Display ──────────────────────────────────────────────────────────
+      displayLarge: GoogleFonts.inter(
         fontSize: 57,
         fontWeight: FontWeight.w400,
         letterSpacing: -0.25,
-        fontFamily: family,
+        height: 1.12,
       ),
-      displayMedium: TextStyle(
+      displayMedium: GoogleFonts.inter(
         fontSize: 45,
         fontWeight: FontWeight.w400,
-        fontFamily: family,
+        height: 1.16,
       ),
-      displaySmall: TextStyle(
+      displaySmall: GoogleFonts.inter(
         fontSize: 36,
         fontWeight: FontWeight.w400,
-        fontFamily: family,
+        height: 1.22,
       ),
-      headlineLarge: TextStyle(
+
+      // ── Headline ─────────────────────────────────────────────────────────
+      headlineLarge: GoogleFonts.inter(
         fontSize: 32,
-        fontWeight: FontWeight.w600,
-        fontFamily: family,
+        fontWeight: FontWeight.w700,
+        height: 1.25,
       ),
-      headlineMedium: TextStyle(
+      headlineMedium: GoogleFonts.inter(
         fontSize: 28,
-        fontWeight: FontWeight.w600,
-        fontFamily: family,
+        fontWeight: FontWeight.w700,
+        height: 1.29,
       ),
-      headlineSmall: TextStyle(
+      headlineSmall: GoogleFonts.inter(
         fontSize: 24,
         fontWeight: FontWeight.w600,
-        fontFamily: family,
+        height: 1.33,
       ),
-      titleLarge: TextStyle(
+
+      // ── Title ────────────────────────────────────────────────────────────
+      titleLarge: GoogleFonts.inter(
         fontSize: 22,
-        fontWeight: FontWeight.w500,
-        fontFamily: family,
+        fontWeight: FontWeight.w600,
+        height: 1.27,
       ),
-      titleMedium: TextStyle(
+      titleMedium: GoogleFonts.inter(
         fontSize: 16,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w600,
         letterSpacing: 0.15,
-        fontFamily: family,
+        height: 1.5,
       ),
-      titleSmall: TextStyle(
+      titleSmall: GoogleFonts.inter(
         fontSize: 14,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w600,
         letterSpacing: 0.1,
-        fontFamily: family,
+        height: 1.43,
       ),
-      labelLarge: TextStyle(
+
+      // ── Label ────────────────────────────────────────────────────────────
+      labelLarge: GoogleFonts.inter(
         fontSize: 14,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w600,
         letterSpacing: 0.1,
-        fontFamily: family,
+        height: 1.43,
       ),
-      labelMedium: TextStyle(
+      labelMedium: GoogleFonts.inter(
         fontSize: 12,
         fontWeight: FontWeight.w500,
         letterSpacing: 0.5,
-        fontFamily: family,
+        height: 1.33,
       ),
-      labelSmall: TextStyle(
+      labelSmall: GoogleFonts.inter(
         fontSize: 11,
         fontWeight: FontWeight.w500,
         letterSpacing: 0.5,
-        fontFamily: family,
+        height: 1.45,
       ),
-      bodyLarge: TextStyle(
+
+      // ── Body ─────────────────────────────────────────────────────────────
+      bodyLarge: GoogleFonts.inter(
         fontSize: 16,
         fontWeight: FontWeight.w400,
-        letterSpacing: 0.5,
-        fontFamily: family,
+        letterSpacing: 0.15,
+        height: 1.5,
       ),
-      bodyMedium: TextStyle(
+      bodyMedium: GoogleFonts.inter(
         fontSize: 14,
         fontWeight: FontWeight.w400,
         letterSpacing: 0.25,
-        fontFamily: family,
+        height: 1.43,
       ),
-      bodySmall: TextStyle(
+      bodySmall: GoogleFonts.inter(
         fontSize: 12,
         fontWeight: FontWeight.w400,
         letterSpacing: 0.4,
-        fontFamily: family,
+        height: 1.33,
       ),
     );
   }
+
+  // ── Semantic Convenience Getters ──────────────────────────────────────────
+
+  /// Large numeric value displayed on stat cards.
+  static TextStyle get statValue => GoogleFonts.inter(
+        fontSize: 28,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.5,
+        height: 1.0,
+      );
+
+  /// Compact numeric value on smaller stat cards.
+  static TextStyle get statValueSmall => GoogleFonts.inter(
+        fontSize: 22,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.25,
+        height: 1.0,
+      );
+
+  /// Label on a badge / chip.
+  static TextStyle get badgeLabel => GoogleFonts.inter(
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.4,
+      );
+
+  /// Monospace-like style for UUIDs / codes.
+  static TextStyle get monoCode => GoogleFonts.jetBrainsMono(
+        fontSize: 12,
+        fontWeight: FontWeight.w400,
+        letterSpacing: 0.0,
+      );
+
+  /// Button label style — matched to labelLarge.
+  static TextStyle get buttonLabel => GoogleFonts.inter(
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.1,
+      );
 }
