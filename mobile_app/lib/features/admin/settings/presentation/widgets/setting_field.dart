@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -103,19 +105,50 @@ class SettingField extends StatelessWidget {
           ),
         );
       case 'select':
-        return DropdownButtonFormField<String>(
-          value: currentValue,
+        final options = setting.options ?? [];
+        if (currentValue.startsWith('[')) {
+          final selected = (jsonDecode(currentValue) as List)
+              .map((e) => e.toString())
+              .toSet();
+          return Wrap(
+            spacing: 6,
+            runSpacing: 4,
+            children: options.map((opt) {
+              final isSelected = selected.contains(opt);
+              return FilterChip(
+                label: Text(_optionLabel(opt), style: const TextStyle(fontSize: 12)),
+                selected: isSelected,
+                onSelected: (sel) {
+                  final updated = Set<String>.from(selected);
+                  sel ? updated.add(opt) : updated.remove(opt);
+                  final sorted = updated.toList()..sort();
+                  onChanged('[${sorted.join(',')}]');
+                },
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
+              );
+            }).toList(),
+          );
+        }
+        return InputDecorator(
           decoration: const InputDecoration(
             isDense: true,
             contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             border: OutlineInputBorder(),
           ),
-          items: (setting.options ?? []).map((opt) {
-            return DropdownMenuItem(value: opt, child: Text(_optionLabel(opt)));
-          }).toList(),
-          onChanged: (v) {
-            if (v != null) onChanged(v);
-          },
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: currentValue,
+              isDense: true,
+              isExpanded: true,
+              items: options.map((opt) {
+                return DropdownMenuItem(value: opt, child: Text(_optionLabel(opt)));
+              }).toList(),
+              onChanged: (v) {
+                if (v != null) onChanged(v);
+              },
+            ),
+          ),
         );
       case 'number':
         return TextFormField(

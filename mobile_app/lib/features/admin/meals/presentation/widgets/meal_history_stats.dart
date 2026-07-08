@@ -73,7 +73,7 @@ class MealHistoryStats extends StatelessWidget {
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
-            childAspectRatio: 1.5,
+            mainAxisExtent: 145,
             crossAxisSpacing: Spacing.sm,
             mainAxisSpacing: Spacing.sm,
           ),
@@ -110,8 +110,8 @@ class _StatCard extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(Spacing.md),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Row(
               children: [
@@ -128,7 +128,6 @@ class _StatCard extends StatelessWidget {
                 ),
               ],
             ),
-            const Spacer(),
             Text(
               value,
               style: theme.textTheme.headlineSmall?.copyWith(

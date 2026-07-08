@@ -20,46 +20,58 @@ class VisitorCard extends StatelessWidget {
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(Spacing.md),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CircleAvatar(
-                radius: 24,
-                backgroundColor: theme.colorScheme.primaryContainer,
-                child: Text(
-                  '${visitor.prenom[0]}${visitor.nom[0]}',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.onPrimaryContainer,
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 24,
+                    backgroundColor: theme.colorScheme.primaryContainer,
+                    child: Text(
+                      '${visitor.prenom[0]}${visitor.nom[0]}',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onPrimaryContainer,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(width: Spacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
+                  const SizedBox(width: Spacing.md),
+                  Expanded(
+                    child: Text(
                       visitor.fullName,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 2),
+                  ),
+                  const SizedBox(width: Spacing.xs),
+                  StatusBadge(status: visitor.statut),
+                  const SizedBox(width: Spacing.xs),
+                  Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant),
+                ],
+              ),
+              const SizedBox(height: Spacing.xxs),
+              Wrap(
+                spacing: Spacing.sm,
+                children: [
+                  if (visitor.societe != null)
                     Text(
-                      [
-                        if (visitor.societe != null) visitor.societe!,
-                        visitor.formattedDate,
-                      ].join(' • '),
+                      visitor.societe!,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
-                  ],
-                ),
+                  Text(
+                    visitor.formattedDate,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
-              StatusBadge(status: visitor.statut),
-              const SizedBox(width: Spacing.sm),
-              Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant),
             ],
           ),
         ),

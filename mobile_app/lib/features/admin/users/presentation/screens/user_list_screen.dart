@@ -264,43 +264,46 @@ class _UserListScreenState extends ConsumerState<UserListScreen> {
             ),
           ),
           const SizedBox(height: Spacing.sm),
-          Row(
-            children: [
-              _FilterChip(
-                label: 'Tous',
-                selected: _typeFilter == null,
-                onSelected: () {
-                  setState(() => _typeFilter = null);
-                  ref.read(adminUserProvider.notifier).setTypeFilter(null);
-                },
-              ),
-              const SizedBox(width: Spacing.xs),
-              _FilterChip(
-                label: 'Administrateurs',
-                selected: _typeFilter == 'ADMINISTRATEUR',
-                onSelected: () {
-                  setState(() => _typeFilter = 'ADMINISTRATEUR');
-                  ref.read(adminUserProvider.notifier).setTypeFilter('ADMINISTRATEUR');
-                },
-              ),
-              const SizedBox(width: Spacing.xs),
-              _FilterChip(
-                label: 'Réceptionnistes',
-                selected: _typeFilter == 'RECEPTION',
-                onSelected: () {
-                  setState(() => _typeFilter = 'RECEPTION');
-                  ref.read(adminUserProvider.notifier).setTypeFilter('RECEPTION');
-                },
-              ),
-              const Spacer(),
-              _StatusFilterDropdown(
-                value: _statusFilter,
-                onChanged: (v) {
-                  setState(() => _statusFilter = v);
-                  ref.read(adminUserProvider.notifier).setStatutFilter(v);
-                },
-              ),
-            ],
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _FilterChip(
+                  label: 'Tous',
+                  selected: _typeFilter == null,
+                  onSelected: () {
+                    setState(() => _typeFilter = null);
+                    ref.read(adminUserProvider.notifier).setTypeFilter(null);
+                  },
+                ),
+                const SizedBox(width: Spacing.xs),
+                _FilterChip(
+                  label: 'Administrateurs',
+                  selected: _typeFilter == 'ADMINISTRATEUR',
+                  onSelected: () {
+                    setState(() => _typeFilter = 'ADMINISTRATEUR');
+                    ref.read(adminUserProvider.notifier).setTypeFilter('ADMINISTRATEUR');
+                  },
+                ),
+                const SizedBox(width: Spacing.xs),
+                _FilterChip(
+                  label: 'Réceptionnistes',
+                  selected: _typeFilter == 'RECEPTION',
+                  onSelected: () {
+                    setState(() => _typeFilter = 'RECEPTION');
+                    ref.read(adminUserProvider.notifier).setTypeFilter('RECEPTION');
+                  },
+                ),
+                const SizedBox(width: Spacing.md),
+                _StatusFilterDropdown(
+                  value: _statusFilter,
+                  onChanged: (v) {
+                    setState(() => _statusFilter = v);
+                    ref.read(adminUserProvider.notifier).setStatutFilter(v);
+                  },
+                ),
+              ],
+            ),
           ),
         ],
       ),
