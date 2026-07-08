@@ -30,8 +30,11 @@ from app.repositories.meal import MealRepository
 from app.repositories.user import UserRepository
 from app.repositories.meal import MealStats
 from app.schemas.pagination import PaginatedResult, PaginationParams
+from app.services.audit_service import AuditLogService
 from app.services.qr_code_service import QrCodeService
 from app.utils.date_utils import today_utc
+
+_audit_service = AuditLogService()
 
 # ---------------------------------------------------------------------------
 # Business constants
@@ -216,6 +219,18 @@ class MealService:
                 "type": type_identification,
             },
         )
+
+        user = self._user_repo.get_by_uuid(db, user_uuid)
+        user_name = f"{user.prenom} {user.nom}" if user else user_uuid
+
+        _audit_service.log_meal_registered(
+            db,
+            employee_uuid=user_uuid,
+            employee_name=user_name,
+            meal_type=category.nom if category else "",
+            recognition_method=type_identification,
+        )
+
         return meal
 
     # ==================================================================

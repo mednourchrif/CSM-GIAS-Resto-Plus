@@ -12,11 +12,13 @@ from app.schemas.pagination import PaginationParams
 from app.schemas.response import PaginatedResponse, SuccessResponse
 from app.schemas.visitor import VisitorCreate, VisitorResponse, VisitorUpdate
 from app.security.dependencies import require_admin
+from app.services.audit_service import AuditLogService
 from app.services.visitor_service import VisitorService
 
 router = APIRouter(prefix="/visitors", tags=["visitors"])
 
 _service = VisitorService()
+_audit = AuditLogService()
 
 
 @router.get(
@@ -72,6 +74,11 @@ async def create_visitor(
 ) -> SuccessResponse[VisitorResponse]:
     """Create a new visitor."""
     visitor = _service.create(db, body, admin)
+    _audit.log_visitor_created(
+        db, admin=admin,
+        visitor_uuid=visitor.uuid,
+        visitor_name=f"{visitor.prenom} {visitor.nom}",
+    )
     return SuccessResponse(data=VisitorResponse.model_validate(visitor))
 
 
@@ -89,6 +96,11 @@ async def update_visitor(
 ) -> SuccessResponse[VisitorResponse]:
     """Replace a visitor's data."""
     visitor = _service.update(db, uuid, body, admin)
+    _audit.log_visitor_updated(
+        db, admin=admin,
+        visitor_uuid=uuid,
+        visitor_name=f"{visitor.prenom} {visitor.nom}",
+    )
     return SuccessResponse(data=VisitorResponse.model_validate(visitor))
 
 
@@ -106,6 +118,11 @@ async def patch_visitor(
 ) -> SuccessResponse[VisitorResponse]:
     """Partially update a visitor."""
     visitor = _service.update(db, uuid, body, admin)
+    _audit.log_visitor_updated(
+        db, admin=admin,
+        visitor_uuid=uuid,
+        visitor_name=f"{visitor.prenom} {visitor.nom}",
+    )
     return SuccessResponse(data=VisitorResponse.model_validate(visitor))
 
 
@@ -121,5 +138,12 @@ async def delete_visitor(
     admin: Admin = Depends(require_admin),
 ) -> Response:
     """Soft-delete a visitor."""
+    visitor = _service.get(db, uuid)
+    visitor_name = f"{visitor.prenom} {visitor.nom}"
     _service.delete(db, uuid, admin)
+    _audit.log_visitor_deleted(
+        db, admin=admin,
+        visitor_uuid=uuid,
+        visitor_name=visitor_name,
+    )
     return Response(status_code=status.HTTP_204_NO_CONTENT)

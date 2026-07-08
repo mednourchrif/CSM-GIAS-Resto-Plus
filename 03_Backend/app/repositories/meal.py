@@ -58,12 +58,16 @@ class MealRepository(BaseRepository[Meal]):
         )
         return list(db.execute(stmt).scalars().all())
 
-    def get_history_by_user(self, db: Session, user_uuid: str) -> list[Meal]:
+    def get_history_by_user(
+        self, db: Session, user_uuid: str, limit: int | None = None
+    ) -> list[Meal]:
         stmt = (
             select(Meal)
             .where(Meal.utilisateur_uuid == user_uuid)
             .order_by(Meal.date_repas.desc(), Meal.heure_repas.desc())
         )
+        if limit is not None:
+            stmt = stmt.limit(limit)
         return list(db.execute(stmt).scalars().all())
 
     def search_paginated(

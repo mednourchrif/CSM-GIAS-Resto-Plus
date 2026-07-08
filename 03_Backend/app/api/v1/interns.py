@@ -12,11 +12,13 @@ from app.schemas.intern import InternCreate, InternResponse, InternUpdate
 from app.schemas.pagination import PaginationParams
 from app.schemas.response import PaginatedResponse, SuccessResponse
 from app.security.dependencies import require_admin
+from app.services.audit_service import AuditLogService
 from app.services.intern_service import InternService
 
 router = APIRouter(prefix="/interns", tags=["interns"])
 
 _service = InternService()
+_audit = AuditLogService()
 
 
 @router.get(
@@ -72,6 +74,11 @@ async def create_intern(
 ) -> SuccessResponse[InternResponse]:
     """Create a new intern."""
     intern = _service.create(db, body, admin)
+    _audit.log_intern_created(
+        db, admin=admin,
+        intern_uuid=intern.uuid,
+        intern_name=f"{intern.prenom} {intern.nom}",
+    )
     return SuccessResponse(data=InternResponse.model_validate(intern))
 
 
@@ -89,6 +96,11 @@ async def update_intern(
 ) -> SuccessResponse[InternResponse]:
     """Replace an intern's data."""
     intern = _service.update(db, uuid, body, admin)
+    _audit.log_intern_updated(
+        db, admin=admin,
+        intern_uuid=uuid,
+        intern_name=f"{intern.prenom} {intern.nom}",
+    )
     return SuccessResponse(data=InternResponse.model_validate(intern))
 
 
@@ -106,6 +118,11 @@ async def patch_intern(
 ) -> SuccessResponse[InternResponse]:
     """Partially update an intern."""
     intern = _service.update(db, uuid, body, admin)
+    _audit.log_intern_updated(
+        db, admin=admin,
+        intern_uuid=uuid,
+        intern_name=f"{intern.prenom} {intern.nom}",
+    )
     return SuccessResponse(data=InternResponse.model_validate(intern))
 
 
@@ -121,5 +138,12 @@ async def delete_intern(
     admin: Admin = Depends(require_admin),
 ) -> Response:
     """Soft-delete an intern."""
+    intern = _service.get(db, uuid)
+    intern_name = f"{intern.prenom} {intern.nom}"
     _service.delete(db, uuid, admin)
+    _audit.log_intern_deleted(
+        db, admin=admin,
+        intern_uuid=uuid,
+        intern_name=intern_name,
+    )
     return Response(status_code=status.HTTP_204_NO_CONTENT)

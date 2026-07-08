@@ -1,16 +1,34 @@
 """Employee service — business logic for employee management."""
 
+from datetime import date
+
+from dataclasses import dataclass
+
 from loguru import logger
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import ConflictException, NotFoundException
 from app.models.admin import Admin
 from app.models.employee import Employee
+from app.models.meal import Meal
 from app.repositories.employee import EmployeeRepository
+from app.repositories.face_repository import FaceEmbeddingRepository
+from app.repositories.meal import MealRepository
+from app.repositories.qr_code import QrCodeRepository
 from app.repositories.user import UserRepository
 from app.schemas.employee import EmployeeCreate, EmployeeUpdate
 from app.schemas.pagination import PaginatedResult, PaginationParams
 from app.utils.password import hash_password
+
+
+@dataclass
+class EmployeeDetail:
+    """Rich employee detail returned by :meth:`get_detail`."""
+    employee: Employee
+    today_meal: Meal | None
+    last_meals: list[Meal]
+    face_enrolled: bool
+    qr_generated: bool
 
 
 class EmployeeService:
@@ -20,9 +38,15 @@ class EmployeeService:
         self,
         employee_repo: EmployeeRepository | None = None,
         user_repo: UserRepository | None = None,
+        meal_repo: MealRepository | None = None,
+        face_repo: FaceEmbeddingRepository | None = None,
+        qr_repo: QrCodeRepository | None = None,
     ) -> None:
         self._employee_repo = employee_repo or EmployeeRepository()
         self._user_repo = user_repo or UserRepository()
+        self._meal_repo = meal_repo or MealRepository()
+        self._face_repo = face_repo or FaceEmbeddingRepository()
+        self._qr_repo = qr_repo or QrCodeRepository()
 
     def create(self, db: Session, data: EmployeeCreate, admin: Admin) -> Employee:
         self._validate_unique_matricule(db, data.matricule)
@@ -45,6 +69,33 @@ class EmployeeService:
         if employee is None or employee.date_suppression is not None:
             raise NotFoundException(message=f"Employé {uuid} introuvable.")
         return employee
+
+    def get_detail(self, db: Session, uuid: str) -> EmployeeDetail:
+        """Return the employee with today's meal, last meals, and ID status."""
+        employee = self.get(db, uuid)
+
+        today = date.today()
+        last_meals = self._meal_repo.get_history_by_user(db, uuid, limit=6)
+        today_meal: Meal | None = None
+        history: list[Meal] = []
+        for meal in last_meals:
+            if meal.date_repas == today and today_meal is None:
+                today_meal = meal
+            else:
+                history.append(meal)
+                if len(history) == 5:
+                    break
+
+        face = self._face_repo.get_active_by_user(db, uuid)
+        qr = self._qr_repo.get_active_by_owner(db, uuid)
+
+        return EmployeeDetail(
+            employee=employee,
+            today_meal=today_meal,
+            last_meals=history,
+            face_enrolled=face is not None,
+            qr_generated=qr is not None,
+        )
 
     def update(self, db: Session, uuid: str, data: EmployeeUpdate, admin: Admin) -> Employee:
         employee = self.get(db, uuid)

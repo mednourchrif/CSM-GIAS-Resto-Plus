@@ -19,10 +19,12 @@ Design
 """
 
 import numpy as np
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.ai.engine import FaceRecognitionEngine, StubFaceRecognitionEngine
 from app.core.exceptions import BusinessException, NotFoundException
+from app.models.employee import Employee, StatutEnrolement
 from app.models.face_embedding import FaceEmbedding
 from app.repositories.face_repository import FaceEmbeddingRepository
 from app.repositories.user import UserRepository
@@ -104,6 +106,12 @@ class FaceService:
             quality_score=0.95,
             active=True,
         )
+
+        stmt = select(Employee).where(Employee.uuid == user_uuid)
+        employee = db.execute(stmt).scalar_one_or_none()
+        if employee is not None:
+            employee.statut_enrolement = StatutEnrolement.ENROLE
+            db.flush()
 
         meal_registered = False
         if categorie_uuid:
@@ -260,8 +268,20 @@ class FaceService:
     def delete_embedding(self, db: Session, uuid: str) -> None:
         """Soft-delete a face embedding by setting ``active=False``.
 
+        Resets the employee's enrollment status to ``NON_ENROLE`` if no
+        active embeddings remain for that user.
+
         :raises NotFoundException: If the record does not exist.
         """
         embedding = self.get_by_uuid(db, uuid)
+        user_uuid = embedding.utilisateur_uuid
         embedding.active = False
         db.flush()
+
+        remaining = self._repo.get_active_by_user(db, user_uuid)
+        if remaining is None:
+            stmt = select(Employee).where(Employee.uuid == user_uuid)
+            employee = db.execute(stmt).scalar_one_or_none()
+            if employee is not None:
+                employee.statut_enrolement = StatutEnrolement.NON_ENROLE
+                db.flush()

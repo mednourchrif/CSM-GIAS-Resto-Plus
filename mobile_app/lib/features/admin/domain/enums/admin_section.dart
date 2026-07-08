@@ -10,7 +10,8 @@ enum AdminSection {
   statistics(Icons.bar_chart_rounded, 'Statistiques'),
   reports(Icons.assessment_rounded, 'Rapports'),
   users(Icons.admin_panel_settings_rounded, 'Utilisateurs'),
-  settings(Icons.settings_rounded, 'Paramètres');
+  settings(Icons.settings_rounded, 'Paramètres'),
+  audit(Icons.history_rounded, 'Audit');
 
   final IconData icon;
   final String label;
@@ -41,6 +42,8 @@ enum AdminSection {
         return 'Gestion des utilisateurs: administrateurs et réceptionnistes.';
       case AdminSection.settings:
         return 'Configuration du système: restaurant, reconnaissance, QR codes, sécurité.';
+      case AdminSection.audit:
+        return "Journal d'audit: suivi des actions et modifications du système.";
     }
   }
 }

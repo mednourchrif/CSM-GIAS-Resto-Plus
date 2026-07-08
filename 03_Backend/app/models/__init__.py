@@ -29,6 +29,9 @@ from app.models.face_embedding import FaceEmbedding
 # Settings
 from app.models.setting import Setting
 
+# Audit
+from app.models.audit_log import AuditLog
+
 __all__ = [
     # Base
     "BaseModel",
@@ -51,4 +54,6 @@ __all__ = [
     "FaceEmbedding",
     # Settings
     "Setting",
+    # Audit
+    "AuditLog",
 ]

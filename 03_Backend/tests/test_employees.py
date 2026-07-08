@@ -68,7 +68,12 @@ class TestEmployeeCRUD:
 
         resp = client.get(f"/api/v1/employees/{uuid}", headers=_auth_header(token))
         assert resp.status_code == 200
-        assert resp.json()["data"]["uuid"] == uuid
+        data = resp.json()["data"]
+        assert data["uuid"] == uuid
+        assert data["face_enrolled"] is False
+        assert data["qr_generated"] is False
+        assert data["today_meal"] is None
+        assert data["last_meals"] == []
 
     def test_get_employee_not_found(self, client: TestClient, db_session: Session) -> None:
         token = _login(client, db_session)

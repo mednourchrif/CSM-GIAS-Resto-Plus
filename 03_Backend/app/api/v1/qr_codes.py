@@ -24,12 +24,14 @@ from app.schemas.qr_code import (
 )
 from app.schemas.response import PaginatedResponse, SuccessResponse
 from app.security.dependencies import require_admin, require_reception
+from app.services.audit_service import AuditLogService
 from app.services.qr_code_service import QrCodeService
 from app.utils.qr_code import generate_qr_base64
 
 router = APIRouter(prefix="/qr", tags=["qr-codes"])
 
 _service = QrCodeService()
+_audit = AuditLogService()
 
 
 @router.get(
@@ -113,6 +115,10 @@ async def generate_intern_qr(
     Any previously active QR for this intern is revoked automatically.
     """
     qr = _service.generate_for_intern(db, uuid, admin)
+    _audit.log_qr_generated(
+        db, admin=admin, qr_uuid=qr.uuid,
+        owner_type="STAGIAIRE", owner_name=qr._raw_token,
+    )
     return SuccessResponse(
         data=QrGenerateResponse(
             id=qr.id,
@@ -153,6 +159,10 @@ async def generate_visitor_qr(
     Any previously active QR for this visitor is revoked automatically.
     """
     qr = _service.generate_for_visitor(db, uuid, admin)
+    _audit.log_qr_generated(
+        db, admin=admin, qr_uuid=qr.uuid,
+        owner_type="VISITEUR", owner_name=qr._raw_token,
+    )
     return SuccessResponse(
         data=QrGenerateResponse(
             id=qr.id,
@@ -222,6 +232,10 @@ async def revoke_qr(
     ``Visite annulée``.
     """
     qr = _service.revoke(db, uuid, admin)
+    _audit.log_qr_deleted(
+        db, admin=admin, qr_uuid=uuid,
+        owner_name=qr.proprietaire_uuid or uuid,
+    )
     return SuccessResponse(
         data=QrCodeResponse(
             id=qr.id,
@@ -268,6 +282,10 @@ async def regenerate_qr(
     ``VISITEUR``.
     """
     qr = _service.regenerate(db, uuid, owner_type, admin)
+    _audit.log_qr_generated(
+        db, admin=admin, qr_uuid=qr.uuid,
+        owner_type=owner_type, owner_name=qr._raw_token,
+    )
     return SuccessResponse(
         data=QrGenerateResponse(
             id=qr.id,
@@ -351,6 +369,10 @@ async def download_qr(
     For existing QRs, regenerate first to obtain a new downloadable image.
     """
     png_bytes, owner_type = _service.download(db, uuid)
+    _audit.log_qr_downloaded(
+        db, admin=admin, qr_uuid=uuid,
+        owner_name=uuid,
+    )
     return Response(
         content=png_bytes,
         media_type="image/png",

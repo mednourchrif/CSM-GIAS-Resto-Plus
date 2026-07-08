@@ -4,6 +4,7 @@ import '../../../../../core/errors/failures.dart';
 import '../../../../../shared/models/result.dart';
 import '../../../../../shared/utils/dio_error_mapper.dart';
 import '../../domain/entities/employee.dart';
+import '../../domain/entities/employee_detail.dart';
 import '../../domain/repositories/employee_repository.dart';
 import '../datasources/employee_remote_datasource.dart';
 import '../dto/create_employee_request_dto.dart';
@@ -54,6 +55,18 @@ class EmployeeRepositoryImpl implements EmployeeRepository {
       return Fail(mapDioError(e, resourceName: 'employé'));
     } catch (e) {
       return Fail(ApiFailure(message: 'Erreur lors du chargement de l\'employé.'));
+    }
+  }
+
+  @override
+  Future<Result<EmployeeDetail>> getEmployeeDetail(String uuid) async {
+    try {
+      final dto = await _dataSource.getEmployeeDetail(uuid);
+      return Success(dto.toDomain());
+    } on DioException catch (e) {
+      return Fail(mapDioError(e, resourceName: 'employé'));
+    } catch (e) {
+      return Fail(ApiFailure(message: 'Erreur lors du chargement des détails.'));
     }
   }
 

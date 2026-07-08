@@ -63,7 +63,7 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
   void _showDetail(Employee employee) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => EmployeeDetailScreen(employee: employee),
+        builder: (_) => EmployeeDetailScreen(uuid: employee.uuid),
       ),
     );
   }

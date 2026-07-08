@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../dto/create_employee_request_dto.dart';
+import '../dto/employee_detail_dto.dart';
 import '../dto/employee_dto.dart';
 import '../dto/update_employee_request_dto.dart';
 
@@ -47,6 +48,12 @@ class EmployeeRemoteDataSource {
     final response = await _dio.get<Map<String, dynamic>>('/employees/$uuid');
     final body = response.data!;
     return EmployeeDto.fromJson(body['data'] as Map<String, dynamic>);
+  }
+
+  Future<EmployeeDetailDto> getEmployeeDetail(String uuid) async {
+    final response = await _dio.get<Map<String, dynamic>>('/employees/$uuid');
+    final body = response.data!;
+    return EmployeeDetailDto.fromJson(body['data'] as Map<String, dynamic>);
   }
 
   Future<EmployeeDto> createEmployee(CreateEmployeeRequestDto request) async {

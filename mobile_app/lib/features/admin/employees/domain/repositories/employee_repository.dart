@@ -1,5 +1,6 @@
 import '../../../../../shared/models/result.dart';
 import '../entities/employee.dart';
+import '../entities/employee_detail.dart';
 
 abstract class EmployeeRepository {
   Future<Result<PaginatedEmployees>> getEmployees({
@@ -11,6 +12,8 @@ abstract class EmployeeRepository {
   });
 
   Future<Result<Employee>> getEmployee(String uuid);
+
+  Future<Result<EmployeeDetail>> getEmployeeDetail(String uuid);
 
   Future<Result<Employee>> createEmployee({
     required String nom,

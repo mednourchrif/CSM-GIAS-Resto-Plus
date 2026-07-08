@@ -1,6 +1,6 @@
 """Employee schemas."""
 
-from datetime import datetime
+from datetime import date, datetime
 
 from pydantic import Field
 
@@ -48,3 +48,21 @@ class EmployeeResponse(BaseResponse):
     statut: StatutUtilisateur = StatutUtilisateur.ACTIF
     langue: Langue | None = None
     date_suppression: datetime | None = None
+
+
+class MealSummaryResponse(BaseResponse):
+    """Lightweight meal response for employee detail."""
+
+    categorie_nom: str
+    type_identification: str
+    date_repas: date
+    heure_repas: datetime
+
+
+class EmployeeDetailResponse(EmployeeResponse):
+    """Enriched employee response with today's meal, history, and ID status."""
+
+    today_meal: MealSummaryResponse | None = None
+    last_meals: list[MealSummaryResponse] = []
+    face_enrolled: bool = False
+    qr_generated: bool = False

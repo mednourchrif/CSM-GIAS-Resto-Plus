@@ -33,11 +33,13 @@ from app.schemas.face import (
 )
 from app.schemas.response import SuccessResponse
 from app.security.dependencies import require_admin
+from app.services.audit_service import AuditLogService
 from app.services.face_service import FaceService
 
 router = APIRouter(prefix="/face", tags=["face"])
 
 _service = FaceService()
+_audit = AuditLogService()
 
 
 @router.post(
@@ -62,6 +64,13 @@ async def enroll(
         image_base64=body.image_base64,
         user_uuid=body.utilisateur_uuid,
         categorie_uuid=body.categorie_uuid,
+    )
+    employee = _service._user_repo.get_by_uuid(db, body.utilisateur_uuid)
+    employee_name = f"{employee.prenom} {employee.nom}" if employee else body.utilisateur_uuid
+    _audit.log_face_enrolled(
+        db, admin=admin,
+        employee_uuid=body.utilisateur_uuid,
+        employee_name=employee_name,
     )
     return SuccessResponse(
         data=FaceEnrollResponse(
@@ -182,7 +191,15 @@ async def delete_embedding(
     admin: Admin = Depends(require_admin),
 ) -> Response:
     """Soft-delete a face embedding by UUID."""
+    embedding = _service.get_by_uuid(db, uuid)
+    employee = _service._user_repo.get_by_uuid(db, embedding.utilisateur_uuid)
+    employee_name = f"{employee.prenom} {employee.nom}" if employee else embedding.utilisateur_uuid
     _service.delete_embedding(db, uuid)
+    _audit.log_face_removed(
+        db, admin=admin,
+        employee_uuid=embedding.utilisateur_uuid,
+        employee_name=employee_name,
+    )
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 

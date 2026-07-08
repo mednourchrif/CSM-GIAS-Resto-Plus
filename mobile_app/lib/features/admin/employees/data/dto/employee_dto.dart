@@ -58,6 +58,7 @@ class EmployeeDto {
         uuid: uuid,
         nom: nom,
         prenom: prenom,
+        email: email,
         matricule: matricule,
         photoPath: photoPath,
         statut: statut,

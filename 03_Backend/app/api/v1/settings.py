@@ -13,11 +13,13 @@ from app.schemas.setting import (
     VersionInfoResponse,
 )
 from app.security.dependencies import require_admin
+from app.services.audit_service import AuditLogService
 from app.services.setting_service import SettingService
 
 router = APIRouter(prefix="/settings", tags=["settings"])
 
 _service = SettingService()
+_audit = AuditLogService()
 
 
 @router.get(
@@ -45,7 +47,17 @@ async def update_settings(
     db: Session = Depends(get_db),
     admin: Admin = Depends(require_admin),
 ) -> SuccessResponse[SettingsResponse]:
+    old = _service.get_settings(db)
     result = _service.update_settings(db, body.settings)
+    for key, new_value in body.settings.items():
+        old_value = old.raw.get(key)
+        if str(old_value) != str(new_value):
+            _audit.log_settings_updated(
+                db, admin=admin,
+                old_value=str(old_value) if old_value is not None else None,
+                new_value=str(new_value),
+                setting_key=key,
+            )
     return SuccessResponse(data=result)
 
 
@@ -60,6 +72,12 @@ async def reset_settings(
     admin: Admin = Depends(require_admin),
 ) -> SuccessResponse[SettingsResponse]:
     result = _service.reset_to_defaults(db)
+    _audit.log(
+        db, action="SETTINGS_RESET", user_name=f"{admin.prenom} {admin.nom}",
+        user_role="ADMIN", user_uuid=admin.uuid,
+        entity_type="SETTINGS", entity_name="all",
+        description="Paramètres réinitialisés aux valeurs par défaut",
+    )
     return SuccessResponse(data=result)
 
 

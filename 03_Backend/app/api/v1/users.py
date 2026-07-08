@@ -17,11 +17,13 @@ from app.schemas.user import (
     UserAdminUpdate,
 )
 from app.security.dependencies import require_admin
+from app.services.audit_service import AuditLogService
 from app.services.user_admin_service import UserAdminService
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 _service = UserAdminService()
+_audit = AuditLogService()
 
 
 @router.get(
@@ -75,6 +77,11 @@ async def create_user(
     admin: Admin = Depends(require_admin),
 ) -> SuccessResponse[UserAdminResponse]:
     user = _service.create(db, body, admin)
+    _audit.log_user_created(
+        db, admin=admin,
+        user_uuid=user.uuid,
+        user_name=f"{user.prenom} {user.nom}",
+    )
     return SuccessResponse(data=user)
 
 
@@ -90,6 +97,11 @@ async def update_user(
     admin: Admin = Depends(require_admin),
 ) -> SuccessResponse[UserAdminResponse]:
     user = _service.update(db, uuid, body, admin)
+    _audit.log_user_updated(
+        db, admin=admin,
+        user_uuid=uuid,
+        user_name=f"{user.prenom} {user.nom}",
+    )
     return SuccessResponse(data=user)
 
 
@@ -105,7 +117,13 @@ async def reset_password(
     db: Session = Depends(get_db),
     admin: Admin = Depends(require_admin),
 ) -> SuccessResponse:
+    user = _service.get(db, uuid)
     _service.reset_password(db, uuid, body, admin)
+    _audit.log_password_changed(
+        db, admin=admin,
+        user_uuid=uuid,
+        user_name=f"{user.prenom} {user.nom}",
+    )
     return SuccessResponse(message="Mot de passe réinitialisé avec succès.")
 
 
@@ -123,6 +141,20 @@ async def set_user_status(
     from app.models.user import StatutUtilisateur
 
     user = _service.set_status(db, uuid, StatutUtilisateur(statut), admin)
+    if statut == "ACTIF":
+        _audit.log(
+            db, action="USER_ACTIVATED", user_name=f"{admin.prenom} {admin.nom}",
+            user_role="ADMIN", user_uuid=admin.uuid,
+            entity_type="USER", entity_uuid=uuid,
+            entity_name=f"{user.prenom} {user.nom}",
+        )
+    else:
+        _audit.log(
+            db, action="USER_DEACTIVATED", user_name=f"{admin.prenom} {admin.nom}",
+            user_role="ADMIN", user_uuid=admin.uuid,
+            entity_type="USER", entity_uuid=uuid,
+            entity_name=f"{user.prenom} {user.nom}",
+        )
     return SuccessResponse(data=user)
 
 
@@ -137,5 +169,12 @@ async def delete_user(
     db: Session = Depends(get_db),
     admin: Admin = Depends(require_admin),
 ) -> Response:
+    user = _service.get(db, uuid)
+    user_name = f"{user.prenom} {user.nom}"
     _service.delete(db, uuid, admin)
+    _audit.log_user_deleted(
+        db, admin=admin,
+        user_uuid=uuid,
+        user_name=user_name,
+    )
     return Response(status_code=status.HTTP_204_NO_CONTENT)

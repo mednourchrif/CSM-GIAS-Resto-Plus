@@ -9,7 +9,7 @@ Endpoints
 * ``GET  /api/v1/auth/me``    — Return the currently authenticated admin.
 """
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from app.core.dependencies import get_db
@@ -18,10 +18,12 @@ from app.schemas.auth import AdminSummary, LoginRequest, LoginResponse, TokenRes
 from app.schemas.response import SuccessResponse
 from app.security.dependencies import get_current_admin
 from app.services.auth_service import AuthService
+from app.services.audit_service import AuditLogService
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
 _service = AuthService()
+_audit = AuditLogService()
 
 
 @router.post(
@@ -36,6 +38,7 @@ _service = AuthService()
 )
 async def login(
     body: LoginRequest,
+    request: Request,
     db: Session = Depends(get_db),
 ) -> SuccessResponse[LoginResponse]:
     """Authenticate an administrator and return a JWT token.
@@ -43,6 +46,9 @@ async def login(
     The token must be sent as ``Authorization: Bearer <token>`` in
     subsequent requests.
     """
+    ip_address = request.client.host if request.client else None
+    user_agent = request.headers.get("user-agent")
+
     token, expires_in, admin = _service.authenticate(
         db=db,
         email=body.email,
@@ -50,6 +56,16 @@ async def login(
     )
 
     role_name = admin.role.nom if admin.role else None
+
+    _audit.log_login(
+        db,
+        user_name=f"{admin.prenom} {admin.nom}",
+        user_role="ADMIN",
+        user_uuid=admin.uuid,
+        success=True,
+        ip_address=ip_address,
+        user_agent=user_agent,
+    )
 
     return SuccessResponse(
         data=LoginResponse(

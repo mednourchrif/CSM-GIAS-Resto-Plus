@@ -6,10 +6,7 @@ import '../../features/admin/presentation/screens/dashboard_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
-import '../../features/identification/presentation/screens/identification_method_screen.dart';
-import '../../features/meal_registration/presentation/screens/qr_scanner_screen.dart';
-import '../../features/face_recognition/presentation/screens/face_recognition_screen.dart';
-import '../../features/recognition/presentation/screens/processing_screen.dart';
+import '../../features/kiosk_camera/presentation/screens/kiosk_camera_screen.dart';
 import '../../features/recognition/presentation/screens/success_screen.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(
@@ -47,24 +44,9 @@ abstract final class AppRouter {
           builder: (context, state) => const LoginScreen(),
         ),
         GoRoute(
-          path: '/identification-method',
-          name: RouteNames.identificationMethod,
-          builder: (context, state) => const IdentificationMethodScreen(),
-        ),
-        GoRoute(
-          path: '/face',
-          name: RouteNames.face,
-          builder: (context, state) => const FaceRecognitionScreen(),
-        ),
-        GoRoute(
-          path: '/qr',
-          name: RouteNames.qr,
-          builder: (context, state) => const QrScannerScreen(),
-        ),
-        GoRoute(
-          path: '/processing',
-          name: RouteNames.processing,
-          builder: (context, state) => const ProcessingScreen(),
+          path: '/kiosk-camera',
+          name: RouteNames.kioskCamera,
+          builder: (context, state) => const KioskCameraScreen(),
         ),
         GoRoute(
           path: '/success',

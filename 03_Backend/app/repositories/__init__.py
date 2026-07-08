@@ -14,6 +14,7 @@ from app.repositories.user import UserRepository
 from app.repositories.visitor import VisitorRepository
 
 from app.repositories.face_repository import FaceEmbeddingRepository
+from app.repositories.audit_repository import AuditLogRepository
 
 __all__ = [
     "BaseRepository",
@@ -25,4 +26,5 @@ __all__ = [
     "InternRepository",
     "VisitorRepository",
     "FaceEmbeddingRepository",
+    "AuditLogRepository",
 ]

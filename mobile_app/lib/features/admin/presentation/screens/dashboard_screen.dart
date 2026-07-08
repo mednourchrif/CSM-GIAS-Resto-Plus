@@ -14,6 +14,7 @@ import '../../../admin/statistics/presentation/screens/statistics_dashboard_scre
 import '../../../admin/settings/presentation/screens/settings_screen.dart';
 import '../../../admin/users/presentation/screens/user_list_screen.dart';
 import '../../../admin/visitors/presentation/screens/visitor_list_screen.dart';
+import '../../audit/presentation/screens/audit_log_list_screen.dart';
 import '../widgets/admin_drawer.dart';
 import '../widgets/admin_navigation_rail.dart';
 import 'admin_placeholder_screen.dart';
@@ -70,6 +71,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         return const UserListScreen();
       case 9:
         return const SettingsScreen();
+      case 10:
+        return const AuditLogListScreen();
       default:
         return AdminPlaceholderScreen(section: AdminSection.values[_selectedIndex]);
     }

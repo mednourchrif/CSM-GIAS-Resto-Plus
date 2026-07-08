@@ -3,6 +3,7 @@ class Employee {
   final String uuid;
   final String nom;
   final String prenom;
+  final String? email;
   final String matricule;
   final String statut;
   final String statutEnrolement;
@@ -17,6 +18,7 @@ class Employee {
     required this.uuid,
     required this.nom,
     required this.prenom,
+    this.email,
     required this.matricule,
     required this.statut,
     required this.statutEnrolement,

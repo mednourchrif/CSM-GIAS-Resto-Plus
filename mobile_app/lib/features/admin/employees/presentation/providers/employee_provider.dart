@@ -4,6 +4,7 @@ import '../../../../../providers.dart';
 import '../../data/datasources/employee_remote_datasource.dart';
 import '../../data/repositories/employee_repository_impl.dart';
 import '../../domain/entities/employee.dart';
+import '../../domain/entities/employee_detail.dart';
 import '../../domain/repositories/employee_repository.dart';
 import 'employee_state.dart';
 
@@ -181,3 +182,13 @@ class EmployeeNotifier extends StateNotifier<EmployeeState> {
     state = state.copyWith(clearError: true);
   }
 }
+
+final employeeDetailProvider =
+    FutureProvider.family<EmployeeDetail, String>((ref, uuid) async {
+  final repo = ref.read(employeeRepositoryProvider);
+  final result = await repo.getEmployeeDetail(uuid);
+  return result.when(
+    success: (detail) => detail,
+    failure: (failure) => throw Exception(failure.message),
+  );
+});

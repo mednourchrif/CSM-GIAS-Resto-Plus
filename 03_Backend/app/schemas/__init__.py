@@ -60,6 +60,14 @@ from app.schemas.visitor import (
     VisitorUpdate,
 )
 
+# Audit
+from app.schemas.audit import (
+    AuditLogExportResponse,
+    AuditLogFilterParams,
+    AuditLogFiltersResponse,
+    AuditLogResponse,
+)
+
 # Settings
 from app.schemas.setting import (
     DatabaseStatusResponse,
@@ -117,6 +125,11 @@ __all__ = [
     "VisitorCreate",
     "VisitorResponse",
     "VisitorUpdate",
+    # Audit
+    "AuditLogResponse",
+    "AuditLogFilterParams",
+    "AuditLogFiltersResponse",
+    "AuditLogExportResponse",
     # Settings
     "SettingResponse",
     "SettingsBatchUpdate",

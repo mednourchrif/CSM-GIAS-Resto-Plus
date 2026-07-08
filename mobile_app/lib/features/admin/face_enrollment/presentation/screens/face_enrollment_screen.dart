@@ -39,9 +39,9 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
   Timer? _captureCooldown;
   bool _canCapture = true;
 
-  static const int _minImages = 5;
-  static const int _maxImages = 10;
-  static const Duration _stabilityDuration = Duration(milliseconds: 800);
+  static const int _minImages = 3;
+  static const int _maxImages = 5;
+  static const Duration _stabilityDuration = Duration(milliseconds: 500);
   static const Duration _captureCooldownDuration = Duration(seconds: 1);
   static const double _centerThreshold = 0.2;
 

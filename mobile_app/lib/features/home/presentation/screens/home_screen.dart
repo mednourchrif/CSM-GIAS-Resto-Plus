@@ -67,11 +67,6 @@ class HomeScreen extends ConsumerWidget {
                             selectedMeal: selectedMeal,
                           ),
                         ),
-                        const SizedBox(height: Spacing.xl),
-                        AnimatedFadeIn(
-                          delay: const Duration(milliseconds: 350),
-                          child: _ContinueButton(selectedMeal: selectedMeal),
-                        ),
                       ],
                     ),
                   ),
@@ -151,11 +146,6 @@ class HomeScreen extends ConsumerWidget {
                         categoriesAsync: categoriesAsync,
                         selectedMeal: selectedMeal,
                       ),
-                    ),
-                    const SizedBox(height: Spacing.xl),
-                    AnimatedFadeIn(
-                      delay: const Duration(milliseconds: 200),
-                      child: _ContinueButton(selectedMeal: selectedMeal),
                     ),
                   ],
                 ),
@@ -311,34 +301,11 @@ class _MealCardItem extends ConsumerWidget {
             ref.read(selectedCategoryUuidProvider.notifier).state =
                 category.uuid;
           }
+          context.push('/kiosk-camera');
         },
       ),
     );
   }
 }
 
-// ─── Continue Button ──────────────────────────────────────────────────────────
 
-class _ContinueButton extends ConsumerWidget {
-  final MealType? selectedMeal;
-
-  const _ContinueButton({required this.selectedMeal});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return SizedBox(
-      width: 300,
-      height: Spacing.minTouchTarget + 4,
-      child: FilledButton.icon(
-        onPressed: selectedMeal != null
-            ? () {
-                ref.read(selectedMealProvider.notifier).state = selectedMeal;
-                context.push('/identification-method');
-              }
-            : null,
-        icon: const Icon(Icons.arrow_forward_rounded),
-        label: const Text('Continuer'),
-      ),
-    );
-  }
-}
