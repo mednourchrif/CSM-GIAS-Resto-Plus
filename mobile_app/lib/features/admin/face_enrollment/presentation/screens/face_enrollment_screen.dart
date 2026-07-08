@@ -9,6 +9,7 @@ import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 
 import '../../../employees/domain/entities/employee.dart';
 import '../../domain/entities/face_enrollment_data.dart';
+import '../../../settings/presentation/providers/app_settings_provider.dart';
 import '../providers/face_enrollment_provider.dart';
 import '../providers/face_enrollment_state.dart';
 
@@ -89,9 +90,10 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
         orElse: () => cameras.first,
       );
 
+      final appSettings = ref.read(appSettingsProvider);
       _cameraController = CameraController(
         frontCamera,
-        ResolutionPreset.medium,
+        appSettings.resolutionPreset,
         enableAudio: false,
         imageFormatGroup: ImageFormatGroup.nv21,
       );

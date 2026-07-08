@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/colors.dart';
 import '../../../../core/theme/spacing.dart';
 import '../../../../core/theme/app_shadows.dart';
+import '../../../admin/settings/presentation/providers/app_settings_provider.dart';
 import '../../../home/presentation/providers/selection_providers.dart';
 import '../../../meal_registration/presentation/providers/meal_registration_provider.dart';
 
@@ -197,7 +198,7 @@ class _SuccessScreenState extends ConsumerState<SuccessScreen>
                         children: [
                           if (userName != null) ...[
                             Text(
-                              'Bienvenue,',
+                              ref.watch(appSettingsProvider).welcomeMessage,
                               style: theme.textTheme.headlineSmall?.copyWith(
                                 color: theme.colorScheme.onSurface,
                               ),
@@ -249,7 +250,7 @@ class _SuccessScreenState extends ConsumerState<SuccessScreen>
                                 ),
                                 const SizedBox(height: Spacing.xs),
                                 Text(
-                                  'Bon appétit ! 🎉',
+                                  ref.watch(appSettingsProvider).successMessage,
                                   style: theme.textTheme.bodyLarge?.copyWith(
                                     color: theme.colorScheme.primary,
                                     fontWeight: FontWeight.w700,

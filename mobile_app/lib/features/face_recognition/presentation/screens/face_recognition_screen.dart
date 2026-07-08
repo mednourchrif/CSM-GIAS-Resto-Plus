@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 
 import '../../../../core/theme/spacing.dart';
+import '../../../admin/settings/presentation/providers/app_settings_provider.dart';
 import '../../../home/presentation/providers/selection_providers.dart';
 import '../../../meal_registration/presentation/providers/meal_registration_provider.dart';
 import '../providers/face_recognition_provider.dart';
@@ -77,9 +78,10 @@ class _FaceRecognitionScreenState
         orElse: () => cameras.first,
       );
 
+      final appSettings = ref.read(appSettingsProvider);
       _cameraController = CameraController(
         frontCamera,
-        ResolutionPreset.medium,
+        appSettings.resolutionPreset,
         enableAudio: false,
         imageFormatGroup: ImageFormatGroup.nv21,
       );
@@ -386,6 +388,33 @@ class _FaceRecognitionScreenState
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final appSettings = ref.watch(appSettingsProvider);
+
+    if (!appSettings.faceRecognitionEnabled) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.face_rounded,
+                  size: 64, color: Colors.white38),
+              const SizedBox(height: 16),
+              Text(
+                'La reconnaissance faciale est actuellement désactivée.',
+                style: theme.textTheme.bodyLarge?.copyWith(color: Colors.white70),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              FilledButton(
+                onPressed: () => context.go('/home'),
+                child: const Text('Retour à l\'accueil'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: Colors.black,

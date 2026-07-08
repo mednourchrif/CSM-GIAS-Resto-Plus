@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/colors.dart';
 import '../../../../core/theme/spacing.dart';
 import '../../../../core/theme/app_shadows.dart';
+import '../../../admin/settings/presentation/providers/settings_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -53,6 +54,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     _logoController.forward().then((_) {
       _textController.forward();
+    });
+
+    Future.microtask(() {
+      ref.read(settingsProvider.notifier).loadSettings();
     });
   }
 

@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/theme/app_theme.dart';
+import 'features/admin/settings/presentation/providers/app_settings_provider.dart';
 import 'providers.dart';
 
 void main() {
@@ -16,13 +17,14 @@ class RestoApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(goRouterProvider);
+    final appSettings = ref.watch(appSettingsProvider);
 
     return MaterialApp.router(
       title: 'CSM-GIAS Resto+',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.system,
+      themeMode: appSettings.themeMode,
       routerConfig: router,
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
@@ -32,8 +34,9 @@ class RestoApp extends ConsumerWidget {
       supportedLocales: const [
         Locale('fr', 'FR'),
         Locale('en', 'US'),
+        Locale('ar', 'SA'),
       ],
-      locale: Locale('fr', 'FR'),
+      locale: appSettings.locale,
     );
   }
 }

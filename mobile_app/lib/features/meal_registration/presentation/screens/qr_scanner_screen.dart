@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../../core/theme/spacing.dart';
+import '../../../admin/settings/presentation/providers/app_settings_provider.dart';
 import '../../../home/presentation/providers/selection_providers.dart';
 import '../providers/meal_registration_provider.dart';
 
@@ -161,6 +162,33 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final appSettings = ref.watch(appSettingsProvider);
+
+    if (!appSettings.qrValidationEnabled) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.qr_code_scanner_rounded,
+                  size: 64, color: Colors.white38),
+              const SizedBox(height: 16),
+              Text(
+                'Le scan QR est actuellement désactivé.',
+                style: theme.textTheme.bodyLarge?.copyWith(color: Colors.white70),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              FilledButton(
+                onPressed: () => context.go('/home'),
+                child: const Text('Retour à l\'accueil'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: Colors.black,

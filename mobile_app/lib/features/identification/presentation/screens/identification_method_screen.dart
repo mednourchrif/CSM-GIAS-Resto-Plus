@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/spacing.dart';
 import '../../../../features/home/presentation/providers/selection_providers.dart';
+import '../../../admin/settings/presentation/providers/app_settings_provider.dart';
 import '../../domain/enums/identification_method.dart';
 
 class IdentificationMethodScreen extends ConsumerWidget {
@@ -14,6 +15,21 @@ class IdentificationMethodScreen extends ConsumerWidget {
     final selectedMethod = ref.watch(selectedIdentificationProvider);
     final theme = Theme.of(context);
     final isDesktop = MediaQuery.sizeOf(context).width >= Spacing.tabletBreakpoint;
+    final appSettings = ref.watch(appSettingsProvider);
+
+    final methods = <Widget>[
+      if (appSettings.faceRecognitionEnabled)
+        _MethodCard(
+          method: IdentificationMethod.face,
+          icon: Icons.face_rounded,
+          isSelected: selectedMethod == IdentificationMethod.face,
+        ),
+      _MethodCard(
+        method: IdentificationMethod.qr,
+        icon: Icons.qr_code_scanner_rounded,
+        isSelected: selectedMethod == IdentificationMethod.qr,
+      ),
+    ];
 
     return Scaffold(
       appBar: AppBar(title: const Text('Mode d\'identification')),
@@ -51,41 +67,24 @@ class IdentificationMethodScreen extends ConsumerWidget {
                   // Method cards — side by side on wide screens
                   if (isDesktop)
                     Row(
-                      children: [
-                        Expanded(
-                          child: _MethodCard(
-                            method: IdentificationMethod.face,
-                            icon: Icons.face_rounded,
-                            isSelected:
-                                selectedMethod == IdentificationMethod.face,
-                          ),
-                        ),
-                        const SizedBox(width: Spacing.md),
-                        Expanded(
-                          child: _MethodCard(
-                            method: IdentificationMethod.qr,
-                            icon: Icons.qr_code_scanner_rounded,
-                            isSelected:
-                                selectedMethod == IdentificationMethod.qr,
-                          ),
-                        ),
-                      ],
+                      children: methods
+                          .map((m) => Padding(
+                                padding: EdgeInsets.only(
+                                    left: methods.indexOf(m) > 0
+                                        ? Spacing.md
+                                        : 0.0),
+                                child: Expanded(child: m),
+                              ))
+                          .toList(),
                     )
-                  else ...[
-                    _MethodCard(
-                      method: IdentificationMethod.face,
-                      icon: Icons.face_rounded,
-                      isSelected:
-                          selectedMethod == IdentificationMethod.face,
-                    ),
-                    const SizedBox(height: Spacing.md),
-                    _MethodCard(
-                      method: IdentificationMethod.qr,
-                      icon: Icons.qr_code_scanner_rounded,
-                      isSelected:
-                          selectedMethod == IdentificationMethod.qr,
-                    ),
-                  ],
+                  else
+                    ...methods
+                        .map((m) => [
+                              m,
+                              if (m != methods.last)
+                                const SizedBox(height: Spacing.md),
+                            ])
+                        .expand((e) => e),
 
                   const Spacer(),
 
