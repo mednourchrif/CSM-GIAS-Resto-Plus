@@ -12,6 +12,7 @@ import '../../../../../shared/widgets/empty_state.dart';
 import '../../../../../shared/widgets/error_state.dart';
 import '../../../../../shared/widgets/shimmer_loading.dart';
 import '../../../audit/domain/entities/audit_log.dart';
+import '../../../audit/domain/repositories/audit_repository.dart';
 import '../../../audit/presentation/providers/audit_provider.dart';
 
 class AuditLogListScreen extends ConsumerStatefulWidget {
