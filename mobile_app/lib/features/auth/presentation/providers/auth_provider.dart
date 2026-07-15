@@ -41,16 +41,15 @@ class AuthNotifier extends Notifier<AuthState> {
   @override
   AuthState build() {
     _setupAuthInterceptor();
+    _syncTokenToInterceptor();
     _restoreSession();
     return const AuthState(isLoading: true);
   }
 
   void _setupAuthInterceptor() {
     final apiClient = ref.read(apiClientProvider);
-    final storageService = ref.read(storageServiceProvider);
 
     _interceptor = AuthInterceptor(
-      storageService: storageService,
       onUnauthorized: () => _handleUnauthorized(),
     );
 
@@ -63,10 +62,16 @@ class AuthNotifier extends Notifier<AuthState> {
     });
   }
 
+  Future<void> _syncTokenToInterceptor() async {
+    final token = await ref.read(authRepositoryProvider).getStoredToken();
+    _interceptor?.updateToken(token);
+  }
+
   void _handleUnauthorized() {
     final current = state;
     if (current.isAuthenticated) {
       ref.read(authRepositoryProvider).clearSession();
+      _interceptor?.updateToken(null);
       state = const AuthState();
     }
   }
@@ -83,6 +88,7 @@ class AuthNotifier extends Notifier<AuthState> {
         state = const AuthState();
       },
     );
+    _syncTokenToInterceptor();
   }
 
   Future<void> login({
@@ -102,10 +108,12 @@ class AuthNotifier extends Notifier<AuthState> {
         state = AuthState(error: failure.message);
       },
     );
+    _syncTokenToInterceptor();
   }
 
   Future<void> logout() async {
     await ref.read(authRepositoryProvider).clearSession();
+    _interceptor?.updateToken(null);
     state = const AuthState();
   }
 }

@@ -143,7 +143,9 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
   void _stopCameraStream() {
     try {
       _cameraController?.stopImageStream();
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('KioskCamera: error stopping camera stream: $e');
+    }
   }
 
   // ─── Image processing ────────────────────────────────────────────────────
@@ -170,7 +172,9 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
       } else if (_qrEnabled) {
         _detectBarcode(inputImage);
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('KioskCamera: error processing image: $e');
+    }
   }
 
   InputImage? _inputImageFromCamera(CameraImage image) {
@@ -354,7 +358,9 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
           await _registerMeal(qrToken: qrToken);
         }
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('KioskCamera: error detecting barcode: $e');
+    }
   }
 
   // ─── Meal registration ───────────────────────────────────────────────────

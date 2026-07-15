@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/theme/spacing.dart';
+import '../../../../../core/utils/validators.dart';
 import '../../domain/entities/intern.dart';
 import '../providers/intern_provider.dart';
 
@@ -70,6 +71,13 @@ class _InternFormScreenState extends ConsumerState<InternFormScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+
+    if (_dateFinStage.isBefore(_dateDebutStage)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('La date de fin doit être après la date de début.')),
+      );
+      return;
+    }
 
     setState(() => _isSaving = true);
 
@@ -153,7 +161,7 @@ class _InternFormScreenState extends ConsumerState<InternFormScreen> {
                             border: OutlineInputBorder(),
                           ),
                           validator: (v) =>
-                              v == null || v.trim().isEmpty ? 'Requis' : null,
+                              Validators.required(v, fieldName: 'Le nom')?.message,
                         ),
                         const SizedBox(height: Spacing.md),
                         TextFormField(
@@ -163,7 +171,7 @@ class _InternFormScreenState extends ConsumerState<InternFormScreen> {
                             border: OutlineInputBorder(),
                           ),
                           validator: (v) =>
-                              v == null || v.trim().isEmpty ? 'Requis' : null,
+                              Validators.required(v, fieldName: 'Le prénom')?.message,
                         ),
                         const SizedBox(height: Spacing.md),
                         TextFormField(
@@ -173,7 +181,7 @@ class _InternFormScreenState extends ConsumerState<InternFormScreen> {
                             border: OutlineInputBorder(),
                           ),
                           validator: (v) =>
-                              v == null || v.trim().isEmpty ? 'Requis' : null,
+                              Validators.required(v, fieldName: 'Le matricule')?.message,
                         ),
                         const SizedBox(height: Spacing.md),
                         InkWell(

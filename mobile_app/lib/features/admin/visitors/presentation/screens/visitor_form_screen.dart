@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/theme/spacing.dart';
+import '../../../../../core/utils/validators.dart';
 import '../../domain/entities/visitor.dart';
 import '../providers/visitor_provider.dart';
 
@@ -152,7 +153,7 @@ class _VisitorFormScreenState extends ConsumerState<VisitorFormScreen> {
                             border: OutlineInputBorder(),
                           ),
                           validator: (v) =>
-                              v == null || v.trim().isEmpty ? 'Requis' : null,
+                              Validators.required(v, fieldName: 'Le nom')?.message,
                         ),
                         const SizedBox(height: Spacing.md),
                         TextFormField(
@@ -162,7 +163,7 @@ class _VisitorFormScreenState extends ConsumerState<VisitorFormScreen> {
                             border: OutlineInputBorder(),
                           ),
                           validator: (v) =>
-                              v == null || v.trim().isEmpty ? 'Requis' : null,
+                              Validators.required(v, fieldName: 'Le prénom')?.message,
                         ),
                         const SizedBox(height: Spacing.md),
                         TextFormField(
@@ -172,6 +173,8 @@ class _VisitorFormScreenState extends ConsumerState<VisitorFormScreen> {
                             border: OutlineInputBorder(),
                           ),
                           keyboardType: TextInputType.emailAddress,
+                          validator: (v) =>
+                              v == null || v.trim().isEmpty ? null : Validators.email(v)?.message,
                         ),
                         const SizedBox(height: Spacing.md),
                         TextFormField(

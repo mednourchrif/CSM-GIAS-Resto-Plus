@@ -94,13 +94,7 @@ class IdentificationMethodScreen extends ConsumerWidget {
                     height: Spacing.minTouchTarget + 4,
                     child: FilledButton.icon(
                       onPressed: selectedMethod != null
-                          ? () {
-                              final route =
-                                  selectedMethod == IdentificationMethod.face
-                                      ? '/face'
-                                      : '/qr';
-                              context.push(route);
-                            }
+                          ? () => context.push('/kiosk-camera')
                           : null,
                       icon: const Icon(Icons.arrow_forward_rounded),
                       label: const Text('Continuer'),

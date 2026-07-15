@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:universal_platform/universal_platform.dart';
 
 import 'package:mobile_app/core/errors/failures.dart';
 
@@ -7,17 +8,63 @@ Failure mapDioError(DioException e, {String resourceName = 'Ressource'}) {
   final data = e.response?.data;
   final message = data is Map ? (data['message'] as String?) : null;
 
-  if (e.type == DioExceptionType.connectionError ||
-      e.type == DioExceptionType.connectionTimeout ||
-      e.type == DioExceptionType.receiveTimeout ||
-      e.type == DioExceptionType.sendTimeout) {
-    return const NetworkFailure(
-      message: 'Impossible de contacter le serveur.',
-    );
+  if (UniversalPlatform.isWeb) {
+    final uri = e.requestOptions.uri;
+    final isLocalhost = uri.host == 'localhost' || uri.host == '127.0.0.1';
+    if (isLocalhost &&
+        (e.type == DioExceptionType.connectionError ||
+            e.type == DioExceptionType.unknown)) {
+      return const NetworkFailure(
+        message: 'Connexion au serveur bloquée par le navigateur (CORS).',
+      );
+    }
+  }
+
+  switch (e.type) {
+    case DioExceptionType.connectionTimeout:
+      return const NetworkFailure(
+        message: 'Délai de connexion dépassé. Vérifiez votre réseau.',
+      );
+    case DioExceptionType.sendTimeout:
+      return const NetworkFailure(
+        message: "Délai d'envoi dépassé. Vérifiez votre réseau.",
+      );
+    case DioExceptionType.receiveTimeout:
+      return const NetworkFailure(
+        message: 'Délai de réponse dépassé. Vérifiez votre réseau.',
+      );
+    case DioExceptionType.connectionError:
+      return const NetworkFailure(
+        message:
+            'Impossible de contacter le serveur. Vérifiez votre connexion.',
+      );
+    case DioExceptionType.cancel:
+      return const NetworkFailure(message: 'Requête annulée.');
+    case DioExceptionType.badCertificate:
+      return const NetworkFailure(
+        message: 'Certificat de sécurité invalide.',
+      );
+    case DioExceptionType.badResponse:
+      break;
+    case DioExceptionType.transformTimeout:
+      return const NetworkFailure(
+        message: 'Délai de transformation dépassé.',
+      );
+    case DioExceptionType.unknown:
+      return const NetworkFailure(
+        message: 'Erreur réseau. Veuillez réessayer.',
+      );
   }
 
   if (statusCode == 401) {
     return const UnauthorizedFailure();
+  }
+
+  if (statusCode == 403) {
+    return ApiFailure(
+      message: message ?? "Accès refusé. Vous n'avez pas les droits.",
+      statusCode: statusCode,
+    );
   }
 
   if (statusCode == 404) {

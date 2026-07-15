@@ -1,28 +1,27 @@
 import 'package:dio/dio.dart';
 
-import '../../../../core/storage/storage_service.dart';
-
 final class AuthInterceptor extends Interceptor {
-  final StorageService _storageService;
+  String? _cachedToken;
   final void Function()? onUnauthorized;
 
   AuthInterceptor({
-    required StorageService storageService,
+    String? initialToken,
     this.onUnauthorized,
-  }) : _storageService = storageService;
+  }) : _cachedToken = initialToken;
+
+  void updateToken(String? token) {
+    _cachedToken = token;
+  }
 
   @override
   void onRequest(
     RequestOptions options,
     RequestInterceptorHandler handler,
-  ) async {
+  ) {
     final isPublic = options.path.contains('/auth/login') ||
         options.path.contains('/meals/register');
-    if (!isPublic) {
-      final token = await _storageService.read(key: _tokenKey);
-      if (token != null && token.isNotEmpty) {
-        options.headers['Authorization'] = 'Bearer $token';
-      }
+    if (!isPublic && _cachedToken != null && _cachedToken!.isNotEmpty) {
+      options.headers['Authorization'] = 'Bearer $_cachedToken';
     }
     handler.next(options);
   }
@@ -35,5 +34,3 @@ final class AuthInterceptor extends Interceptor {
     handler.next(err);
   }
 }
-
-const _tokenKey = 'auth_token';

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/theme/spacing.dart';
+import '../../../../../core/utils/validators.dart';
 import '../../domain/entities/employee.dart';
 import '../providers/employee_provider.dart';
 
@@ -123,7 +124,7 @@ class _EmployeeFormScreenState extends ConsumerState<EmployeeFormScreen> {
                             border: OutlineInputBorder(),
                           ),
                           validator: (v) =>
-                              v == null || v.trim().isEmpty ? 'Requis' : null,
+                              Validators.required(v, fieldName: 'Le nom')?.message,
                         ),
                         const SizedBox(height: Spacing.md),
                         TextFormField(
@@ -133,7 +134,7 @@ class _EmployeeFormScreenState extends ConsumerState<EmployeeFormScreen> {
                             border: OutlineInputBorder(),
                           ),
                           validator: (v) =>
-                              v == null || v.trim().isEmpty ? 'Requis' : null,
+                              Validators.required(v, fieldName: 'Le prénom')?.message,
                         ),
                         const SizedBox(height: Spacing.md),
                         TextFormField(
@@ -143,7 +144,7 @@ class _EmployeeFormScreenState extends ConsumerState<EmployeeFormScreen> {
                             border: OutlineInputBorder(),
                           ),
                           validator: (v) =>
-                              v == null || v.trim().isEmpty ? 'Requis' : null,
+                              Validators.required(v, fieldName: 'Le matricule')?.message,
                         ),
                         const SizedBox(height: Spacing.md),
                         DropdownButtonFormField<String>(
