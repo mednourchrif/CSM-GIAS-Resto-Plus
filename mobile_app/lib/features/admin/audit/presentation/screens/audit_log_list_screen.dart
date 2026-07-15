@@ -40,7 +40,6 @@ class _AuditLogListScreenState extends ConsumerState<AuditLogListScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    ref.invalidate(auditLogsProvider(_params));
   }
 
   @override

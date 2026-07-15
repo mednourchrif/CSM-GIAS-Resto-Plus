@@ -40,6 +40,7 @@ from app.database.base import Base  # noqa: F401
 # ``Base``.  Each ``__init__.py`` import chain registers every entity.
 from app.models import (  # noqa: F401, F403
     Admin,
+    AuditLog,
     BaseModel,
     Employee,
     FaceEmbedding,
