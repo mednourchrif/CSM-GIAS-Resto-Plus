@@ -361,19 +361,17 @@ class _AuditLogListScreenState extends ConsumerState<AuditLogListScreen> {
     required List<T> items,
     required void Function(T?) onChanged,
   }) {
-    return SizedBox(
-      width: 180,
-      child: DropdownButtonFormField<T>(
-        value: value,
-        decoration: InputDecoration(
-          labelText: label,
-          isDense: true,
-          contentPadding: const EdgeInsets.symmetric(horizontal: Spacing.sm, vertical: Spacing.xs),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(Spacing.radiusSm)),
-        ),
-        items: items.map((e) => DropdownMenuItem(value: e, child: Text(e.toString(), style: const TextStyle(fontSize: 12)))).toList(),
-        onChanged: onChanged,
+    return DropdownButtonFormField<T>(
+      value: value,
+      isExpanded: true,
+      decoration: InputDecoration(
+        labelText: label,
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: Spacing.sm, vertical: Spacing.xs),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(Spacing.radiusSm)),
       ),
+      items: items.map((e) => DropdownMenuItem(value: e, child: Text(e.toString(), style: const TextStyle(fontSize: 12)))).toList(),
+      onChanged: onChanged,
     );
   }
 

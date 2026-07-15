@@ -85,8 +85,6 @@ class AuditRemoteDataSource {
     String? search,
   }) async {
     final queryParams = <String, dynamic>{
-      'page': 1,
-      'page_size': 10000,
       if (dateFrom != null) 'date_from': dateFrom.toIso8601String(),
       if (dateTo != null) 'date_to': dateTo.toIso8601String(),
       if (userUuid != null && userUuid.isNotEmpty) 'user_uuid': userUuid,
