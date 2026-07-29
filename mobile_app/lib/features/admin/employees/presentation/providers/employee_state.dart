@@ -38,7 +38,9 @@ class EmployeeState {
     return EmployeeState(
       isLoading: isLoading ?? this.isLoading,
       employees: employees ?? this.employees,
-      selectedEmployee: clearSelected ? null : (selectedEmployee ?? this.selectedEmployee),
+      selectedEmployee: clearSelected
+          ? null
+          : (selectedEmployee ?? this.selectedEmployee),
       error: clearError ? null : (error ?? this.error),
       page: page ?? this.page,
       totalPages: totalPages ?? this.totalPages,

@@ -24,11 +24,17 @@ class VersionCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.info_outline_rounded, size: 20, color: theme.colorScheme.primary),
+                  Icon(
+                    Icons.info_outline_rounded,
+                    size: 20,
+                    color: theme.colorScheme.primary,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'Version',
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const Spacer(),
                   if (version == null)
@@ -41,7 +47,10 @@ class VersionCard extends StatelessWidget {
               ),
               if (version != null) ...[
                 const Divider(height: 24),
-                _InfoRow(label: 'Application', value: version!.applicationVersion),
+                _InfoRow(
+                  label: 'Application',
+                  value: version!.applicationVersion,
+                ),
                 const SizedBox(height: 8),
                 _InfoRow(label: 'Backend', value: version!.backendVersion),
                 const SizedBox(height: 8),
@@ -66,8 +75,14 @@ class _InfoRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13)),
+        Text(
+          label,
+          style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+        ),
+        Text(
+          value,
+          style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
+        ),
       ],
     );
   }

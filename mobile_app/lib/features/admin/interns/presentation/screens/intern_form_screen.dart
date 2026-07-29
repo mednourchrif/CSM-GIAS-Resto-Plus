@@ -35,7 +35,8 @@ class _InternFormScreenState extends ConsumerState<InternFormScreen> {
     _prenomController = TextEditingController(text: i?.prenom ?? '');
     _matriculeController = TextEditingController(text: i?.matricule ?? '');
     _dateDebutStage = i?.dateDebutStage ?? DateTime.now();
-    _dateFinStage = i?.dateFinStage ?? DateTime.now().add(const Duration(days: 90));
+    _dateFinStage =
+        i?.dateFinStage ?? DateTime.now().add(const Duration(days: 90));
     _statut = i?.statut ?? 'ACTIF';
   }
 
@@ -48,7 +49,6 @@ class _InternFormScreenState extends ConsumerState<InternFormScreen> {
   }
 
   Future<void> _pickDate(BuildContext context, bool isStart) async {
-    final now = DateTime.now();
     final picked = await showDatePicker(
       context: context,
       initialDate: isStart ? _dateDebutStage : _dateFinStage,
@@ -74,7 +74,9 @@ class _InternFormScreenState extends ConsumerState<InternFormScreen> {
 
     if (_dateFinStage.isBefore(_dateDebutStage)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('La date de fin doit être après la date de début.')),
+        const SnackBar(
+          content: Text('La date de fin doit être après la date de début.'),
+        ),
       );
       return;
     }
@@ -83,7 +85,9 @@ class _InternFormScreenState extends ConsumerState<InternFormScreen> {
 
     bool success;
     if (_isEditing) {
-      success = await ref.read(internProvider.notifier).updateIntern(
+      success = await ref
+          .read(internProvider.notifier)
+          .updateIntern(
             widget.intern!.uuid,
             nom: _nomController.text.trim(),
             prenom: _prenomController.text.trim(),
@@ -93,7 +97,9 @@ class _InternFormScreenState extends ConsumerState<InternFormScreen> {
             statut: _statut,
           );
     } else {
-      success = await ref.read(internProvider.notifier).createIntern(
+      success = await ref
+          .read(internProvider.notifier)
+          .createIntern(
             nom: _nomController.text.trim(),
             prenom: _prenomController.text.trim(),
             matricule: _matriculeController.text.trim(),
@@ -160,8 +166,10 @@ class _InternFormScreenState extends ConsumerState<InternFormScreen> {
                             labelText: 'Nom *',
                             border: OutlineInputBorder(),
                           ),
-                          validator: (v) =>
-                              Validators.required(v, fieldName: 'Le nom')?.message,
+                          validator: (v) => Validators.required(
+                            v,
+                            fieldName: 'Le nom',
+                          )?.message,
                         ),
                         const SizedBox(height: Spacing.md),
                         TextFormField(
@@ -170,8 +178,10 @@ class _InternFormScreenState extends ConsumerState<InternFormScreen> {
                             labelText: 'Prénom *',
                             border: OutlineInputBorder(),
                           ),
-                          validator: (v) =>
-                              Validators.required(v, fieldName: 'Le prénom')?.message,
+                          validator: (v) => Validators.required(
+                            v,
+                            fieldName: 'Le prénom',
+                          )?.message,
                         ),
                         const SizedBox(height: Spacing.md),
                         TextFormField(
@@ -180,8 +190,10 @@ class _InternFormScreenState extends ConsumerState<InternFormScreen> {
                             labelText: 'Matricule *',
                             border: OutlineInputBorder(),
                           ),
-                          validator: (v) =>
-                              Validators.required(v, fieldName: 'Le matricule')?.message,
+                          validator: (v) => Validators.required(
+                            v,
+                            fieldName: 'Le matricule',
+                          )?.message,
                         ),
                         const SizedBox(height: Spacing.md),
                         InkWell(
@@ -255,10 +267,10 @@ class _InternFormScreenState extends ConsumerState<InternFormScreen> {
                           ? const SizedBox(
                               width: 20,
                               height: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Colors.white,
-              ),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
                           : const Text('Enregistrer'),
                     ),

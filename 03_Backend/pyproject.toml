@@ -17,6 +17,7 @@ dependencies = [
     "cryptography>=44.0.0",
     "pydantic>=2.10.0",
     "pydantic-settings>=2.7.0",
+    "email-validator>=2.2.0",
     "python-dotenv>=1.0.1",
     "pyjwt>=2.10.0",
     "bcrypt>=4.2.0",
@@ -87,10 +88,12 @@ ignore = ["PLR0913", "PLR2004"]
 "app/api/v1/health.py" = ["B008"]
 "app/schemas/response.py" = ["UP017"]
 "app/database/mixins.py" = ["UP017"]
-"app/api/v1/*.py" = ["B008"]
+"app/api/v1/*.py" = ["B008", "ARG001"]
 "app/security/dependencies.py" = ["B008"]
 "app/core/dependencies.py" = ["B008"]
-"tests/*.py" = ["PLR0913", "PLR2004"]
+"migrations/*.py" = ["E402"]
+"scripts/seed.py" = ["E402"]
+"tests/*.py" = ["PLR0913", "PLR2004", "PLC0415", "ARG002", "ARG005", "F841", "B007"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -104,7 +107,10 @@ testpaths = ["tests"]
 pythonpath = ["app"]
 addopts = "-v --tb=short --strict-markers"
 asyncio_mode = "auto"
-filterwarnings = ["ignore::DeprecationWarning"]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore:Using `httpx` with `starlette.testclient` is deprecated.*",
+]
 
 [tool.coverage.run]
 source = ["app"]

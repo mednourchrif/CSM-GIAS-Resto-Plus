@@ -1,7 +1,5 @@
 """Statistics dashboard endpoint."""
 
-from datetime import date
-
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -10,6 +8,7 @@ from app.models.admin import Admin
 from app.repositories.statistics import DashboardStats
 from app.schemas.response import SuccessResponse
 from app.security.dependencies import require_admin
+from app.utils.date_utils import today_local
 
 router = APIRouter(prefix="/stats", tags=["statistics"])
 
@@ -18,12 +17,12 @@ router = APIRouter(prefix="/stats", tags=["statistics"])
     "/dashboard",
     summary="Statistiques du tableau de bord",
     description="Retourne toutes les statistiques pour le tableau de bord d'administration.",
-    response_model=SuccessResponse,
+    response_model=SuccessResponse[dict[str, object]],
 )
 async def get_dashboard_stats(
     db: Session = Depends(get_db),
     admin: Admin = Depends(require_admin),
-) -> SuccessResponse:
+) -> SuccessResponse[dict[str, object]]:
     """Aggregate and return all dashboard statistics."""
-    stats = DashboardStats(db, date.today()).compute()
+    stats = DashboardStats(db, today_local()).compute()
     return SuccessResponse(data=stats.model_dump())

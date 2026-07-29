@@ -32,10 +32,8 @@ def new_uuid() -> str:
 
     Falls back to UUID v4 if v7 is not available (Python < 3.14).
     """
-    try:
-        return str(_uuid.uuid7())
-    except AttributeError:
-        return str(_uuid.uuid4())
+    uuid7 = getattr(_uuid, "uuid7", None)
+    return str(uuid7() if uuid7 is not None else _uuid.uuid4())
 
 
 class BaseModel(Base, TimestampMixin):

@@ -16,11 +16,16 @@ access control.  They are designed to be composable::
         ...
 """
 
-from fastapi import Depends
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+import secrets
+from collections.abc import Callable
+from ipaddress import ip_address
+
+from fastapi import Depends, Request
+from fastapi.security import APIKeyHeader, HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
-from app.core.dependencies import get_db
+from app.core.config import BaseAppSettings
+from app.core.dependencies import get_db, get_settings_dependency
 from app.core.exceptions import ForbiddenException, UnauthorizedException
 from app.models.admin import Admin
 from app.models.user import StatutUtilisateur, TypeUtilisateur
@@ -36,6 +41,15 @@ _bearer_scheme = HTTPBearer(
     description="Entrez votre token JWT d'authentification",
     auto_error=True,
 )
+_optional_bearer_scheme = HTTPBearer(
+    bearerFormat="JWT",
+    auto_error=False,
+)
+_tablet_key_scheme = APIKeyHeader(
+    name="X-Tablet-Key",
+    description="Clé d'accès de la tablette restaurant",
+    auto_error=False,
+)
 
 # ---------------------------------------------------------------------------
 # Repository & JWT service singletons (stateless, safe to share)
@@ -50,9 +64,9 @@ _jwt_service = JWTService()
 # ---------------------------------------------------------------------------
 
 
-def get_current_admin(
-    db: Session = Depends(get_db),
-    credentials: HTTPAuthorizationCredentials = Depends(_bearer_scheme),
+def _resolve_admin(
+    db: Session,
+    credentials: HTTPAuthorizationCredentials,
 ) -> Admin:
     """Extract and validate the current administrator from the JWT token.
 
@@ -114,6 +128,60 @@ def get_current_admin(
     return admin
 
 
+def get_current_admin(
+    db: Session = Depends(get_db),
+    credentials: HTTPAuthorizationCredentials = Depends(_bearer_scheme),
+) -> Admin:
+    """Return the active administrator represented by a Bearer token."""
+    return _resolve_admin(db, credentials)
+
+
+def require_kiosk_access(
+    request: Request,
+    db: Session = Depends(get_db),
+    tablet_key: str | None = Depends(_tablet_key_scheme),
+    credentials: HTTPAuthorizationCredentials | None = Depends(_optional_bearer_scheme),
+    settings: BaseAppSettings = Depends(get_settings_dependency),
+) -> Admin | None:
+    """Authorize a kiosk request with a tablet key or an admin token.
+
+    The API key is mandatory for unauthenticated kiosk operation. An admin
+    Bearer token remains accepted for diagnostics and API tests. In development
+    only, a request without a key may come directly from a private/loopback
+    client so a physical device can be tested without embedding a shared secret
+    in a debug APK.
+    """
+    configured_key = settings.TABLET_API_KEY.strip()
+    unsafe_values = {"", "change-me", "change-me-to-tablet-api-key"}
+    if (
+        configured_key not in unsafe_values
+        and tablet_key is not None
+        and secrets.compare_digest(tablet_key, configured_key)
+    ):
+        return None
+
+    if settings.is_development and tablet_key is None and _is_private_client(request):
+        return None
+
+    if credentials is not None:
+        return _resolve_admin(db, credentials)
+
+    raise UnauthorizedException(
+        message="Authentification de la tablette requise.",
+    )
+
+
+def _is_private_client(request: Request) -> bool:
+    """Return whether a direct client address is safe for development bypass."""
+    if request.client is None:
+        return False
+    try:
+        address = ip_address(request.client.host.split("%", maxsplit=1)[0])
+    except ValueError:
+        return False
+    return address.is_private or address.is_loopback or address.is_link_local
+
+
 # ---------------------------------------------------------------------------
 # Role-based authorisation dependencies
 # ---------------------------------------------------------------------------
@@ -146,7 +214,7 @@ def require_reception(admin: Admin = Depends(get_current_admin)) -> Admin:
     return admin
 
 
-def require_role(required_nom: str):
+def require_role(required_nom: str) -> Callable[[Admin], Admin]:
     """Factory: return a dependency that requires a specific role name.
 
     Usage::

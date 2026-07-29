@@ -51,10 +51,7 @@ class _LoginFormState extends State<LoginForm> {
 
   void _submit() {
     if (_formKey.currentState?.validate() ?? false) {
-      widget.onSubmit(
-        _emailController.text.trim(),
-        _passwordController.text,
-      );
+      widget.onSubmit(_emailController.text.trim(), _passwordController.text);
     }
   }
 
@@ -167,7 +164,9 @@ class _LoginFormState extends State<LoginForm> {
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.5,
-                        color: theme.colorScheme.onPrimary.withValues(alpha: 0.7),
+                        color: theme.colorScheme.onPrimary.withValues(
+                          alpha: 0.7,
+                        ),
                       ),
                     )
                   : const Text('Se connecter'),

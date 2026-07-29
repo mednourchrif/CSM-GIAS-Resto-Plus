@@ -36,13 +36,19 @@ class SettingField extends StatelessWidget {
                     Expanded(
                       child: Text(
                         setting.label,
-                        style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                        ),
                       ),
                     ),
                     if (isChanged)
                       Container(
                         margin: const EdgeInsets.only(left: 8),
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.orange.withAlpha(30),
                           borderRadius: BorderRadius.circular(4),
@@ -59,17 +65,17 @@ class SettingField extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 2),
                     child: Text(
                       setting.description!,
-                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
                     ),
                   ),
               ],
             ),
           ),
           const SizedBox(width: 16),
-          Expanded(
-            flex: 2,
-            child: _buildField(context),
-          ),
+          Expanded(flex: 2, child: _buildField(context)),
         ],
       ),
     );
@@ -87,17 +93,28 @@ class SettingField extends StatelessWidget {
           onTap: () async {
             final parts = currentValue.split(':');
             final initial = parts.length == 2
-                ? TimeOfDay(hour: int.tryParse(parts[0]) ?? 12, minute: int.tryParse(parts[1]) ?? 0)
+                ? TimeOfDay(
+                    hour: int.tryParse(parts[0]) ?? 12,
+                    minute: int.tryParse(parts[1]) ?? 0,
+                  )
                 : const TimeOfDay(hour: 12, minute: 0);
-            final picked = await showTimePicker(context: context, initialTime: initial);
+            final picked = await showTimePicker(
+              context: context,
+              initialTime: initial,
+            );
             if (picked != null) {
-              onChanged('${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}');
+              onChanged(
+                '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}',
+              );
             }
           },
           child: InputDecorator(
             decoration: const InputDecoration(
               isDense: true,
-              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
               border: OutlineInputBorder(),
               suffixIcon: Icon(Icons.access_time_rounded, size: 20),
             ),
@@ -116,7 +133,10 @@ class SettingField extends StatelessWidget {
             children: options.map((opt) {
               final isSelected = selected.contains(opt);
               return FilterChip(
-                label: Text(_optionLabel(opt), style: const TextStyle(fontSize: 12)),
+                label: Text(
+                  _optionLabel(opt),
+                  style: const TextStyle(fontSize: 12),
+                ),
                 selected: isSelected,
                 onSelected: (sel) {
                   final updated = Set<String>.from(selected);
@@ -142,7 +162,10 @@ class SettingField extends StatelessWidget {
               isDense: true,
               isExpanded: true,
               items: options.map((opt) {
-                return DropdownMenuItem(value: opt, child: Text(_optionLabel(opt)));
+                return DropdownMenuItem(
+                  value: opt,
+                  child: Text(_optionLabel(opt)),
+                );
               }).toList(),
               onChanged: (v) {
                 if (v != null) onChanged(v);
@@ -154,7 +177,9 @@ class SettingField extends StatelessWidget {
         return TextFormField(
           initialValue: currentValue,
           keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))],
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
+          ],
           decoration: const InputDecoration(
             isDense: true,
             contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -177,30 +202,54 @@ class SettingField extends StatelessWidget {
 
   String _optionLabel(String value) {
     switch (value) {
-      case 'fr': return 'Français';
-      case 'en': return 'Anglais';
-      case 'ar': return 'Arabe';
-      case 'light': return 'Clair';
-      case 'dark': return 'Sombre';
-      case 'system': return 'Système';
-      case 'low': return 'Basse';
-      case 'medium': return 'Moyenne';
-      case 'high': return 'Haute';
-      case 'L': return 'Faible';
-      case 'M': return 'Moyenne';
-      case 'Q': return 'Élevée';
-      case 'H': return 'Maximale';
-      case 'default': return 'Par défaut';
-      case 'strict': return 'Stricte';
-      case 'very_strict': return 'Très stricte';
-      case '1': return 'Lundi';
-      case '2': return 'Mardi';
-      case '3': return 'Mercredi';
-      case '4': return 'Jeudi';
-      case '5': return 'Vendredi';
-      case '6': return 'Samedi';
-      case '7': return 'Dimanche';
-      default: return value;
+      case 'fr':
+        return 'Français';
+      case 'en':
+        return 'Anglais';
+      case 'ar':
+        return 'Arabe';
+      case 'light':
+        return 'Clair';
+      case 'dark':
+        return 'Sombre';
+      case 'system':
+        return 'Système';
+      case 'low':
+        return 'Basse';
+      case 'medium':
+        return 'Moyenne';
+      case 'high':
+        return 'Haute';
+      case 'L':
+        return 'Faible';
+      case 'M':
+        return 'Moyenne';
+      case 'Q':
+        return 'Élevée';
+      case 'H':
+        return 'Maximale';
+      case 'default':
+        return 'Par défaut';
+      case 'strict':
+        return 'Stricte';
+      case 'very_strict':
+        return 'Très stricte';
+      case '1':
+        return 'Lundi';
+      case '2':
+        return 'Mardi';
+      case '3':
+        return 'Mercredi';
+      case '4':
+        return 'Jeudi';
+      case '5':
+        return 'Vendredi';
+      case '6':
+        return 'Samedi';
+      case '7':
+        return 'Dimanche';
+      default:
+        return value;
     }
   }
 }

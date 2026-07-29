@@ -13,10 +13,11 @@ design decisions are:
 
 import os
 
-# Set APP_ENVIRONMENT to testing before any application code is imported.
-# This ensures the ``TestingSettings`` class is used and the health
-# endpoint reports ``environment: "testing"`` correctly.
-os.environ.setdefault("APP_ENVIRONMENT", "testing")
+# Force deterministic test-only settings before any application code is
+# imported. Local developer ``.env`` values must not be able to reject the
+# TestClient host or select a non-test environment.
+os.environ["APP_ENVIRONMENT"] = "testing"
+os.environ["TRUSTED_HOSTS"] = '["testserver","localhost","127.0.0.1"]'
 
 from collections.abc import Generator
 from typing import Any

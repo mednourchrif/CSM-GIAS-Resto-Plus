@@ -5,7 +5,7 @@ import '../dto/meal_history_dto.dart';
 class MealHistoryRemoteDataSource {
   final Dio _dio;
 
-  MealHistoryRemoteDataSource({required Dio dio}) : _dio = dio;
+  MealHistoryRemoteDataSource({required this._dio});
 
   Future<PaginatedMealHistoryDto> getMealHistory({
     int page = 1,
@@ -39,10 +39,7 @@ class MealHistoryRemoteDataSource {
     return PaginatedMealHistoryDto.fromJson(body);
   }
 
-  Future<MealStatsDto> getMealStats({
-    String? dateFrom,
-    String? dateTo,
-  }) async {
+  Future<MealStatsDto> getMealStats({String? dateFrom, String? dateTo}) async {
     final params = <String, dynamic>{};
     if (dateFrom != null) params['date_from'] = dateFrom;
     if (dateTo != null) params['date_to'] = dateTo;

@@ -6,14 +6,10 @@ Covers: CRUD, soft-delete, pagination, search, duplicate checks, auth.
 from datetime import UTC, datetime, timedelta
 
 import jwt
-import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.models.admin import Admin
-from app.models.employee import Employee
-from app.models.role import Role
 from app.models.user import StatutUtilisateur
 from app.security.password import PasswordService
 from tests.test_auth import _auth_header, _login_payload, _seed_admin

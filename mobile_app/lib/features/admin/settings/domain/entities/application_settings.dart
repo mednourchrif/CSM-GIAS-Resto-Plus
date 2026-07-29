@@ -19,7 +19,7 @@ class ApplicationSettings {
     this.language = 'fr',
     this.theme = 'system',
     this.openingHour = '12:30',
-    this.closingHour = '20:00',
+    this.closingHour = '14:00',
     this.faceRecognitionEnabled = true,
     this.qrValidationEnabled = true,
     this.welcomeMessage = 'Bienvenue',
@@ -66,34 +66,33 @@ class ApplicationSettings {
   }
 
   factory ApplicationSettings.fromRawMap(Map<String, String> raw) {
-    String _get(String key, String fallback) =>
-        raw[key] ?? fallback;
+    String get(String key, String fallback) => raw[key] ?? fallback;
 
-    bool _bool(String key, bool fallback) {
+    bool parseBool(String key, bool fallback) {
       final v = raw[key];
       if (v == null) return fallback;
       return v.toLowerCase() == 'true';
     }
 
-    int _int(String key, int fallback) {
+    int parseInt(String key, int fallback) {
       final v = raw[key];
       if (v == null) return fallback;
       return int.tryParse(v) ?? fallback;
     }
 
     return ApplicationSettings(
-      language: _get('language', 'fr'),
-      theme: _get('theme', 'system'),
-      openingHour: _get('opening_hour', '12:30'),
-      closingHour: _get('closing_hour', '20:00'),
-      faceRecognitionEnabled: _bool('face_recognition_enabled', true),
-      qrValidationEnabled: _bool('qr_validation_enabled', true),
-      welcomeMessage: _get('welcome_message', 'Bienvenue'),
-      successMessage: _get('success_message', 'Bon appétit'),
-      faceDetectionTimeout: _int('face_detection_timeout', 30),
-      maxRecognitionAttempts: _int('max_recognition_attempts', 3),
-      cameraQuality: _get('camera_quality', 'high'),
-      autoReturnDelay: _int('auto_return_delay', 5),
+      language: get('language', 'fr'),
+      theme: get('theme', 'system'),
+      openingHour: get('opening_hour', '12:30'),
+      closingHour: get('closing_hour', '14:00'),
+      faceRecognitionEnabled: parseBool('face_recognition_enabled', true),
+      qrValidationEnabled: parseBool('qr_validation_enabled', true),
+      welcomeMessage: get('welcome_message', 'Bienvenue'),
+      successMessage: get('success_message', 'Bon appétit'),
+      faceDetectionTimeout: parseInt('face_detection_timeout', 30),
+      maxRecognitionAttempts: parseInt('max_recognition_attempts', 3),
+      cameraQuality: get('camera_quality', 'high'),
+      autoReturnDelay: parseInt('auto_return_delay', 5),
     );
   }
 }

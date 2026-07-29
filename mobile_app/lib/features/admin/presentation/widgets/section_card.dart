@@ -11,11 +11,7 @@ class SectionCard extends StatefulWidget {
   final AdminSection section;
   final VoidCallback onTap;
 
-  const SectionCard({
-    super.key,
-    required this.section,
-    required this.onTap,
-  });
+  const SectionCard({super.key, required this.section, required this.onTap});
 
   @override
   State<SectionCard> createState() => _SectionCardState();
@@ -26,14 +22,14 @@ class _SectionCardState extends State<SectionCard> {
 
   // Color palette for each section icon
   static const _sectionColors = [
-    Color(0xFF0D6E6E), // employees — primary teal
-    Color(0xFF4B6587), // interns — slate blue
-    Color(0xFF7B1FA2), // visitors — purple
-    Color(0xFF0277BD), // qr codes — info blue
-    Color(0xFF2E7D32), // face — success green
-    Color(0xFFE8683A), // meals — secondary orange
-    Color(0xFF6D4C41), // statistics — warm brown
-    Color(0xFF37474F), // settings — blue grey
+    AppColors.primary,
+    AppColors.brandBlue,
+    AppColors.brandGreen,
+    AppColors.info,
+    AppColors.success,
+    AppColors.brandOrange,
+    AppColors.brandYellow,
+    AppColors.tertiary,
   ];
 
   Color get _cardColor {
@@ -68,7 +64,7 @@ class _SectionCardState extends State<SectionCard> {
                     color: color.withValues(alpha: 0.15),
                     blurRadius: 16,
                     offset: const Offset(0, 4),
-                  )
+                  ),
                 ]
               : [],
         ),
@@ -92,10 +88,7 @@ class _SectionCardState extends State<SectionCard> {
                     height: _isHovered ? 56 : 52,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [
-                          color,
-                          color.withValues(alpha: 0.65),
-                        ],
+                        colors: [color, color.withValues(alpha: 0.65)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -106,7 +99,7 @@ class _SectionCardState extends State<SectionCard> {
                                 color: color.withValues(alpha: 0.3),
                                 blurRadius: 8,
                                 offset: const Offset(0, 3),
-                              )
+                              ),
                             ]
                           : [],
                     ),

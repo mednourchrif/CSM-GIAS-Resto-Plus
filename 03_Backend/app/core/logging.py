@@ -1,10 +1,15 @@
 import logging
 import sys
 from pathlib import Path
+from types import FrameType
+from typing import TYPE_CHECKING
 
 from loguru import logger
 
 from app.core.config import settings
+
+if TYPE_CHECKING:
+    from loguru import Record
 
 
 class InterceptHandler(logging.Handler):
@@ -16,12 +21,14 @@ class InterceptHandler(logging.Handler):
     """
 
     def emit(self, record: logging.LogRecord) -> None:
+        level: str | int
         try:
             level = logger.level(record.levelname).name
         except ValueError:
             level = record.levelno
 
-        frame, depth = sys._getframe(6), 6
+        frame: FrameType | None = sys._getframe(6)
+        depth = 6
         while frame and frame.f_code.co_filename == logging.__file__:
             frame = frame.f_back
             depth += 1
@@ -46,7 +53,8 @@ def configure_logging() -> None:
         "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> | "
         "<level>{message}</level>"
     )
-    def _file_format(record: dict) -> str:
+
+    def _file_format(record: "Record") -> str:
         """Return the file format string, ensuring a default request_id.
 
         Startup logs, background tasks, and CLI commands fire before the

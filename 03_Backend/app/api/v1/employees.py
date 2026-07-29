@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.dependencies import get_db
 from app.models.admin import Admin
+from app.models.meal import Meal
 from app.models.meal_category import MealCategory
 from app.schemas.employee import (
     EmployeeCreate,
@@ -20,8 +21,8 @@ from app.schemas.employee import (
 from app.schemas.pagination import PaginationParams
 from app.schemas.response import PaginatedResponse, SuccessResponse
 from app.security.dependencies import require_admin
-from app.services.employee_service import EmployeeService
 from app.services.audit_service import AuditLogService
+from app.services.employee_service import EmployeeService
 
 router = APIRouter(prefix="/employees", tags=["employees"])
 
@@ -29,10 +30,8 @@ _service = EmployeeService()
 _audit = AuditLogService()
 
 
-def _meal_summary(meal: object, db: Session) -> MealSummaryResponse | None:
+def _meal_summary(meal: Meal, db: Session) -> MealSummaryResponse:
     """Build a MealSummaryResponse from a Meal ORM object."""
-    if meal is None:
-        return None
     cat_stmt = select(MealCategory).where(MealCategory.uuid == meal.categorie_uuid)
     category = db.execute(cat_stmt).scalar_one_or_none()
     return MealSummaryResponse(
@@ -101,7 +100,9 @@ async def get_employee(
             statut=detail.employee.statut,
             langue=detail.employee.langue,
             date_suppression=detail.employee.date_suppression,
-            today_meal=_meal_summary(detail.today_meal, db),
+            today_meal=(
+                _meal_summary(detail.today_meal, db) if detail.today_meal is not None else None
+            ),
             last_meals=[_meal_summary(m, db) for m in detail.last_meals],
             face_enrolled=detail.face_enrolled,
             qr_generated=detail.qr_generated,
@@ -109,7 +110,9 @@ async def get_employee(
     )
 
 
-@router.post("", response_model=SuccessResponse[EmployeeResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "", response_model=SuccessResponse[EmployeeResponse], status_code=status.HTTP_201_CREATED
+)
 async def create_employee(
     body: EmployeeCreate,
     db: Session = Depends(get_db),
@@ -118,7 +121,8 @@ async def create_employee(
     """Create a new employee."""
     employee = _service.create(db, body, admin)
     _audit.log_employee_created(
-        db, admin=admin,
+        db,
+        admin=admin,
         employee_uuid=employee.uuid,
         employee_name=f"{employee.prenom} {employee.nom}",
     )
@@ -140,7 +144,8 @@ async def update_employee(
     """Replace an employee's data."""
     employee = _service.update(db, uuid, body, admin)
     _audit.log_employee_updated(
-        db, admin=admin,
+        db,
+        admin=admin,
         employee_uuid=uuid,
         employee_name=f"{employee.prenom} {employee.nom}",
     )
@@ -162,7 +167,8 @@ async def patch_employee(
     """Partially update an employee."""
     employee = _service.update(db, uuid, body, admin)
     _audit.log_employee_updated(
-        db, admin=admin,
+        db,
+        admin=admin,
         employee_uuid=uuid,
         employee_name=f"{employee.prenom} {employee.nom}",
     )
@@ -185,7 +191,8 @@ async def delete_employee(
     employee_name = f"{employee.prenom} {employee.nom}"
     _service.delete(db, uuid, admin)
     _audit.log_employee_deleted(
-        db, admin=admin,
+        db,
+        admin=admin,
         employee_uuid=uuid,
         employee_name=employee_name,
     )

@@ -51,17 +51,16 @@ class QrGenerateResponseDto {
   }
 
   QrCode toDomain() => QrCode(
-        id: id,
-        uuid: uuid,
-        qrHash: qrHash,
-        proprietaireUuid: proprietaireUuid,
-        typeProprietaire: typeProprietaire,
-        statut: statut,
-        dateExpiration: dateExpiration,
-        creeParUuid: creeParUuid,
-        nombreValidations: 0,
-        qrBase64: qrBase64,
-        createdAt: createdAt,
-        updatedAt: updatedAt,
-      );
+    id: id,
+    uuid: uuid,
+    qrHash: qrHash,
+    proprietaireUuid: proprietaireUuid,
+    typeProprietaire: typeProprietaire,
+    statut: statut,
+    dateExpiration: dateExpiration,
+    creeParUuid: creeParUuid,
+    qrBase64: qrBase64,
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+  );
 }

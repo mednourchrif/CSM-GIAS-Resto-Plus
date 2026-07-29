@@ -1,5 +1,7 @@
 """Visitor service — business logic for visitor management."""
 
+from datetime import UTC, datetime
+
 from loguru import logger
 from sqlalchemy.orm import Session
 
@@ -36,7 +38,7 @@ class VisitorService:
         attrs["updated_by_id"] = admin.uuid
 
         visitor = self._visitor_repo.create(db, **attrs)
-        logger.info("Visitor created", extra={"uuid": visitor.uuid, "admin": admin.uuid})
+        logger.info("Visitor created")
         return visitor
 
     def get(self, db: Session, uuid: str) -> Visitor:
@@ -52,7 +54,11 @@ class VisitorService:
         if data.mot_de_passe:
             update_data["mot_de_passe"] = hash_password(data.mot_de_passe)
 
-        if "email" in update_data and update_data["email"] and update_data["email"] != visitor.email:
+        if (
+            "email" in update_data
+            and update_data["email"]
+            and update_data["email"] != visitor.email
+        ):
             self._validate_unique_email(db, update_data["email"])
 
         update_data["updated_by_id"] = admin.uuid
@@ -60,16 +66,15 @@ class VisitorService:
         updated = self._visitor_repo.update(db, visitor.id, **update_data)
         if updated is None:
             raise NotFoundException(message=f"Visiteur {uuid} introuvable.")
-        logger.info("Visitor updated", extra={"uuid": uuid, "admin": admin.uuid})
+        logger.info("Visitor updated")
         return updated
 
     def delete(self, db: Session, uuid: str, admin: Admin) -> None:
-        from datetime import UTC, datetime
-
         visitor = self.get(db, uuid)
         visitor.date_suppression = datetime.now(UTC)
+        visitor.updated_by_id = admin.uuid
         db.flush()
-        logger.info("Visitor soft-deleted", extra={"uuid": uuid, "admin": admin.uuid})
+        logger.info("Visitor soft-deleted")
 
     def get_list(self, db: Session, params: PaginationParams) -> PaginatedResult[Visitor]:
         items, total = self._visitor_repo.search_paginated(

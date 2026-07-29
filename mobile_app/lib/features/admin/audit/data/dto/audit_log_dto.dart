@@ -62,8 +62,12 @@ class AuditLogDto {
       userAgent: json['user_agent'] as String?,
       status: json['status'] as String? ?? 'SUCCESS',
       metadataJson: json['metadata_json'] as String?,
-      createdAt: DateTime.tryParse(json['created_at'] as String? ?? '') ?? DateTime.now(),
-      updatedAt: DateTime.tryParse(json['updated_at'] as String? ?? '') ?? DateTime.now(),
+      createdAt:
+          DateTime.tryParse(json['created_at'] as String? ?? '') ??
+          DateTime.now(),
+      updatedAt:
+          DateTime.tryParse(json['updated_at'] as String? ?? '') ??
+          DateTime.now(),
     );
   }
 
@@ -94,19 +98,24 @@ class AuditLogFilterValuesDto {
   final List<String> actions;
   final List<String> entityTypes;
 
-  const AuditLogFilterValuesDto({required this.actions, required this.entityTypes});
+  const AuditLogFilterValuesDto({
+    required this.actions,
+    required this.entityTypes,
+  });
 
   factory AuditLogFilterValuesDto.fromJson(Map<String, dynamic> json) {
     return AuditLogFilterValuesDto(
-      actions: (json['actions'] as List<dynamic>).map((e) => e as String).toList(),
-      entityTypes: (json['entity_types'] as List<dynamic>).map((e) => e as String).toList(),
+      actions: (json['actions'] as List<dynamic>)
+          .map((e) => e as String)
+          .toList(),
+      entityTypes: (json['entity_types'] as List<dynamic>)
+          .map((e) => e as String)
+          .toList(),
     );
   }
 
-  AuditLogFilterValues toDomain() => AuditLogFilterValues(
-    actions: actions,
-    entityTypes: entityTypes,
-  );
+  AuditLogFilterValues toDomain() =>
+      AuditLogFilterValues(actions: actions, entityTypes: entityTypes);
 }
 
 class AuditLogExportItemDto {

@@ -12,8 +12,7 @@ import '../dto/update_visitor_request_dto.dart';
 class VisitorRepositoryImpl implements VisitorRepository {
   final VisitorRemoteDataSource _dataSource;
 
-  VisitorRepositoryImpl({required VisitorRemoteDataSource dataSource})
-      : _dataSource = dataSource;
+  VisitorRepositoryImpl({required this._dataSource});
 
   @override
   Future<Result<PaginatedVisitors>> getVisitors({
@@ -31,17 +30,21 @@ class VisitorRepositoryImpl implements VisitorRepository {
         sort: sort,
         order: order,
       );
-      return Success(PaginatedVisitors(
-        items: response.items.map((e) => e.toDomain()).toList(),
-        total: response.total,
-        page: response.page,
-        pageSize: response.pageSize,
-        totalPages: response.totalPages,
-      ));
+      return Success(
+        PaginatedVisitors(
+          items: response.items.map((e) => e.toDomain()).toList(),
+          total: response.total,
+          page: response.page,
+          pageSize: response.pageSize,
+          totalPages: response.totalPages,
+        ),
+      );
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'visiteur'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors du chargement des visiteurs.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors du chargement des visiteurs.'),
+      );
     }
   }
 
@@ -53,7 +56,9 @@ class VisitorRepositoryImpl implements VisitorRepository {
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'visiteur'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors du chargement du visiteur.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors du chargement du visiteur.'),
+      );
     }
   }
 
@@ -80,7 +85,9 @@ class VisitorRepositoryImpl implements VisitorRepository {
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'visiteur'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors de la création du visiteur.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors de la création du visiteur.'),
+      );
     }
   }
 
@@ -108,7 +115,9 @@ class VisitorRepositoryImpl implements VisitorRepository {
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'visiteur'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors de la modification du visiteur.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors de la modification du visiteur.'),
+      );
     }
   }
 
@@ -120,7 +129,9 @@ class VisitorRepositoryImpl implements VisitorRepository {
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'visiteur'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors de la suppression du visiteur.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors de la suppression du visiteur.'),
+      );
     }
   }
 

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/theme/spacing.dart';
 import '../../../../../shared/widgets/detail_row.dart';
 import '../../../../../shared/widgets/status_badge.dart';
+import '../../../qr/presentation/screens/qr_generate_screen.dart';
 import '../../domain/entities/intern.dart';
 import '../providers/intern_provider.dart';
 import 'intern_form_screen.dart';
@@ -70,13 +71,15 @@ class InternDetailScreen extends ConsumerWidget {
               DetailRow(label: 'UUID', value: intern.uuid),
               DetailRow(
                 label: 'Début de stage',
-                value: '${intern.dateDebutStage.day.toString().padLeft(2, '0')}/'
+                value:
+                    '${intern.dateDebutStage.day.toString().padLeft(2, '0')}/'
                     '${intern.dateDebutStage.month.toString().padLeft(2, '0')}/'
                     '${intern.dateDebutStage.year}',
               ),
               DetailRow(
                 label: 'Fin de stage',
-                value: '${intern.dateFinStage.day.toString().padLeft(2, '0')}/'
+                value:
+                    '${intern.dateFinStage.day.toString().padLeft(2, '0')}/'
                     '${intern.dateFinStage.month.toString().padLeft(2, '0')}/'
                     '${intern.dateFinStage.year}',
               ),
@@ -117,11 +120,14 @@ class InternDetailScreen extends ConsumerWidget {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Génération de QR code à venir.')),
-                    );
-                  },
+                  onPressed: () => showDialog<void>(
+                    context: context,
+                    builder: (_) => QrGenerateScreen(
+                      initialOwnerType: 'STAGIAIRE',
+                      initialOwnerUuid: intern.uuid,
+                      initialOwnerName: intern.fullName,
+                    ),
+                  ),
                   icon: const Icon(Icons.qr_code_rounded),
                   label: const Text('Générer un QR code'),
                 ),
@@ -169,7 +175,8 @@ class InternDetailScreen extends ConsumerWidget {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                        ref.read(internProvider).error ?? 'Erreur lors de la suppression.',
+                        ref.read(internProvider).error ??
+                            'Erreur lors de la suppression.',
                       ),
                     ),
                   );

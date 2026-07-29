@@ -50,14 +50,7 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _initializeCamera();
-    _faceDetector = FaceDetector(
-      options: FaceDetectorOptions(
-        enableClassification: false,
-        enableLandmarks: false,
-        enableContours: false,
-        performanceMode: FaceDetectorMode.fast,
-      ),
-    );
+    _faceDetector = FaceDetector(options: FaceDetectorOptions());
   }
 
   @override
@@ -189,7 +182,9 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
   void _onSingleFace(Face face, int imageWidth, int imageHeight) {
     if (!_isFaceDetected) {
       _isFaceDetected = true;
-      setState(() => _guidanceMessage = 'Visage détecté, maintenez la position');
+      setState(
+        () => _guidanceMessage = 'Visage détecté, maintenez la position',
+      );
     }
 
     final box = face.boundingBox;
@@ -198,7 +193,8 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
     final normX = centerX / imageWidth;
     final normY = centerY / imageHeight;
 
-    final isCentered = (normX - 0.5).abs() < _centerThreshold &&
+    final isCentered =
+        (normX - 0.5).abs() < _centerThreshold &&
         (normY - 0.5).abs() < _centerThreshold;
 
     if (!isCentered) {
@@ -239,8 +235,7 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
       _captureCount++;
 
       setState(() {
-        _guidanceMessage =
-            'Image $_captureCount / $_minImages capturée';
+        _guidanceMessage = 'Image $_captureCount / $_minImages capturée';
       });
 
       if (_captureCount >= _minImages) {
@@ -308,8 +303,10 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
                   left: Spacing.md,
                   child: SafeArea(
                     child: IconButton(
-                      icon: const Icon(Icons.close_rounded,
-                          color: Colors.white),
+                      icon: const Icon(
+                        Icons.close_rounded,
+                        color: Colors.white,
+                      ),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                   ),
@@ -318,11 +315,7 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
                   top: MediaQuery.of(context).padding.top + Spacing.md,
                   right: Spacing.md,
                   child: SafeArea(
-                    child: Column(
-                      children: [
-                        _buildProgressIndicator(theme),
-                      ],
-                    ),
+                    child: Column(children: [_buildProgressIndicator(theme)]),
                   ),
                 ),
                 Positioned(
@@ -368,7 +361,9 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
                       child: FilledButton.icon(
                         onPressed: () {
                           _cameraController?.stopImageStream();
-                          ref.read(faceEnrollmentProvider.notifier).goToPreview();
+                          ref
+                              .read(faceEnrollmentProvider.notifier)
+                              .goToPreview();
                         },
                         icon: const Icon(Icons.check_rounded),
                         label: const Text('Continuer'),
@@ -377,9 +372,7 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
                   ),
               ],
             )
-          : const Center(
-              child: CircularProgressIndicator(color: Colors.white),
-            ),
+          : const Center(child: CircularProgressIndicator(color: Colors.white)),
     );
   }
 
@@ -443,8 +436,8 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
           state.step == EnrollmentStep.uploading
               ? 'Envoi en cours...'
               : state.step == EnrollmentStep.done
-                  ? 'Enrôlement terminé'
-                  : 'Aperçu des images',
+              ? 'Enrôlement terminé'
+              : 'Aperçu des images',
         ),
         automaticallyImplyLeading: state.step != EnrollmentStep.done,
       ),
@@ -453,9 +446,7 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
         child: Column(
           children: [
             if (state.step == EnrollmentStep.uploading) ...[
-              LinearProgressIndicator(
-                value: state.uploadProgress,
-              ),
+              LinearProgressIndicator(value: state.uploadProgress),
               const SizedBox(height: Spacing.md),
               Text(
                 'Envoi de ${images.length} images...',
@@ -464,7 +455,7 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
               const SizedBox(height: Spacing.lg),
             ],
             if (state.step == EnrollmentStep.done) ...[
-              Icon(
+              const Icon(
                 Icons.check_circle_rounded,
                 size: 80,
                 color: AppColors.success,
@@ -512,9 +503,7 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () {
-                        ref
-                            .read(faceEnrollmentProvider.notifier)
-                            .goToPreview();
+                        ref.read(faceEnrollmentProvider.notifier).goToPreview();
                       },
                       icon: const Icon(Icons.arrow_back_rounded),
                       label: const Text('Retour'),
@@ -523,8 +512,7 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
                   const SizedBox(width: Spacing.md),
                   Expanded(
                     child: FilledButton.icon(
-                      onPressed: () =>
-                          _uploadImages(context),
+                      onPressed: () => _uploadImages(context),
                       icon: const Icon(Icons.refresh_rounded),
                       label: const Text('Réessayer'),
                     ),
@@ -533,9 +521,7 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
               ),
             ],
             if (state.step == EnrollmentStep.preview) ...[
-              Expanded(
-                child: _buildImageGrid(images, theme),
-              ),
+              Expanded(child: _buildImageGrid(images, theme)),
               const SizedBox(height: Spacing.md),
               Row(
                 children: [
@@ -580,17 +566,15 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(Spacing.radiusSm),
-              child: Image.file(
-                File(image.filePath),
-                fit: BoxFit.cover,
-              ),
+              child: Image.file(File(image.filePath), fit: BoxFit.cover),
             ),
             Positioned(
               top: 4,
               right: 4,
               child: GestureDetector(
-                onTap: () =>
-                    ref.read(faceEnrollmentProvider.notifier).removeImage(index),
+                onTap: () => ref
+                    .read(faceEnrollmentProvider.notifier)
+                    .removeImage(index),
                 child: Container(
                   padding: const EdgeInsets.all(4),
                   decoration: const BoxDecoration(
@@ -609,8 +593,7 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
               bottom: 4,
               left: 4,
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: Colors.black54,
                   borderRadius: BorderRadius.circular(Spacing.radiusXs),
@@ -641,10 +624,7 @@ class _FaceOverlayPainter extends CustomPainter {
   final Rect scanRect;
   final bool isDetected;
 
-  _FaceOverlayPainter({
-    required this.scanRect,
-    required this.isDetected,
-  });
+  _FaceOverlayPainter({required this.scanRect, required this.isDetected});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -656,16 +636,17 @@ class _FaceOverlayPainter extends CustomPainter {
       Path.combine(
         PathOperation.difference,
         Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height)),
-        Path()..addRRect(RRect.fromRectAndRadius(
-          scanRect,
-          const Radius.circular(Spacing.radiusMd),
-        )),
+        Path()..addRRect(
+          RRect.fromRectAndRadius(
+            scanRect,
+            const Radius.circular(Spacing.radiusMd),
+          ),
+        ),
       ),
       overlayPaint,
     );
 
-    final borderColor =
-        isDetected ? AppColors.success : Colors.white;
+    final borderColor = isDetected ? AppColors.success : Colors.white;
     final borderPaint = Paint()
       ..color = borderColor
       ..style = PaintingStyle.stroke
@@ -686,26 +667,49 @@ class _FaceOverlayPainter extends CustomPainter {
 
     const cornerLength = 24.0;
 
-    canvas.drawLine(scanRect.topLeft,
-        Offset(scanRect.left + cornerLength, scanRect.top), cornerPaint);
-    canvas.drawLine(scanRect.topLeft,
-        Offset(scanRect.left, scanRect.top + cornerLength), cornerPaint);
-    canvas.drawLine(scanRect.topRight,
-        Offset(scanRect.right - cornerLength, scanRect.top), cornerPaint);
-    canvas.drawLine(scanRect.topRight,
-        Offset(scanRect.right, scanRect.top + cornerLength), cornerPaint);
-    canvas.drawLine(scanRect.bottomLeft,
-        Offset(scanRect.left + cornerLength, scanRect.bottom), cornerPaint);
-    canvas.drawLine(scanRect.bottomLeft,
-        Offset(scanRect.left, scanRect.bottom - cornerLength), cornerPaint);
-    canvas.drawLine(scanRect.bottomRight,
-        Offset(scanRect.right - cornerLength, scanRect.bottom), cornerPaint);
-    canvas.drawLine(scanRect.bottomRight,
-        Offset(scanRect.right, scanRect.bottom - cornerLength), cornerPaint);
+    canvas.drawLine(
+      scanRect.topLeft,
+      Offset(scanRect.left + cornerLength, scanRect.top),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      scanRect.topLeft,
+      Offset(scanRect.left, scanRect.top + cornerLength),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      scanRect.topRight,
+      Offset(scanRect.right - cornerLength, scanRect.top),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      scanRect.topRight,
+      Offset(scanRect.right, scanRect.top + cornerLength),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      scanRect.bottomLeft,
+      Offset(scanRect.left + cornerLength, scanRect.bottom),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      scanRect.bottomLeft,
+      Offset(scanRect.left, scanRect.bottom - cornerLength),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      scanRect.bottomRight,
+      Offset(scanRect.right - cornerLength, scanRect.bottom),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      scanRect.bottomRight,
+      Offset(scanRect.right, scanRect.bottom - cornerLength),
+      cornerPaint,
+    );
   }
 
   @override
   bool shouldRepaint(_FaceOverlayPainter oldDelegate) =>
-      oldDelegate.scanRect != scanRect ||
-      oldDelegate.isDetected != isDetected;
+      oldDelegate.scanRect != scanRect || oldDelegate.isDetected != isDetected;
 }

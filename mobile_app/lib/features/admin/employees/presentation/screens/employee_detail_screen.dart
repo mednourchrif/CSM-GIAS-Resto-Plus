@@ -5,6 +5,7 @@ import '../../../../../core/theme/colors.dart';
 import '../../../../../core/theme/spacing.dart';
 import '../../../../../shared/widgets/app_dialog.dart';
 import '../../../../../shared/widgets/detail_row.dart';
+import '../../../meals/presentation/screens/meal_history_list_screen.dart';
 import '../../../../../shared/widgets/error_state.dart';
 import '../../../../../shared/widgets/shimmer_loading.dart';
 import '../../../../admin/face_enrollment/presentation/providers/face_enrollment_provider.dart';
@@ -32,18 +33,13 @@ class EmployeeDetailScreen extends ConsumerWidget {
           onRetry: () => ref.invalidate(employeeDetailProvider(uuid)),
         ),
       ),
-      data: (detail) => _buildScaffold(
-        context,
-        _DetailBody(detail: detail),
-      ),
+      data: (detail) => _buildScaffold(context, _DetailBody(detail: detail)),
     );
   }
 
   Widget _buildScaffold(BuildContext context, Widget body) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Détails employé'),
-      ),
+      appBar: AppBar(title: const Text('Détails employé')),
       body: body,
     );
   }
@@ -58,15 +54,15 @@ class _LoadingBody extends StatelessWidget {
       padding: const EdgeInsets.all(Spacing.lg),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 600),
-        child: Column(
+        child: const Column(
           children: [
-            const ShimmerCard(),
-            const SizedBox(height: Spacing.md),
-            const ShimmerCard(),
-            const SizedBox(height: Spacing.md),
-            const ShimmerCard(),
-            const SizedBox(height: Spacing.md),
-            const ShimmerCard(),
+            ShimmerCard(),
+            SizedBox(height: Spacing.md),
+            ShimmerCard(),
+            SizedBox(height: Spacing.md),
+            ShimmerCard(),
+            SizedBox(height: Spacing.md),
+            ShimmerCard(),
           ],
         ),
       ),
@@ -119,7 +115,8 @@ class _HeaderSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final initials = '${employee.prenom.isNotEmpty ? employee.prenom[0] : '?'}'
+    final initials =
+        '${employee.prenom.isNotEmpty ? employee.prenom[0] : '?'}'
         '${employee.nom.isNotEmpty ? employee.nom[0] : '?'}';
 
     return Card(
@@ -196,11 +193,17 @@ class _PersonalInfoSection extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.person_rounded, size: Spacing.iconSm, color: Theme.of(context).colorScheme.primary),
+                Icon(
+                  Icons.person_rounded,
+                  size: Spacing.iconSm,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 const SizedBox(width: Spacing.sm),
                 Text(
                   'Informations personnelles',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -209,8 +212,14 @@ class _PersonalInfoSection extends StatelessWidget {
             DetailRow(label: 'Prénom', value: employee.prenom),
             DetailRow(label: 'Email', value: employee.email ?? 'Non renseigné'),
             DetailRow(label: 'Matricule', value: employee.matricule),
-            DetailRow(label: 'Date de création', value: _formatDate(employee.createdAt)),
-            DetailRow(label: 'Dernière modification', value: _formatDate(employee.updatedAt)),
+            DetailRow(
+              label: 'Date de création',
+              value: _formatDate(employee.createdAt),
+            ),
+            DetailRow(
+              label: 'Dernière modification',
+              value: _formatDate(employee.updatedAt),
+            ),
           ],
         ),
       ),
@@ -246,11 +255,17 @@ class _TodayMealSection extends ConsumerWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.restaurant_rounded, size: Spacing.iconSm, color: theme.colorScheme.primary),
+                Icon(
+                  Icons.restaurant_rounded,
+                  size: Spacing.iconSm,
+                  color: theme.colorScheme.primary,
+                ),
                 const SizedBox(width: Spacing.sm),
                 Text(
                   'Repas du jour',
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -260,14 +275,18 @@ class _TodayMealSection extends ConsumerWidget {
                 Icon(
                   hasMeal ? Icons.check_circle_rounded : Icons.schedule_rounded,
                   size: Spacing.iconSm,
-                  color: hasMeal ? const Color(0xFF1B8A1B) : theme.colorScheme.onSurfaceVariant,
+                  color: hasMeal
+                      ? const Color(0xFF1B8A1B)
+                      : theme.colorScheme.onSurfaceVariant,
                 ),
                 const SizedBox(width: Spacing.sm),
                 Text(
                   detail.mealStatus,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: hasMeal ? const Color(0xFF1B8A1B) : theme.colorScheme.onSurfaceVariant,
+                    color: hasMeal
+                        ? const Color(0xFF1B8A1B)
+                        : theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -275,7 +294,10 @@ class _TodayMealSection extends ConsumerWidget {
             if (hasMeal && meal != null) ...[
               const SizedBox(height: Spacing.sm),
               DetailRow(label: 'Catégorie', value: meal.categorieNom),
-              DetailRow(label: 'Méthode', value: _methodLabel(meal.typeIdentification)),
+              DetailRow(
+                label: 'Méthode',
+                value: _methodLabel(meal.typeIdentification),
+              ),
               DetailRow(label: 'Heure', value: _formatTime(meal.heureRepas)),
             ],
           ],
@@ -315,117 +337,127 @@ class _IdentificationSection extends ConsumerWidget {
       children: [
         Row(
           children: [
-            Icon(Icons.fingerprint_rounded, size: Spacing.iconSm, color: theme.colorScheme.primary),
+            Icon(
+              Icons.verified_user_outlined,
+              size: Spacing.iconSm,
+              color: theme.colorScheme.primary,
+            ),
             const SizedBox(width: Spacing.sm),
             Text(
               'Identification',
-              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),
         const SizedBox(height: Spacing.md),
         _IdMethodCard(
-          icon: Icons.qr_code_rounded,
-          title: 'QR Code',
-          statusLabel: detail.qrGenerated ? 'Généré' : 'Non généré',
-          statusColor: detail.qrGenerated ? const Color(0xFF1B8A1B) : theme.colorScheme.onSurfaceVariant,
-          actions: [
-            _disabledAction('Voir', Icons.visibility_rounded),
-            _disabledAction('Télécharger', Icons.download_rounded),
-            _disabledAction('Imprimer', Icons.print_rounded),
-            _disabledAction('Régénérer', Icons.refresh_rounded),
-          ],
-        ),
-        const SizedBox(height: Spacing.sm),
-        _IdMethodCard(
           icon: Icons.face_rounded,
           title: 'Reconnaissance faciale',
           statusLabel: detail.faceEnrolled ? 'Enrolé' : 'Non enrolé',
-          statusColor: detail.faceEnrolled ? const Color(0xFF1B8A1B) : theme.colorScheme.onSurfaceVariant,
+          statusColor: detail.faceEnrolled
+              ? const Color(0xFF1B8A1B)
+              : theme.colorScheme.onSurfaceVariant,
           actions: [
             if (detail.faceEnrolled)
-              _enabledAction('Ré-enrôler', Icons.face_retouching_natural_rounded, () {
-                ref.read(faceEnrollmentProvider.notifier).reset();
-                Navigator.of(context).push<bool>(
-                  MaterialPageRoute(
-                    builder: (_) => FaceEnrollmentScreen(
-                      employee: emp,
-                    ),
-                  ),
-                ).then((enrolled) {
-                  if (enrolled == true && context.mounted) {
-                    ref.invalidate(employeeDetailProvider(detail.employee.uuid));
-                    ref.read(employeeProvider.notifier).refresh();
-                  }
-                });
-              })
+              _enabledAction(
+                'Ré-enrôler',
+                Icons.face_retouching_natural_rounded,
+                () {
+                  ref.read(faceEnrollmentProvider.notifier).reset();
+                  Navigator.of(context)
+                      .push<bool>(
+                        MaterialPageRoute(
+                          builder: (_) => FaceEnrollmentScreen(employee: emp),
+                        ),
+                      )
+                      .then((enrolled) {
+                        if (enrolled == true && context.mounted) {
+                          ref.invalidate(
+                            employeeDetailProvider(detail.employee.uuid),
+                          );
+                          ref.read(employeeProvider.notifier).refresh();
+                        }
+                      });
+                },
+              )
             else
-              _enabledAction('Enrôler', Icons.face_retouching_natural_rounded, () {
-                ref.read(faceEnrollmentProvider.notifier).reset();
-                Navigator.of(context).push<bool>(
-                  MaterialPageRoute(
-                    builder: (_) => FaceEnrollmentScreen(
-                      employee: emp,
-                    ),
-                  ),
-                ).then((enrolled) {
-                  if (enrolled == true && context.mounted) {
-                    ref.invalidate(employeeDetailProvider(detail.employee.uuid));
-                    ref.read(employeeProvider.notifier).refresh();
-                  }
-                });
-              }),
+              _enabledAction(
+                'Enrôler',
+                Icons.face_retouching_natural_rounded,
+                () {
+                  ref.read(faceEnrollmentProvider.notifier).reset();
+                  Navigator.of(context)
+                      .push<bool>(
+                        MaterialPageRoute(
+                          builder: (_) => FaceEnrollmentScreen(employee: emp),
+                        ),
+                      )
+                      .then((enrolled) {
+                        if (enrolled == true && context.mounted) {
+                          ref.invalidate(
+                            employeeDetailProvider(detail.employee.uuid),
+                          );
+                          ref.read(employeeProvider.notifier).refresh();
+                        }
+                      });
+                },
+              ),
             if (detail.faceEnrolled)
               _enabledAction('Supprimer', Icons.delete_rounded, () async {
                 final confirmed = await showConfirmDangerDialog(
                   context: context,
                   title: 'Supprimer le visage',
-                  message: 'Êtes-vous sûr de vouloir supprimer la reconnaissance faciale de ${emp.fullName} ?',
+                  message:
+                      'Êtes-vous sûr de vouloir supprimer la reconnaissance faciale de ${emp.fullName} ?',
                   confirmLabel: 'Supprimer',
                 );
                 if (confirmed == true && context.mounted) {
-                  ref.invalidate(employeeDetailProvider(detail.employee.uuid));
-                  ref.read(employeeProvider.notifier).refresh();
+                  final deleted = await ref
+                      .read(faceEnrollmentProvider.notifier)
+                      .deleteFace(detail.employee.uuid);
+                  if (!context.mounted) return;
+                  if (deleted) {
+                    ref.invalidate(
+                      employeeDetailProvider(detail.employee.uuid),
+                    );
+                    ref.read(employeeProvider.notifier).refresh();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Empreinte faciale supprimée.'),
+                      ),
+                    );
+                  } else {
+                    final error = ref.read(faceEnrollmentProvider).errorMessage;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(error ?? 'La suppression a échoué.'),
+                      ),
+                    );
+                  }
                 }
               }),
           ],
-        ),
-        const SizedBox(height: Spacing.sm),
-        _IdMethodCard(
-          icon: Icons.fingerprint_rounded,
-          title: 'Empreinte digitale',
-          statusLabel: 'Bientôt disponible',
-          statusColor: theme.colorScheme.onSurfaceVariant,
-          actions: [
-            _disabledAction('Enrôler', Icons.fingerprint),
-            _disabledAction('Supprimer', Icons.delete_rounded),
-          ],
-          showComingSoon: true,
         ),
       ],
     );
   }
 
-  OutlinedButton _disabledAction(String label, IconData icon) {
-    return OutlinedButton.icon(
-      onPressed: null,
-      icon: Icon(icon, size: 16),
-      label: Text(label, style: const TextStyle(fontSize: 12)),
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: Spacing.sm, vertical: Spacing.xs),
-        minimumSize: Size.zero,
-        visualDensity: VisualDensity.compact,
-      ),
-    );
-  }
-
-  OutlinedButton _enabledAction(String label, IconData icon, VoidCallback onPressed) {
+  OutlinedButton _enabledAction(
+    String label,
+    IconData icon,
+    VoidCallback onPressed,
+  ) {
     return OutlinedButton.icon(
       onPressed: onPressed,
       icon: Icon(icon, size: 16),
       label: Text(label, style: const TextStyle(fontSize: 12)),
       style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: Spacing.sm, vertical: Spacing.xs),
+        padding: const EdgeInsets.symmetric(
+          horizontal: Spacing.sm,
+          vertical: Spacing.xs,
+        ),
         minimumSize: Size.zero,
         visualDensity: VisualDensity.compact,
       ),
@@ -439,7 +471,6 @@ class _IdMethodCard extends StatelessWidget {
   final String statusLabel;
   final Color statusColor;
   final List<Widget> actions;
-  final bool showComingSoon;
 
   const _IdMethodCard({
     required this.icon,
@@ -447,7 +478,6 @@ class _IdMethodCard extends StatelessWidget {
     required this.statusLabel,
     required this.statusColor,
     required this.actions,
-    this.showComingSoon = false,
   });
 
   @override
@@ -462,19 +492,30 @@ class _IdMethodCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(icon, size: Spacing.iconSm, color: theme.colorScheme.primary),
+                Icon(
+                  icon,
+                  size: Spacing.iconSm,
+                  color: theme.colorScheme.primary,
+                ),
                 const SizedBox(width: Spacing.sm),
                 Text(
                   title,
-                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const Spacer(),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: Spacing.sm, vertical: Spacing.xxs),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: Spacing.sm,
+                    vertical: Spacing.xxs,
+                  ),
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(Spacing.radiusSm),
-                    border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: statusColor.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Text(
                     statusLabel,
@@ -487,30 +528,6 @@ class _IdMethodCard extends StatelessWidget {
                 ),
               ],
             ),
-            if (showComingSoon) ...[
-              const SizedBox(height: Spacing.sm),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: Spacing.sm, vertical: Spacing.xs),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.tertiaryContainer.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(Spacing.radiusSm),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.construction_rounded, size: 14, color: theme.colorScheme.onTertiaryContainer),
-                    const SizedBox(width: Spacing.xxs + 1),
-                    Text(
-                      'Module en cours de développement',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: theme.colorScheme.onTertiaryContainer,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
             const SizedBox(height: Spacing.sm),
             Wrap(
               spacing: Spacing.xs,
@@ -544,11 +561,17 @@ class _MealHistorySection extends ConsumerWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.history_rounded, size: Spacing.iconSm, color: theme.colorScheme.primary),
+                Icon(
+                  Icons.history_rounded,
+                  size: Spacing.iconSm,
+                  color: theme.colorScheme.primary,
+                ),
                 const SizedBox(width: Spacing.sm),
                 Text(
                   'Derniers repas',
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -558,7 +581,11 @@ class _MealHistorySection extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline_rounded, size: 16, color: theme.colorScheme.onSurfaceVariant),
+                    Icon(
+                      Icons.info_outline_rounded,
+                      size: 16,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                     const SizedBox(width: Spacing.sm),
                     Text(
                       'Aucun repas enregistré.',
@@ -570,20 +597,24 @@ class _MealHistorySection extends ConsumerWidget {
                 ),
               )
             else ...[
-              ...meals.map((meal) => Padding(
-                    padding: const EdgeInsets.only(bottom: Spacing.sm),
-                    child: _MealHistoryCard(meal: meal),
-                  )),
+              ...meals.map(
+                (meal) => Padding(
+                  padding: const EdgeInsets.only(bottom: Spacing.sm),
+                  child: _MealHistoryCard(meal: meal),
+                ),
+              ),
             ],
             const SizedBox(height: Spacing.sm),
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Historique complet à venir.')),
-                  );
-                },
+                onPressed: () => Navigator.of(context).push<void>(
+                  MaterialPageRoute(
+                    builder: (_) => MealHistoryListScreen(
+                      initialSearch: detail.employee.fullName,
+                    ),
+                  ),
+                ),
                 icon: const Icon(Icons.open_in_new_rounded, size: 16),
                 label: const Text('Voir l\'historique complet'),
               ),
@@ -617,7 +648,11 @@ class _MealHistoryCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.restaurant_rounded, size: 16, color: theme.colorScheme.primary),
+          Icon(
+            Icons.restaurant_rounded,
+            size: 16,
+            color: theme.colorScheme.primary,
+          ),
           const SizedBox(width: Spacing.sm),
           Expanded(
             child: Column(
@@ -625,7 +660,9 @@ class _MealHistoryCard extends StatelessWidget {
               children: [
                 Text(
                   meal.categorieNom,
-                  style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -678,11 +715,17 @@ class _AdminActionsSection extends ConsumerWidget {
       children: [
         Row(
           children: [
-            Icon(Icons.admin_panel_settings_rounded, size: Spacing.iconSm, color: theme.colorScheme.primary),
+            Icon(
+              Icons.admin_panel_settings_rounded,
+              size: Spacing.iconSm,
+              color: theme.colorScheme.primary,
+            ),
             const SizedBox(width: Spacing.sm),
             Text(
               'Actions',
-              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),
@@ -698,9 +741,7 @@ class _AdminActionsSection extends ConsumerWidget {
             onPressed: () => _confirmDeactivate(context, ref),
             icon: const Icon(Icons.pause_circle_rounded),
             label: const Text('Désactiver l\'employé'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.warning,
-            ),
+            style: OutlinedButton.styleFrom(foregroundColor: AppColors.warning),
           )
         else
           OutlinedButton.icon(
@@ -739,7 +780,8 @@ class _AdminActionsSection extends ConsumerWidget {
     final confirmed = await showConfirmDangerDialog(
       context: context,
       title: 'Désactiver l\'employé',
-      message: 'Êtes-vous sûr de vouloir désactiver ${detail.employee.fullName} ?',
+      message:
+          'Êtes-vous sûr de vouloir désactiver ${detail.employee.fullName} ?',
       confirmLabel: 'Désactiver',
     );
     if (confirmed == true && context.mounted) {
@@ -748,9 +790,9 @@ class _AdminActionsSection extends ConsumerWidget {
           .updateEmployee(detail.employee.uuid, statut: 'INACTIF');
       if (success && context.mounted) {
         ref.invalidate(employeeDetailProvider(detail.employee.uuid));
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Employé désactivé.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Employé désactivé.')));
       }
     }
   }
@@ -768,9 +810,9 @@ class _AdminActionsSection extends ConsumerWidget {
           .updateEmployee(detail.employee.uuid, statut: 'ACTIF');
       if (success && context.mounted) {
         ref.invalidate(employeeDetailProvider(detail.employee.uuid));
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Employé activé.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Employé activé.')));
       }
     }
   }
@@ -779,7 +821,8 @@ class _AdminActionsSection extends ConsumerWidget {
     final confirmed = await showConfirmDangerDialog(
       context: context,
       title: 'Supprimer l\'employé',
-      message: 'Êtes-vous sûr de vouloir supprimer ${detail.employee.fullName} ?\n\nCette action est réversible.',
+      message:
+          'Êtes-vous sûr de vouloir supprimer ${detail.employee.fullName} ?\n\nCette action est réversible.',
       confirmLabel: 'Supprimer',
     );
     if (confirmed == true && context.mounted) {
@@ -788,9 +831,9 @@ class _AdminActionsSection extends ConsumerWidget {
           .deleteEmployee(detail.employee.uuid);
       if (success && context.mounted) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Employé supprimé.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Employé supprimé.')));
       }
     }
   }

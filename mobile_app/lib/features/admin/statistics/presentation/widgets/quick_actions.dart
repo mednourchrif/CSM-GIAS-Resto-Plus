@@ -4,17 +4,37 @@ import '../../../../../core/theme/spacing.dart';
 
 class QuickActions extends StatelessWidget {
   final void Function(int index) onSectionTap;
-  const QuickActions({required this.onSectionTap});
+  const QuickActions({super.key, required this.onSectionTap});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final actions = [
-      _ActionItem(icon: Icons.people_rounded, label: 'Employés', index: 0),
-      _ActionItem(icon: Icons.school_rounded, label: 'Stagiaires', index: 1),
-      _ActionItem(icon: Icons.group_rounded, label: 'Visiteurs', index: 2),
-      _ActionItem(icon: Icons.qr_code_rounded, label: 'QR Codes', index: 3),
-      _ActionItem(icon: Icons.restaurant_menu_rounded, label: 'Repas', index: 5),
+      const _ActionItem(
+        icon: Icons.people_rounded,
+        label: 'Employés',
+        index: 0,
+      ),
+      const _ActionItem(
+        icon: Icons.school_rounded,
+        label: 'Stagiaires',
+        index: 1,
+      ),
+      const _ActionItem(
+        icon: Icons.group_rounded,
+        label: 'Visiteurs',
+        index: 2,
+      ),
+      const _ActionItem(
+        icon: Icons.qr_code_rounded,
+        label: 'QR Codes',
+        index: 3,
+      ),
+      const _ActionItem(
+        icon: Icons.restaurant_menu_rounded,
+        label: 'Repas',
+        index: 5,
+      ),
     ];
 
     return GridView.count(
@@ -37,9 +57,12 @@ class QuickActions extends StatelessWidget {
               children: [
                 Icon(a.icon, size: 20, color: theme.colorScheme.primary),
                 const SizedBox(width: Spacing.sm),
-                Text(a.label,
-                    style: theme.textTheme.bodyMedium
-                        ?.copyWith(fontWeight: FontWeight.w500)),
+                Text(
+                  a.label,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ],
             ),
           ),

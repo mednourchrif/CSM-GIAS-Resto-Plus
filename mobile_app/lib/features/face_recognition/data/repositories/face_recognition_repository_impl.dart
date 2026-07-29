@@ -10,28 +10,23 @@ import '../datasources/face_recognition_remote_datasource.dart';
 class FaceRecognitionRepositoryImpl implements FaceRecognitionRepository {
   final FaceRecognitionRemoteDataSource _remoteDataSource;
 
-  FaceRecognitionRepositoryImpl({
-    required FaceRecognitionRemoteDataSource remoteDataSource,
-  }) : _remoteDataSource = remoteDataSource;
+  FaceRecognitionRepositoryImpl({required this._remoteDataSource});
 
   @override
   Future<Result<FaceRecognitionResult>> identify({
     required String imageBase64,
-    String? categorieUuid,
   }) async {
     try {
       final response = await _remoteDataSource.identify(
         imageBase64: imageBase64,
-        categorieUuid: categorieUuid,
       );
       return Success(response.toDomain());
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'visage'));
     } catch (e) {
-      return Fail(
-        const ApiFailure(message: 'Erreur lors de l\'identification faciale.'),
+      return const Fail(
+        ApiFailure(message: 'Erreur lors de l\'identification faciale.'),
       );
-
     }
   }
 }

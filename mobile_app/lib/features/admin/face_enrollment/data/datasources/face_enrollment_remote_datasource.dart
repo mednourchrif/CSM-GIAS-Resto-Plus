@@ -3,7 +3,7 @@ import 'package:dio/dio.dart';
 class FaceEnrollmentRemoteDataSource {
   final Dio _dio;
 
-  FaceEnrollmentRemoteDataSource({required Dio dio}) : _dio = dio;
+  FaceEnrollmentRemoteDataSource({required this._dio});
 
   Future<void> enrollFace({
     required String utilisateurUuid,
@@ -13,10 +13,7 @@ class FaceEnrollmentRemoteDataSource {
       'utilisateur_uuid': utilisateurUuid,
       'images': [
         for (int i = 0; i < imagePaths.length; i++)
-          await MultipartFile.fromFile(
-            imagePaths[i],
-            filename: 'face_$i.png',
-          ),
+          await MultipartFile.fromFile(imagePaths[i], filename: 'face_$i.png'),
       ],
     });
 
@@ -29,5 +26,9 @@ class FaceEnrollmentRemoteDataSource {
         sendTimeout: const Duration(seconds: 120),
       ),
     );
+  }
+
+  Future<void> deleteFace(String utilisateurUuid) async {
+    await _dio.delete('/face/user/$utilisateurUuid');
   }
 }

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../config/app_config.dart';
 import 'route_names.dart';
 
 import '../../features/admin/presentation/screens/dashboard_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
+import '../../features/identification/domain/entities/identification_grant.dart';
 import '../../features/kiosk_camera/presentation/screens/kiosk_camera_screen.dart';
 import '../../features/recognition/presentation/screens/success_screen.dart';
 
@@ -18,13 +20,13 @@ abstract final class AppRouter {
 
   static GoRouter create({
     required String? Function(BuildContext context, GoRouterState state)
-        redirect,
+    redirect,
     required Listenable refreshListenable,
   }) {
     return GoRouter(
       navigatorKey: _rootNavigatorKey,
       initialLocation: '/splash',
-      debugLogDiagnostics: true,
+      debugLogDiagnostics: AppConfig.isDevelopment,
       redirect: redirect,
       refreshListenable: refreshListenable,
       routes: [
@@ -36,7 +38,14 @@ abstract final class AppRouter {
         GoRoute(
           path: '/home',
           name: RouteNames.home,
-          builder: (context, state) => const HomeScreen(),
+          builder: (context, state) {
+            final extra = state.extra;
+            return HomeScreen(
+              initialIdentificationGrant: extra is IdentificationGrant
+                  ? extra
+                  : null,
+            );
+          },
         ),
         GoRoute(
           path: '/login',
@@ -59,40 +68,55 @@ abstract final class AppRouter {
           builder: (context, state) => const DashboardScreen(),
         ),
       ],
-      errorBuilder: (context, state) => const _PlaceholderPage(title: '404'),
+      errorBuilder: (context, state) => const _NotFoundPage(),
     );
   }
 }
 
-class _PlaceholderPage extends StatelessWidget {
-  final String title;
-
-  const _PlaceholderPage({required this.title});
+class _NotFoundPage extends StatelessWidget {
+  const _NotFoundPage();
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      appBar: AppBar(title: const Text('Page introuvable')),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.construction_rounded,
-              size: 64,
-              color: theme.colorScheme.primary,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 360),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.wrong_location_outlined,
+                  size: 64,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Cette page n’existe pas',
+                  style: theme.textTheme.headlineSmall,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Le lien est peut-être incorrect ou la page a été déplacée.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                FilledButton.icon(
+                  onPressed: () => context.go('/home'),
+                  icon: const Icon(Icons.home_rounded),
+                  label: const Text('Retour à l’accueil'),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            Text(title, style: theme.textTheme.headlineMedium),
-            const SizedBox(height: 8),
-            Text(
-              'This page is under construction.',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

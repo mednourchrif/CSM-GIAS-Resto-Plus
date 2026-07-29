@@ -17,10 +17,14 @@ Usage::
         ...
 """
 
+from typing import Any, cast
+
 from sqlalchemy.orm import Session
 
+from app.repositories.base import BaseRepository
 
-class BaseService[R]:
+
+class BaseService[R: BaseRepository[Any]]:
     """Generic service with standard CRUD delegation.
 
     :param repository: The repository instance to delegate to.
@@ -47,15 +51,15 @@ class BaseService[R]:
 
     def get(self, db: Session, id: int) -> object | None:
         """Fetch by integer primary key."""
-        return self._repository.get(db, id)
+        return cast(object | None, self._repository.get(db, id))
 
     def get_by_uuid(self, db: Session, uuid: str) -> object | None:
         """Fetch by UUID string."""
-        return self._repository.get_by_uuid(db, uuid)
+        return cast(object | None, self._repository.get_by_uuid(db, uuid))
 
     def get_all(self, db: Session) -> list[object]:
         """Fetch all records."""
-        return self._repository.get_all(db)
+        return cast(list[object], self._repository.get_all(db))
 
     def count(self, db: Session) -> int:
         """Return total record count."""
@@ -66,14 +70,14 @@ class BaseService[R]:
 
         Override to add domain validation before persisting.
         """
-        return self._repository.create(db, **attrs)
+        return cast(object, self._repository.create(db, **attrs))
 
     def update(self, db: Session, id: int, **attrs: object) -> object | None:
         """Update a record by primary key.
 
         Override to add domain validation before persisting.
         """
-        return self._repository.update(db, id, **attrs)
+        return cast(object | None, self._repository.update(db, id, **attrs))
 
     def delete(self, db: Session, id: int) -> bool:
         """Hard-delete a record.

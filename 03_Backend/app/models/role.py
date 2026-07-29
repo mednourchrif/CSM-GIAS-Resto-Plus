@@ -23,10 +23,15 @@ See also
 ``app.models.admin.Admin.role`` — many-to-one back-reference.
 """
 
+from typing import TYPE_CHECKING
+
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import BaseModel
+
+if TYPE_CHECKING:
+    from app.models.admin import Admin
 
 
 class Role(BaseModel):
@@ -60,7 +65,7 @@ class Role(BaseModel):
     # Relationships
     # ------------------------------------------------------------------
 
-    administrateurs: Mapped[list["Admin"]] = relationship(  # noqa: F821
+    administrateurs: Mapped[list["Admin"]] = relationship(
         back_populates="role",
     )
 

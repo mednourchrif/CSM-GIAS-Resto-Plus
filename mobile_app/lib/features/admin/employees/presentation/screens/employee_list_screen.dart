@@ -69,10 +69,7 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
   }
 
   void _showCreateDialog() {
-    showDialog(
-      context: context,
-      builder: (_) => const EmployeeFormScreen(),
-    );
+    showDialog(context: context, builder: (_) => const EmployeeFormScreen());
   }
 
   @override
@@ -128,9 +125,7 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
             ),
           ),
           const SizedBox(height: Spacing.sm),
-          Expanded(
-            child: _buildBody(state, theme, isDesktop),
-          ),
+          Expanded(child: _buildBody(state, theme, isDesktop)),
         ],
       ),
       floatingActionButton: isDesktop
@@ -144,16 +139,11 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
 
   Widget _buildBody(EmployeeState state, ThemeData theme, bool isDesktop) {
     if (state.isLoading && state.employees.isEmpty) {
-      return isDesktop
-          ? const ShimmerDataTable()
-          : const ShimmerList();
+      return isDesktop ? const ShimmerDataTable() : const ShimmerList();
     }
 
     if (state.error != null && state.employees.isEmpty) {
-      return ErrorState(
-        message: state.error!,
-        onRetry: _onRefresh,
-      );
+      return ErrorState(message: state.error!, onRetry: _onRefresh);
     }
 
     if (state.employees.isEmpty) {
@@ -239,8 +229,8 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
             }).toList(),
           ),
           if (state.hasMore)
-            Padding(
-              padding: const EdgeInsets.all(Spacing.md),
+            const Padding(
+              padding: EdgeInsets.all(Spacing.md),
               child: Center(child: CircularProgressIndicator()),
             ),
         ],

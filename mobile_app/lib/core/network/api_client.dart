@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
 import '../config/app_config.dart';
 import '../constants/api_constants.dart';
@@ -9,9 +8,8 @@ final class ApiClient {
   final Dio _dio;
   final Logger _logger;
 
-  ApiClient({required Logger logger})
-    : _logger = logger,
-      _dio = Dio(
+  ApiClient({required this._logger})
+    : _dio = Dio(
         BaseOptions(
           baseUrl: AppConfig.apiBaseUrl,
           connectTimeout: ApiConstants.connectTimeout,
@@ -20,10 +18,10 @@ final class ApiClient {
           headers: {
             ApiConstants.acceptHeader: ApiConstants.applicationJson,
             ApiConstants.contentTypeHeader: ApiConstants.applicationJson,
+            'X-Tablet-Key': ?AppConfig.tabletApiKey,
           },
         ),
       ) {
-    debugPrint('ApiClient: baseUrl = ${_dio.options.baseUrl}');
     _dio.interceptors.addAll([
       ApiLoggerInterceptor(logger: _logger),
       ApiErrorInterceptor(),

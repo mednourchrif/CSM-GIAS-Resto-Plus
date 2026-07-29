@@ -4,6 +4,7 @@ class AppConfig {
   AppConfig._();
 
   static String get apiBaseUrl => Environment.apiBaseUrl;
+  static String? get tabletApiKey => Environment.tabletApiKey;
   static bool get isProduction => Environment.isProduction;
   static bool get isDevelopment => Environment.isDevelopment;
   static String get environmentName => Environment.environmentName;

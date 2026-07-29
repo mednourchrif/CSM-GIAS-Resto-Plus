@@ -53,21 +53,25 @@ class ReportOverviewCards extends StatelessWidget {
     ];
 
     if (overview.peakHour != null) {
-      cards.add(_StatCard(
-        icon: Icons.access_time_rounded,
-        label: 'Heure de pointe',
-        value: overview.peakHour!,
-        color: Colors.indigo,
-      ));
+      cards.add(
+        _StatCard(
+          icon: Icons.access_time_rounded,
+          label: 'Heure de pointe',
+          value: overview.peakHour!,
+          color: Colors.indigo,
+        ),
+      );
     }
 
     if (overview.mostSelectedMeal != null) {
-      cards.add(_StatCard(
-        icon: Icons.star_rounded,
-        label: 'Repas le plus choisi',
-        value: overview.mostSelectedMeal!,
-        color: Colors.amber,
-      ));
+      cards.add(
+        _StatCard(
+          icon: Icons.star_rounded,
+          label: 'Repas le plus choisi',
+          value: overview.mostSelectedMeal!,
+          color: Colors.amber,
+        ),
+      );
     }
 
     return GridView.builder(

@@ -20,15 +20,13 @@ class ShareService {
     final file = File('${dir.path}/QR_$safeName.png');
     await file.writeAsBytes(bytes);
 
-    final message = 'QR Code\n'
+    final message =
+        'QR Code\n'
         'Propriétaire : $ownerName\n'
         'Type : $typeLabel\n'
         'Généré par : CSM-GIAS Resto+';
 
-    final result = await Share.shareXFiles(
-      [XFile(file.path)],
-      text: message,
-    );
+    final result = await Share.shareXFiles([XFile(file.path)], text: message);
 
     return result.status == ShareResultStatus.success;
   }

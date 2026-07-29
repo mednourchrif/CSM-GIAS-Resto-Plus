@@ -3,9 +3,5 @@ class MealCategory {
   final String nom;
   final String? description;
 
-  const MealCategory({
-    required this.uuid,
-    required this.nom,
-    this.description,
-  });
+  const MealCategory({required this.uuid, required this.nom, this.description});
 }

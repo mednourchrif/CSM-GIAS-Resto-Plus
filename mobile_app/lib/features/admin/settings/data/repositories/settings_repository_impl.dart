@@ -10,7 +10,7 @@ import '../datasources/settings_remote_datasource.dart';
 class SettingsRepositoryImpl implements SettingsRepository {
   final SettingsRemoteDataSource _dataSource;
 
-  SettingsRepositoryImpl({required SettingsRemoteDataSource dataSource}) : _dataSource = dataSource;
+  SettingsRepositoryImpl({required this._dataSource});
 
   @override
   Future<Result<AppSettings>> getSettings() async {
@@ -20,19 +20,39 @@ class SettingsRepositoryImpl implements SettingsRepository {
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'paramètres'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors du chargement des paramètres.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors du chargement des paramètres.'),
+      );
     }
   }
 
   @override
-  Future<Result<AppSettings>> updateSettings(Map<String, String> settings) async {
+  Future<Result<AppSettings>> getKioskSettings() async {
+    try {
+      final dto = await _dataSource.getKioskSettings();
+      return Success(dto.toDomain());
+    } on DioException catch (e) {
+      return Fail(mapDioError(e, resourceName: 'paramètres du kiosque'));
+    } catch (_) {
+      return const Fail(
+        ApiFailure(message: 'Erreur lors du chargement du kiosque.'),
+      );
+    }
+  }
+
+  @override
+  Future<Result<AppSettings>> updateSettings(
+    Map<String, String> settings,
+  ) async {
     try {
       final dto = await _dataSource.updateSettings(settings);
       return Success(dto.toDomain());
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'paramètres'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors de la mise à jour des paramètres.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors de la mise à jour des paramètres.'),
+      );
     }
   }
 
@@ -44,7 +64,11 @@ class SettingsRepositoryImpl implements SettingsRepository {
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'paramètres'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors de la réinitialisation des paramètres.'));
+      return const Fail(
+        ApiFailure(
+          message: 'Erreur lors de la réinitialisation des paramètres.',
+        ),
+      );
     }
   }
 
@@ -56,7 +80,9 @@ class SettingsRepositoryImpl implements SettingsRepository {
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'version'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors de la récupération de la version.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors de la récupération de la version.'),
+      );
     }
   }
 
@@ -68,7 +94,9 @@ class SettingsRepositoryImpl implements SettingsRepository {
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'base de données'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors de la récupération du statut.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors de la récupération du statut.'),
+      );
     }
   }
 }

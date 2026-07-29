@@ -11,30 +11,39 @@ final auditRemoteDataSourceProvider = Provider<AuditRemoteDataSource>((ref) {
 });
 
 final auditRepositoryProvider = Provider<AuditRepository>((ref) {
-  return AuditRepositoryImpl(dataSource: ref.watch(auditRemoteDataSourceProvider));
-});
-
-final auditLogsProvider = FutureProvider.family<AuditLogListResponse, AuditQueryParams>((ref, params) async {
-  final repo = ref.read(auditRepositoryProvider);
-  final result = await repo.getAuditLogs(
-    page: params.page,
-    pageSize: params.pageSize,
-    dateFrom: params.dateFrom,
-    dateTo: params.dateTo,
-    userUuid: params.userUuid,
-    role: params.role,
-    action: params.action,
-    entityType: params.entityType,
-    status: params.status,
-    search: params.search,
-  );
-  return result.when(
-    success: (data) => data,
-    failure: (f) => throw Exception(f.message),
+  return AuditRepositoryImpl(
+    dataSource: ref.watch(auditRemoteDataSourceProvider),
   );
 });
 
-final auditLogDetailProvider = FutureProvider.family<AuditLog, String>((ref, uuid) async {
+final auditLogsProvider =
+    FutureProvider.family<AuditLogListResponse, AuditQueryParams>((
+      ref,
+      params,
+    ) async {
+      final repo = ref.read(auditRepositoryProvider);
+      final result = await repo.getAuditLogs(
+        page: params.page,
+        pageSize: params.pageSize,
+        dateFrom: params.dateFrom,
+        dateTo: params.dateTo,
+        userUuid: params.userUuid,
+        role: params.role,
+        action: params.action,
+        entityType: params.entityType,
+        status: params.status,
+        search: params.search,
+      );
+      return result.when(
+        success: (data) => data,
+        failure: (f) => throw Exception(f.message),
+      );
+    });
+
+final auditLogDetailProvider = FutureProvider.family<AuditLog, String>((
+  ref,
+  uuid,
+) async {
   final repo = ref.read(auditRepositoryProvider);
   final result = await repo.getAuditLog(uuid);
   return result.when(
@@ -43,7 +52,9 @@ final auditLogDetailProvider = FutureProvider.family<AuditLog, String>((ref, uui
   );
 });
 
-final auditFilterValuesProvider = FutureProvider<AuditLogFilterValues>((ref) async {
+final auditFilterValuesProvider = FutureProvider<AuditLogFilterValues>((
+  ref,
+) async {
   final repo = ref.read(auditRepositoryProvider);
   final result = await repo.getFilterValues();
   return result.when(

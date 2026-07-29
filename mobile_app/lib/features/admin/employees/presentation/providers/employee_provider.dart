@@ -8,7 +8,9 @@ import '../../domain/entities/employee_detail.dart';
 import '../../domain/repositories/employee_repository.dart';
 import 'employee_state.dart';
 
-final employeeRemoteDataSourceProvider = Provider<EmployeeRemoteDataSource>((ref) {
+final employeeRemoteDataSourceProvider = Provider<EmployeeRemoteDataSource>((
+  ref,
+) {
   return EmployeeRemoteDataSource(dio: ref.watch(apiClientProvider).dio);
 });
 
@@ -18,10 +20,11 @@ final employeeRepositoryProvider = Provider<EmployeeRepository>((ref) {
   );
 });
 
-final employeeProvider =
-    StateNotifierProvider<EmployeeNotifier, EmployeeState>((ref) {
-  return EmployeeNotifier(ref);
-});
+final employeeProvider = StateNotifierProvider<EmployeeNotifier, EmployeeState>(
+  (ref) {
+    return EmployeeNotifier(ref);
+  },
+);
 
 class EmployeeNotifier extends StateNotifier<EmployeeState> {
   final Ref _ref;
@@ -29,8 +32,7 @@ class EmployeeNotifier extends StateNotifier<EmployeeState> {
 
   EmployeeNotifier(this._ref) : super(const EmployeeState());
 
-  EmployeeRepository get _repo =>
-      _ref.read(employeeRepositoryProvider);
+  EmployeeRepository get _repo => _ref.read(employeeRepositoryProvider);
 
   Future<void> loadEmployees({bool refresh = false}) async {
     if (!refresh && state.isLoading) return;
@@ -163,7 +165,6 @@ class EmployeeNotifier extends StateNotifier<EmployeeState> {
     return result.when(
       success: (_) {
         state = state.copyWith(
-          selectedEmployee: null,
           clearSelected: true,
           employees: state.employees.where((e) => e.uuid != uuid).toList(),
           total: state.total - 1,
@@ -183,8 +184,10 @@ class EmployeeNotifier extends StateNotifier<EmployeeState> {
   }
 }
 
-final employeeDetailProvider =
-    FutureProvider.family<EmployeeDetail, String>((ref, uuid) async {
+final employeeDetailProvider = FutureProvider.family<EmployeeDetail, String>((
+  ref,
+  uuid,
+) async {
   final repo = ref.read(employeeRepositoryProvider);
   final result = await repo.getEmployeeDetail(uuid);
   return result.when(

@@ -32,10 +32,12 @@ class Intern {
   bool get isActive => statut == 'ACTIF';
 
   String get periodeStage {
-    final debut = '${dateDebutStage.day.toString().padLeft(2, '0')}/'
+    final debut =
+        '${dateDebutStage.day.toString().padLeft(2, '0')}/'
         '${dateDebutStage.month.toString().padLeft(2, '0')}/'
         '${dateDebutStage.year}';
-    final fin = '${dateFinStage.day.toString().padLeft(2, '0')}/'
+    final fin =
+        '${dateFinStage.day.toString().padLeft(2, '0')}/'
         '${dateFinStage.month.toString().padLeft(2, '0')}/'
         '${dateFinStage.year}';
     return '$debut → $fin';

@@ -40,7 +40,12 @@ class ReportScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildBody(BuildContext context, ThemeData theme, ReportState state, WidgetRef ref) {
+  Widget _buildBody(
+    BuildContext context,
+    ThemeData theme,
+    ReportState state,
+    WidgetRef ref,
+  ) {
     if (state.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -52,9 +57,17 @@ class ReportScreen extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error_outline_rounded, size: 64, color: theme.colorScheme.error),
+              Icon(
+                Icons.error_outline_rounded,
+                size: 64,
+                color: theme.colorScheme.error,
+              ),
               const SizedBox(height: 16),
-              Text(state.error!, style: theme.textTheme.bodyLarge, textAlign: TextAlign.center),
+              Text(
+                state.error!,
+                style: theme.textTheme.bodyLarge,
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 24),
               FilledButton.icon(
                 onPressed: () => ref.read(reportProvider.notifier).clearError(),
@@ -82,7 +95,12 @@ class ReportScreen extends ConsumerWidget {
               const SizedBox(height: 20),
               ReportOverviewCards(overview: state.report!.overview),
               const SizedBox(height: 24),
-              Text('Graphiques', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+              Text(
+                'Graphiques',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               const SizedBox(height: 12),
               ReportCharts(report: state.report!),
               const SizedBox(height: 24),
@@ -95,7 +113,11 @@ class ReportScreen extends ConsumerWidget {
                   padding: const EdgeInsets.symmetric(vertical: 80),
                   child: Column(
                     children: [
-                      Icon(Icons.bar_chart_rounded, size: 80, color: theme.colorScheme.primary.withAlpha(100)),
+                      Icon(
+                        Icons.bar_chart_rounded,
+                        size: 80,
+                        color: theme.colorScheme.primary.withAlpha(100),
+                      ),
                       const SizedBox(height: 24),
                       Text(
                         'Générer un rapport d\'activité',
@@ -127,7 +149,10 @@ class ReportScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            Icon(Icons.description_rounded, color: theme.colorScheme.onPrimaryContainer),
+            Icon(
+              Icons.description_rounded,
+              color: theme.colorScheme.onPrimaryContainer,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -170,7 +195,12 @@ class ReportScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Répartition', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+            Text(
+              'Répartition',
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 12),
             DataTable(
               columns: const [
@@ -178,18 +208,30 @@ class ReportScreen extends ConsumerWidget {
                 DataColumn(label: Text('Total')),
               ],
               rows: [
-                ...report.mealsByCategory.map((item) => DataRow(cells: [
-                  DataCell(Text(item.label)),
-                  DataCell(Text(item.count.toString())),
-                ])),
-                ...report.registrationMethods.map((item) => DataRow(cells: [
-                  DataCell(Text('Méthode: ${item.label}')),
-                  DataCell(Text(item.count.toString())),
-                ])),
-                ...report.peopleByType.map((item) => DataRow(cells: [
-                  DataCell(Text('Type: ${item.label}')),
-                  DataCell(Text(item.count.toString())),
-                ])),
+                ...report.mealsByCategory.map(
+                  (item) => DataRow(
+                    cells: [
+                      DataCell(Text(item.label)),
+                      DataCell(Text(item.count.toString())),
+                    ],
+                  ),
+                ),
+                ...report.registrationMethods.map(
+                  (item) => DataRow(
+                    cells: [
+                      DataCell(Text('Méthode: ${item.label}')),
+                      DataCell(Text(item.count.toString())),
+                    ],
+                  ),
+                ),
+                ...report.peopleByType.map(
+                  (item) => DataRow(
+                    cells: [
+                      DataCell(Text('Type: ${item.label}')),
+                      DataCell(Text(item.count.toString())),
+                    ],
+                  ),
+                ),
               ],
             ),
           ],
@@ -198,7 +240,11 @@ class ReportScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context, WidgetRef ref, Report report) {
+  Widget _buildActionButtons(
+    BuildContext context,
+    WidgetRef ref,
+    Report report,
+  ) {
     return Row(
       children: [
         Expanded(

@@ -19,7 +19,7 @@ class AdminNavigationRail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sections = AdminSection.values;
+    const sections = AdminSection.values;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -29,10 +29,7 @@ class AdminNavigationRail extends StatelessWidget {
             ? AppColors.surfaceContainerDark
             : const Color(0xFFF0F4F8),
         border: Border(
-          right: BorderSide(
-            color: theme.colorScheme.outlineVariant,
-            width: 1,
-          ),
+          right: BorderSide(color: theme.colorScheme.outlineVariant),
         ),
       ),
       child: NavigationRail(
@@ -52,30 +49,25 @@ class AdminNavigationRail extends StatelessWidget {
             Tooltip(
               message: 'CSM-GIAS Resto+',
               child: Container(
-                width: 44,
-                height: 44,
+                width: extended ? 142 : 54,
+                height: 48,
+                padding: const EdgeInsets.symmetric(horizontal: Spacing.xs),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      theme.colorScheme.primary,
-                      theme.colorScheme.primary.withValues(alpha: 0.7),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(Spacing.radiusMd),
-                ),
-                child: const Icon(
-                  Icons.restaurant_menu_rounded,
-                  size: 22,
                   color: Colors.white,
+                  borderRadius: BorderRadius.circular(Spacing.radiusMd),
+                  border: Border.all(color: theme.colorScheme.outlineVariant),
+                ),
+                child: Image.asset(
+                  'assets/branding/csm-gias.png',
+                  fit: BoxFit.contain,
+                  filterQuality: FilterQuality.high,
                 ),
               ),
             ),
             if (extended) ...[
               const SizedBox(height: Spacing.sm),
               Text(
-                'CSM-GIAS',
+                'Administration Resto+',
                 style: theme.textTheme.labelMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                   color: theme.colorScheme.primary,
@@ -85,7 +77,6 @@ class AdminNavigationRail extends StatelessWidget {
             const SizedBox(height: Spacing.md),
           ],
         ),
-        trailing: null,
         destinations: [
           // Index 0 → dashboard (-1 + 1 = 0 in DashboardScreen)
           NavigationRailDestination(

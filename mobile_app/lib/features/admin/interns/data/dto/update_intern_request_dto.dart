@@ -16,11 +16,11 @@ class UpdateInternRequestDto {
   });
 
   Map<String, dynamic> toJson() => {
-        if (nom != null) 'nom': nom,
-        if (prenom != null) 'prenom': prenom,
-        if (matricule != null) 'matricule': matricule,
-        if (dateDebutStage != null) 'date_debut_stage': dateDebutStage,
-        if (dateFinStage != null) 'date_fin_stage': dateFinStage,
-        if (statut != null) 'statut': statut,
-      };
+    if (nom != null) 'nom': nom,
+    if (prenom != null) 'prenom': prenom,
+    if (matricule != null) 'matricule': matricule,
+    if (dateDebutStage != null) 'date_debut_stage': dateDebutStage,
+    if (dateFinStage != null) 'date_fin_stage': dateFinStage,
+    if (statut != null) 'statut': statut,
+  };
 }

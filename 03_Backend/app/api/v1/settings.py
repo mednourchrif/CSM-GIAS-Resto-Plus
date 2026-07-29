@@ -12,7 +12,7 @@ from app.schemas.setting import (
     SettingsResponse,
     VersionInfoResponse,
 )
-from app.security.dependencies import require_admin
+from app.security.dependencies import require_admin, require_kiosk_access
 from app.services.audit_service import AuditLogService
 from app.services.setting_service import SettingService
 
@@ -20,6 +20,19 @@ router = APIRouter(prefix="/settings", tags=["settings"])
 
 _service = SettingService()
 _audit = AuditLogService()
+
+
+@router.get(
+    "/kiosk",
+    summary="Get safe kiosk settings",
+    description="Returns the non-sensitive runtime settings used by the restaurant tablet.",
+    response_model=SuccessResponse[SettingsResponse],
+)
+async def get_kiosk_settings(
+    db: Session = Depends(get_db),
+    _kiosk_identity: Admin | None = Depends(require_kiosk_access),
+) -> SuccessResponse[SettingsResponse]:
+    return SuccessResponse(data=_service.get_settings(db))
 
 
 @router.get(
@@ -53,7 +66,8 @@ async def update_settings(
         old_value = old.raw.get(key)
         if str(old_value) != str(new_value):
             _audit.log_settings_updated(
-                db, admin=admin,
+                db,
+                admin=admin,
                 old_value=str(old_value) if old_value is not None else None,
                 new_value=str(new_value),
                 setting_key=key,
@@ -73,9 +87,13 @@ async def reset_settings(
 ) -> SuccessResponse[SettingsResponse]:
     result = _service.reset_to_defaults(db)
     _audit.log(
-        db, action="SETTINGS_RESET", user_name=f"{admin.prenom} {admin.nom}",
-        user_role="ADMIN", user_uuid=admin.uuid,
-        entity_type="SETTINGS", entity_name="all",
+        db,
+        action="SETTINGS_RESET",
+        user_name=f"{admin.prenom} {admin.nom}",
+        user_role="ADMIN",
+        user_uuid=admin.uuid,
+        entity_type="SETTINGS",
+        entity_name="all",
         description="Paramètres réinitialisés aux valeurs par défaut",
     )
     return SuccessResponse(data=result)

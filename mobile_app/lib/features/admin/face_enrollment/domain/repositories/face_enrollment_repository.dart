@@ -6,4 +6,6 @@ abstract class FaceEnrollmentRepository {
     required String utilisateurUuid,
     required List<String> imagePaths,
   });
+
+  Future<Result<bool>> deleteFace(String utilisateurUuid);
 }

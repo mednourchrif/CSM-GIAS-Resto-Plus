@@ -21,7 +21,7 @@ class AuditLogListDto {
 class AuditRemoteDataSource {
   final Dio _dio;
 
-  AuditRemoteDataSource({required Dio dio}) : _dio = dio;
+  AuditRemoteDataSource({required this._dio});
 
   Future<AuditLogListDto> getAuditLogs({
     required int page,
@@ -43,7 +43,8 @@ class AuditRemoteDataSource {
       if (userUuid != null && userUuid.isNotEmpty) 'user_uuid': userUuid,
       if (role != null && role.isNotEmpty) 'role': role,
       if (action != null && action.isNotEmpty) 'action': action,
-      if (entityType != null && entityType.isNotEmpty) 'entity_type': entityType,
+      if (entityType != null && entityType.isNotEmpty)
+        'entity_type': entityType,
       if (status != null && status.isNotEmpty) 'status': status,
       if (search != null && search.isNotEmpty) 'search': search,
     };
@@ -71,7 +72,9 @@ class AuditRemoteDataSource {
 
   Future<AuditLogFilterValuesDto> getFilterValues() async {
     final response = await _dio.get<Map<String, dynamic>>('/audit/filters');
-    return AuditLogFilterValuesDto.fromJson(response.data!['data'] as Map<String, dynamic>);
+    return AuditLogFilterValuesDto.fromJson(
+      response.data!['data'] as Map<String, dynamic>,
+    );
   }
 
   Future<List<AuditLogExportItemDto>> exportAuditLogs({
@@ -90,7 +93,8 @@ class AuditRemoteDataSource {
       if (userUuid != null && userUuid.isNotEmpty) 'user_uuid': userUuid,
       if (role != null && role.isNotEmpty) 'role': role,
       if (action != null && action.isNotEmpty) 'action': action,
-      if (entityType != null && entityType.isNotEmpty) 'entity_type': entityType,
+      if (entityType != null && entityType.isNotEmpty)
+        'entity_type': entityType,
       if (status != null && status.isNotEmpty) 'status': status,
       if (search != null && search.isNotEmpty) 'search': search,
     };

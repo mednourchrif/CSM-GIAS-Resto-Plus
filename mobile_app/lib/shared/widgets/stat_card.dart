@@ -98,7 +98,9 @@ class StatCard extends StatelessWidget {
               Text(
                 trendLabel!,
                 style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                  color: theme.colorScheme.onSurfaceVariant.withValues(
+                    alpha: 0.7,
+                  ),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -120,8 +122,12 @@ class _TrendBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isPositive = trend >= 0;
-    final color = isPositive ? const Color(0xFF1B8A1B) : theme.colorScheme.error;
-    final icon = isPositive ? Icons.trending_up_rounded : Icons.trending_down_rounded;
+    final color = isPositive
+        ? const Color(0xFF1B8A1B)
+        : theme.colorScheme.error;
+    final icon = isPositive
+        ? Icons.trending_up_rounded
+        : Icons.trending_down_rounded;
     final sign = isPositive ? '+' : '';
 
     return Container(

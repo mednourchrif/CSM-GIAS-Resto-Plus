@@ -17,12 +17,18 @@ class SettingsGroupCard extends StatelessWidget {
 
   IconData _categoryIcon(String category) {
     switch (category) {
-      case 'restaurant': return Icons.restaurant_rounded;
-      case 'recognition': return Icons.face_retouching_natural_rounded;
-      case 'qr_codes': return Icons.qr_code_rounded;
-      case 'application': return Icons.app_settings_alt_rounded;
-      case 'security': return Icons.security_rounded;
-      default: return Icons.settings_rounded;
+      case 'restaurant':
+        return Icons.restaurant_rounded;
+      case 'recognition':
+        return Icons.face_retouching_natural_rounded;
+      case 'qr_codes':
+        return Icons.qr_code_rounded;
+      case 'application':
+        return Icons.app_settings_alt_rounded;
+      case 'security':
+        return Icons.security_rounded;
+      default:
+        return Icons.settings_rounded;
     }
   }
 
@@ -44,7 +50,9 @@ class SettingsGroupCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   group.label,
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -58,8 +66,7 @@ class SettingsGroupCard extends StatelessWidget {
                     currentValue: currentValue,
                     onChanged: (value) => onChanged(setting.key, value),
                   ),
-                  if (setting != group.settings.last)
-                    const Divider(height: 8),
+                  if (setting != group.settings.last) const Divider(height: 8),
                 ],
               );
             }),

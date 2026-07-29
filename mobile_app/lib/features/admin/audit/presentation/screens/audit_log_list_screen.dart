@@ -50,7 +50,8 @@ class _AuditLogListScreenState extends ConsumerState<AuditLogListScreen> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
       _loadMore();
     }
   }
@@ -69,7 +70,11 @@ class _AuditLogListScreenState extends ConsumerState<AuditLogListScreen> {
 
   void _onSearchChanged(String query) {
     setState(() {
-      _params = _params.copyWith(page: 1, search: query.isNotEmpty ? query : null, clearSearch: query.isEmpty);
+      _params = _params.copyWith(
+        page: 1,
+        search: query.isNotEmpty ? query : null,
+        clearSearch: query.isEmpty,
+      );
     });
   }
 
@@ -118,11 +123,16 @@ class _AuditLogListScreenState extends ConsumerState<AuditLogListScreen> {
               padding: const EdgeInsets.all(Spacing.md),
               child: Text(
                 'Exporter les logs',
-                style: Theme.of(ctx).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                style: Theme.of(
+                  ctx,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
             ),
             ListTile(
-              leading: const Icon(Icons.table_chart_rounded, color: AppColors.success),
+              leading: const Icon(
+                Icons.table_chart_rounded,
+                color: AppColors.success,
+              ),
               title: const Text('CSV'),
               onTap: () => Navigator.of(ctx).pop(ExportFormat.csv),
             ),
@@ -132,7 +142,10 @@ class _AuditLogListScreenState extends ConsumerState<AuditLogListScreen> {
               onTap: () => Navigator.of(ctx).pop(ExportFormat.excel),
             ),
             ListTile(
-              leading: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.error),
+              leading: const Icon(
+                Icons.picture_as_pdf_rounded,
+                color: AppColors.error,
+              ),
               title: const Text('PDF'),
               onTap: () => Navigator.of(ctx).pop(ExportFormat.pdf),
             ),
@@ -168,7 +181,9 @@ class _AuditLogListScreenState extends ConsumerState<AuditLogListScreen> {
           ExportFormat.excel => 'xlsx',
           ExportFormat.pdf => 'pdf',
         };
-        final file = File('${dir.path}/audit_logs.${DateTime.now().millisecondsSinceEpoch}.$ext');
+        final file = File(
+          '${dir.path}/audit_logs.${DateTime.now().millisecondsSinceEpoch}.$ext',
+        );
         await file.writeAsString(content);
 
         if (!mounted) return;
@@ -183,13 +198,18 @@ class _AuditLogListScreenState extends ConsumerState<AuditLogListScreen> {
     );
   }
 
-  String _buildExportContent(List<AuditLogExportItem> items, ExportFormat format) {
+  String _buildExportContent(
+    List<AuditLogExportItem> items,
+    ExportFormat format,
+  ) {
     final buf = StringBuffer();
     buf.writeln('Timestamp;Utilisateur;Rôle;Action;Entité;Statut;Description');
     for (final item in items) {
       final ts = DateFormat('yyyy-MM-dd HH:mm:ss').format(item.timestamp);
       final desc = (item.description ?? '').replaceAll('"', '""');
-      buf.writeln('$ts;${item.userName};${item.userRole};${item.action};${item.entityName ?? ''};${item.status};"$desc"');
+      buf.writeln(
+        '$ts;${item.userName};${item.userRole};${item.action};${item.entityName ?? ''};${item.status};"$desc"',
+      );
     }
     return buf.toString();
   }
@@ -197,7 +217,8 @@ class _AuditLogListScreenState extends ConsumerState<AuditLogListScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDesktop = MediaQuery.sizeOf(context).width >= Spacing.tabletBreakpoint;
+    final isDesktop =
+        MediaQuery.sizeOf(context).width >= Spacing.tabletBreakpoint;
     final logsAsync = ref.watch(auditLogsProvider(_params));
 
     return Scaffold(
@@ -205,7 +226,11 @@ class _AuditLogListScreenState extends ConsumerState<AuditLogListScreen> {
         title: const Text('Logs d\'audit'),
         actions: [
           IconButton(
-            icon: Icon(_showFilters ? Icons.filter_alt_off_rounded : Icons.filter_alt_rounded),
+            icon: Icon(
+              _showFilters
+                  ? Icons.filter_alt_off_rounded
+                  : Icons.filter_alt_rounded,
+            ),
             tooltip: 'Filtres',
             onPressed: () => setState(() => _showFilters = !_showFilters),
           ),
@@ -219,15 +244,26 @@ class _AuditLogListScreenState extends ConsumerState<AuditLogListScreen> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(Spacing.md, Spacing.sm, Spacing.md, Spacing.xs),
+            padding: const EdgeInsets.fromLTRB(
+              Spacing.md,
+              Spacing.sm,
+              Spacing.md,
+              Spacing.xs,
+            ),
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
                 hintText: 'Rechercher par utilisateur, entité, description...',
-                prefixIcon: const Icon(Icons.search_rounded, size: Spacing.iconSm),
+                prefixIcon: const Icon(
+                  Icons.search_rounded,
+                  size: Spacing.iconSm,
+                ),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.clear_rounded, size: Spacing.iconSm),
+                        icon: const Icon(
+                          Icons.clear_rounded,
+                          size: Spacing.iconSm,
+                        ),
                         onPressed: () {
                           _searchController.clear();
                           _onSearchChanged('');
@@ -235,16 +271,18 @@ class _AuditLogListScreenState extends ConsumerState<AuditLogListScreen> {
                       )
                     : null,
                 filled: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: Spacing.sm),
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: Spacing.sm,
+                ),
               ),
               onChanged: _onSearchChanged,
             ),
           ),
-          if (_showFilters)
-            _buildFilterPanel(theme),
+          if (_showFilters) _buildFilterPanel(theme),
           Expanded(
             child: logsAsync.when(
-              loading: () => isDesktop ? const ShimmerDataTable() : const ShimmerList(),
+              loading: () =>
+                  isDesktop ? const ShimmerDataTable() : const ShimmerList(),
               error: (err, _) => ErrorState(
                 message: err.toString(),
                 onRetry: () => ref.invalidate(auditLogsProvider(_params)),
@@ -281,7 +319,12 @@ class _AuditLogListScreenState extends ConsumerState<AuditLogListScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Filtres', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+          Text(
+            'Filtres',
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: Spacing.sm),
           Wrap(
             spacing: Spacing.sm,
@@ -311,14 +354,30 @@ class _AuditLogListScreenState extends ConsumerState<AuditLogListScreen> {
                 value: _filterAction,
                 label: 'Action',
                 items: const [
-                  'LOGIN_SUCCESS', 'LOGOUT',
-                  'EMPLOYEE_CREATED', 'EMPLOYEE_UPDATED', 'EMPLOYEE_DELETED',
-                  'VISITOR_CREATED', 'VISITOR_UPDATED', 'VISITOR_DELETED',
-                  'INTERN_CREATED', 'INTERN_UPDATED', 'INTERN_DELETED',
-                  'USER_CREATED', 'USER_UPDATED', 'USER_DELETED',
-                  'USER_PASSWORD_CHANGED', 'USER_ACTIVATED', 'USER_DEACTIVATED',
-                  'QR_GENERATED', 'QR_DOWNLOADED', 'QR_PRINTED', 'FACE_ENROLLED',
-                  'MEAL_REGISTERED', 'SETTINGS_UPDATED', 'SETTINGS_RESET',
+                  'LOGIN_SUCCESS',
+                  'LOGOUT',
+                  'EMPLOYEE_CREATED',
+                  'EMPLOYEE_UPDATED',
+                  'EMPLOYEE_DELETED',
+                  'VISITOR_CREATED',
+                  'VISITOR_UPDATED',
+                  'VISITOR_DELETED',
+                  'INTERN_CREATED',
+                  'INTERN_UPDATED',
+                  'INTERN_DELETED',
+                  'USER_CREATED',
+                  'USER_UPDATED',
+                  'USER_DELETED',
+                  'USER_PASSWORD_CHANGED',
+                  'USER_ACTIVATED',
+                  'USER_DEACTIVATED',
+                  'QR_GENERATED',
+                  'QR_DOWNLOADED',
+                  'QR_PRINTED',
+                  'FACE_ENROLLED',
+                  'MEAL_REGISTERED',
+                  'SETTINGS_UPDATED',
+                  'SETTINGS_RESET',
                 ],
                 onChanged: (v) => setState(() => _filterAction = v),
               ),
@@ -335,9 +394,15 @@ class _AuditLogListScreenState extends ConsumerState<AuditLogListScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              TextButton(onPressed: _resetFilters, child: const Text('Réinitialiser')),
+              TextButton(
+                onPressed: _resetFilters,
+                child: const Text('Réinitialiser'),
+              ),
               const SizedBox(width: Spacing.sm),
-              FilledButton(onPressed: _applyFilters, child: const Text('Appliquer')),
+              FilledButton(
+                onPressed: _applyFilters,
+                child: const Text('Appliquer'),
+              ),
             ],
           ),
         ],
@@ -345,10 +410,12 @@ class _AuditLogListScreenState extends ConsumerState<AuditLogListScreen> {
     );
   }
 
-  Widget _filterChip({required String label, required void Function(bool)? onSelected}) {
+  Widget _filterChip({
+    required String label,
+    required void Function(bool)? onSelected,
+  }) {
     return FilterChip(
       label: Text(label, style: const TextStyle(fontSize: 12)),
-      selected: false,
       onSelected: onSelected,
       visualDensity: VisualDensity.compact,
     );
@@ -362,15 +429,27 @@ class _AuditLogListScreenState extends ConsumerState<AuditLogListScreen> {
     required void Function(T?) onChanged,
   }) {
     return DropdownButtonFormField<T>(
-      value: value,
+      initialValue: value,
       isExpanded: true,
       decoration: InputDecoration(
         labelText: label,
         isDense: true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: Spacing.sm, vertical: Spacing.xs),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(Spacing.radiusSm)),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: Spacing.sm,
+          vertical: Spacing.xs,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(Spacing.radiusSm),
+        ),
       ),
-      items: items.map((e) => DropdownMenuItem(value: e, child: Text(e.toString(), style: const TextStyle(fontSize: 12)))).toList(),
+      items: items
+          .map(
+            (e) => DropdownMenuItem(
+              value: e,
+              child: Text(e.toString(), style: const TextStyle(fontSize: 12)),
+            ),
+          )
+          .toList(),
       onChanged: onChanged,
     );
   }
@@ -412,7 +491,8 @@ class _AuditLogListScreenState extends ConsumerState<AuditLogListScreen> {
             log: response.items[index],
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (_) => _AuditLogDetailScreen(log: response.items[index]),
+                builder: (_) =>
+                    _AuditLogDetailScreen(log: response.items[index]),
               ),
             ),
           );
@@ -444,22 +524,26 @@ class _AuditLogListScreenState extends ConsumerState<AuditLogListScreen> {
                 ),
               ),
               cells: [
-                DataCell(Text(
-                  DateFormat('dd/MM/yy HH:mm').format(log.timestamp),
-                  style: const TextStyle(fontSize: 12),
-                )),
+                DataCell(
+                  Text(
+                    DateFormat('dd/MM/yy HH:mm').format(log.timestamp),
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ),
                 DataCell(Text(log.userName)),
                 DataCell(_roleChip(log.userRole)),
                 DataCell(_actionChip(log.action)),
                 DataCell(_statusChip(log.status)),
-                DataCell(SizedBox(
-                  width: 300,
-                  child: Text(
-                    log.description ?? '',
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
+                DataCell(
+                  SizedBox(
+                    width: 300,
+                    child: Text(
+                      log.description ?? '',
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
                   ),
-                )),
+                ),
               ],
             );
           }).toList(),
@@ -486,7 +570,14 @@ class _AuditLogListScreenState extends ConsumerState<AuditLogListScreen> {
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Text(label, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 
@@ -498,7 +589,14 @@ class _AuditLogListScreenState extends ConsumerState<AuditLogListScreen> {
         color: config.$1.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Text(config.$2, style: TextStyle(fontSize: 11, color: config.$1, fontWeight: FontWeight.w600)),
+      child: Text(
+        config.$2,
+        style: TextStyle(
+          fontSize: 11,
+          color: config.$1,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 
@@ -514,7 +612,14 @@ class _AuditLogListScreenState extends ConsumerState<AuditLogListScreen> {
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Text(label, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 
@@ -522,7 +627,10 @@ class _AuditLogListScreenState extends ConsumerState<AuditLogListScreen> {
     switch (action) {
       case 'LOGIN_SUCCESS':
       case 'LOGIN_FAILURE':
-        return (AppColors.info, action == 'LOGIN_SUCCESS' ? 'Connexion' : 'Échec connexion');
+        return (
+          AppColors.info,
+          action == 'LOGIN_SUCCESS' ? 'Connexion' : 'Échec connexion',
+        );
       case 'LOGOUT':
         return (AppColors.outline, 'Déconnexion');
       case 'EMPLOYEE_CREATED':
@@ -592,7 +700,9 @@ class _AuditLogCard extends StatelessWidget {
                 children: [
                   Text(
                     DateFormat('dd/MM/yy HH:mm').format(log.timestamp),
-                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   const Spacer(),
                   _statusChipSmall(log.status, theme),
@@ -601,7 +711,9 @@ class _AuditLogCard extends StatelessWidget {
               const SizedBox(height: Spacing.xs),
               Text(
                 log.userName,
-                style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: Spacing.xs),
               Row(
@@ -637,7 +749,11 @@ class _AuditLogCard extends StatelessWidget {
       ),
       child: Text(
         status == 'SUCCESS' ? 'Succès' : 'Échec',
-        style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w600),
+        style: TextStyle(
+          fontSize: 10,
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -655,7 +771,14 @@ class _AuditLogCard extends StatelessWidget {
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Text(role, style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w600)),
+      child: Text(
+        role,
+        style: TextStyle(
+          fontSize: 10,
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 
@@ -664,13 +787,25 @@ class _AuditLogCard extends StatelessWidget {
       'LOGIN_SUCCESS' => (AppColors.info, 'Connexion'),
       'LOGIN_FAILURE' => (AppColors.error, 'Échec connexion'),
       'LOGOUT' => (AppColors.outline, 'Déconnexion'),
-      String a when a.endsWith('_CREATED') => (const Color(0xFF0277BD), 'Création'),
-      String a when a.endsWith('_UPDATED') => (const Color(0xFFE67E22), 'Modification'),
-      String a when a.endsWith('_DELETED') || a == 'FACE_REMOVED' => (AppColors.error, 'Suppression'),
+      String a when a.endsWith('_CREATED') => (
+        const Color(0xFF0277BD),
+        'Création',
+      ),
+      String a when a.endsWith('_UPDATED') => (
+        const Color(0xFFE67E22),
+        'Modification',
+      ),
+      String a when a.endsWith('_DELETED') || a == 'FACE_REMOVED' => (
+        AppColors.error,
+        'Suppression',
+      ),
       'MEAL_REGISTERED' => (AppColors.success, 'Repas'),
-      'SETTINGS_UPDATED' || 'SETTINGS_RESET' => (const Color(0xFFE67E22), 'Paramètres'),
+      'SETTINGS_UPDATED' ||
+      'SETTINGS_RESET' => (const Color(0xFFE67E22), 'Paramètres'),
       'FACE_ENROLLED' || 'FACE_REENROLLED' => (AppColors.info, 'Visage'),
-      'QR_GENERATED' || 'QR_DOWNLOADED' || 'QR_PRINTED' => (const Color(0xFF4B6587), 'QR Code'),
+      'QR_GENERATED' ||
+      'QR_DOWNLOADED' ||
+      'QR_PRINTED' => (const Color(0xFF4B6587), 'QR Code'),
       _ => (AppColors.outline, action),
     };
     return Container(
@@ -679,7 +814,14 @@ class _AuditLogCard extends StatelessWidget {
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Text(label, style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w600)),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }
@@ -707,9 +849,18 @@ class _AuditLogDetailScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Informations générales', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                      Text(
+                        'Informations générales',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                       const Divider(),
-                      _detailRow(theme, 'Date/Heure', DateFormat('dd/MM/yyyy HH:mm:ss').format(log.timestamp)),
+                      _detailRow(
+                        theme,
+                        'Date/Heure',
+                        DateFormat('dd/MM/yyyy HH:mm:ss').format(log.timestamp),
+                      ),
                       _detailRow(theme, 'Utilisateur', log.userName),
                       _detailRow(theme, 'Rôle', log.userRole),
                       _detailRow(theme, 'Action', log.action),
@@ -725,9 +876,17 @@ class _AuditLogDetailScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Description', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                      Text(
+                        'Description',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                       const Divider(),
-                      Text(log.description ?? 'Aucune description', style: theme.textTheme.bodyMedium),
+                      Text(
+                        log.description ?? 'Aucune description',
+                        style: theme.textTheme.bodyMedium,
+                      ),
                     ],
                   ),
                 ),
@@ -739,7 +898,12 @@ class _AuditLogDetailScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Requête HTTP', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                      Text(
+                        'Requête HTTP',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                       const Divider(),
                       _detailRow(theme, 'Méthode', log.httpMethod ?? '-'),
                       _detailRow(theme, 'Endpoint', log.endpoint ?? '-'),
@@ -756,7 +920,12 @@ class _AuditLogDetailScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Entité', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                      Text(
+                        'Entité',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                       const Divider(),
                       _detailRow(theme, 'Type', log.entityType ?? '-'),
                       _detailRow(theme, 'UUID', log.entityUuid ?? '-'),
@@ -773,18 +942,27 @@ class _AuditLogDetailScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Métadonnées', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                        Text(
+                          'Métadonnées',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                         const Divider(),
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(Spacing.sm),
                           decoration: BoxDecoration(
                             color: theme.colorScheme.surfaceContainerLow,
-                            borderRadius: BorderRadius.circular(Spacing.radiusSm),
+                            borderRadius: BorderRadius.circular(
+                              Spacing.radiusSm,
+                            ),
                           ),
                           child: SelectableText(
                             log.metadataJson!,
-                            style: theme.textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontFamily: 'monospace',
+                            ),
                           ),
                         ),
                       ],
@@ -807,11 +985,14 @@ class _AuditLogDetailScreen extends StatelessWidget {
         children: [
           SizedBox(
             width: 120,
-            child: Text(label, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+            child: Text(
+              label,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
           ),
-          Expanded(
-            child: Text(value, style: theme.textTheme.bodyMedium),
-          ),
+          Expanded(child: Text(value, style: theme.textTheme.bodyMedium)),
         ],
       ),
     );

@@ -48,24 +48,26 @@ class EmployeeDto {
       dateSuppression: json['date_suppression'] != null
           ? DateTime.tryParse(json['date_suppression'] as String)
           : null,
-      createdAt: DateTime.tryParse(json['created_at'] as String) ?? DateTime.now(),
-      updatedAt: DateTime.tryParse(json['updated_at'] as String) ?? DateTime.now(),
+      createdAt:
+          DateTime.tryParse(json['created_at'] as String) ?? DateTime.now(),
+      updatedAt:
+          DateTime.tryParse(json['updated_at'] as String) ?? DateTime.now(),
     );
   }
 
   Employee toDomain() => Employee(
-        id: id,
-        uuid: uuid,
-        nom: nom,
-        prenom: prenom,
-        email: email,
-        matricule: matricule,
-        photoPath: photoPath,
-        statut: statut,
-        statutEnrolement: statutEnrolement,
-        dateEnrolement: dateEnrolement,
-        dateSuppression: dateSuppression,
-        createdAt: createdAt,
-        updatedAt: updatedAt,
-      );
+    id: id,
+    uuid: uuid,
+    nom: nom,
+    prenom: prenom,
+    email: email,
+    matricule: matricule,
+    photoPath: photoPath,
+    statut: statut,
+    statutEnrolement: statutEnrolement,
+    dateEnrolement: dateEnrolement,
+    dateSuppression: dateSuppression,
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+  );
 }

@@ -37,7 +37,8 @@ class ReportOverviewDto {
       faceRegistrations: json['face_registrations'] as int,
       failedRecognitions: json['failed_recognitions'] as int,
       failedQrScans: json['failed_qr_scans'] as int,
-      averageProcessingTime: (json['average_processing_time'] as num?)?.toDouble(),
+      averageProcessingTime: (json['average_processing_time'] as num?)
+          ?.toDouble(),
       peakHour: json['peak_hour'] as String?,
       mostSelectedMeal: json['most_selected_meal'] as String?,
     );
@@ -141,21 +142,34 @@ class ReportDto {
 
   factory ReportDto.fromJson(Map<String, dynamic> json) {
     return ReportDto(
-      overview: ReportOverviewDto.fromJson(json['overview'] as Map<String, dynamic>),
+      overview: ReportOverviewDto.fromJson(
+        json['overview'] as Map<String, dynamic>,
+      ),
       mealsPerDay: (json['meals_per_day'] as List<dynamic>)
-          .map((e) => ReportTimeSeriesItemDto.fromJson(e as Map<String, dynamic>))
+          .map(
+            (e) => ReportTimeSeriesItemDto.fromJson(e as Map<String, dynamic>),
+          )
           .toList(),
       mealsByHour: (json['meals_by_hour'] as List<dynamic>)
           .map((e) => ReportPeakHourItemDto.fromJson(e as Map<String, dynamic>))
           .toList(),
       mealsByCategory: (json['meals_by_category'] as List<dynamic>)
-          .map((e) => ReportDistributionItemDto.fromJson(e as Map<String, dynamic>))
+          .map(
+            (e) =>
+                ReportDistributionItemDto.fromJson(e as Map<String, dynamic>),
+          )
           .toList(),
       registrationMethods: (json['registration_methods'] as List<dynamic>)
-          .map((e) => ReportDistributionItemDto.fromJson(e as Map<String, dynamic>))
+          .map(
+            (e) =>
+                ReportDistributionItemDto.fromJson(e as Map<String, dynamic>),
+          )
           .toList(),
       peopleByType: (json['people_by_type'] as List<dynamic>)
-          .map((e) => ReportDistributionItemDto.fromJson(e as Map<String, dynamic>))
+          .map(
+            (e) =>
+                ReportDistributionItemDto.fromJson(e as Map<String, dynamic>),
+          )
           .toList(),
       periodLabel: json['period_label'] as String,
       dateFrom: json['date_from'] as String,
@@ -170,7 +184,9 @@ class ReportDto {
       mealsPerDay: mealsPerDay.map((e) => e.toDomain()).toList(),
       mealsByHour: mealsByHour.map((e) => e.toDomain()).toList(),
       mealsByCategory: mealsByCategory.map((e) => e.toDomain()).toList(),
-      registrationMethods: registrationMethods.map((e) => e.toDomain()).toList(),
+      registrationMethods: registrationMethods
+          .map((e) => e.toDomain())
+          .toList(),
       peopleByType: peopleByType.map((e) => e.toDomain()).toList(),
       periodLabel: periodLabel,
       dateFrom: dateFrom,

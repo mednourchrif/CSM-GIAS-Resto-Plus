@@ -14,10 +14,10 @@ class UpdateAdminUserRequestDto {
   });
 
   Map<String, dynamic> toJson() => {
-        if (nom != null) 'nom': nom,
-        if (prenom != null) 'prenom': prenom,
-        if (email != null) 'email': email,
-        if (statut != null) 'statut': statut,
-        if (roleId != null) 'role_id': roleId,
-      };
+    if (nom != null) 'nom': nom,
+    if (prenom != null) 'prenom': prenom,
+    if (email != null) 'email': email,
+    if (statut != null) 'statut': statut,
+    if (roleId != null) 'role_id': roleId,
+  };
 }

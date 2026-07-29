@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 
+import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/storage/storage_service.dart';
 import '../../../../shared/models/result.dart';
@@ -17,10 +17,9 @@ class AuthRepositoryImpl implements AuthRepository {
   final StorageService _storageService;
 
   AuthRepositoryImpl({
-    required AuthRemoteDataSource remoteDataSource,
-    required StorageService storageService,
-  })  : _remoteDataSource = remoteDataSource,
-        _storageService = storageService;
+    required this._remoteDataSource,
+    required this._storageService,
+  });
 
   @override
   Future<Result<User>> login({
@@ -35,20 +34,31 @@ class AuthRepositoryImpl implements AuthRepository {
 
       final user = response.admin.toDomain();
 
-      await _saveSession(token: response.token.accessToken, userDto: response.admin);
+      await _saveSession(
+        token: response.token.accessToken,
+        userDto: response.admin,
+      );
 
       return Success(user);
     } on DioException catch (e) {
-      _logDioException(e);
       return Fail(mapDioError(e));
-    } catch (e, s) {
-      debugPrint('--- LOGIN UNEXPECTED ERROR ---');
-      debugPrint('Type: ${e.runtimeType}');
-      debugPrint('Error: $e');
-      debugPrint('Stack: $s');
+    } on CacheException catch (e) {
+      return Fail(e.failure);
+    } on FormatException catch (e, stackTrace) {
       return Fail(
-        const ApiFailure(
-            message: 'Une erreur est survenue lors de la connexion.'),
+        ApiFailure(
+          message: 'Réponse de connexion invalide.',
+          originalError: e,
+          stackTrace: stackTrace,
+        ),
+      );
+    } catch (e, stackTrace) {
+      return Fail(
+        ApiFailure(
+          message: 'Une erreur est survenue lors de la connexion.',
+          originalError: e,
+          stackTrace: stackTrace,
+        ),
       );
     }
   }
@@ -58,9 +68,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final token = await getStoredToken();
       if (token == null || token.isEmpty) {
-        return Fail(
-          const ApiFailure(message: 'Aucune session existante.'),
-        );
+        return const Fail(ApiFailure(message: 'Aucune session existante.'));
       }
 
       final meResponse = await _remoteDataSource.getMe();
@@ -69,24 +77,25 @@ class AuthRepositoryImpl implements AuthRepository {
 
       return Success(user);
     } on DioException catch (e) {
-      _logDioException(e);
       if (e.response?.statusCode == 401) {
         await clearSession();
-        return Fail(const UnauthorizedFailure());
+        return const Fail(UnauthorizedFailure());
       }
       return Fail(mapDioError(e));
     } on FormatException {
       await clearSession();
-      return Fail(
-        const ApiFailure(
-            message: 'Session invalide. Veuillez vous reconnecter.'),
+      return const Fail(
+        ApiFailure(message: 'Session invalide. Veuillez vous reconnecter.'),
       );
-    } catch (e) {
-      debugPrint('--- RESTORE UNEXPECTED ERROR ---');
-      debugPrint('Type: ${e.runtimeType}');
-      debugPrint('Error: $e');
+    } on CacheException catch (e) {
+      return Fail(e.failure);
+    } catch (e, stackTrace) {
       return Fail(
-        const CacheFailure(message: 'Impossible de restaurer la session.'),
+        CacheFailure(
+          message: 'Impossible de restaurer la session.',
+          originalError: e,
+          stackTrace: stackTrace,
+        ),
       );
     }
   }
@@ -124,27 +133,6 @@ class AuthRepositoryImpl implements AuthRepository {
       value: jsonEncode(userDto.toJson()),
     );
   }
-
-  void _logDioException(DioException e) {
-    debugPrint('--- DIO EXCEPTION ---');
-    debugPrint('Type: ${e.type}');
-    debugPrint('Message: ${e.message}');
-    debugPrint('Method: ${e.requestOptions.method}');
-    debugPrint('URL: ${e.requestOptions.uri}');
-    debugPrint('Headers: ${e.requestOptions.headers}');
-    debugPrint('Body: ${e.requestOptions.data}');
-    if (e.response != null) {
-      debugPrint('Response status: ${e.response!.statusCode}');
-      debugPrint('Response headers: ${e.response!.headers.map}');
-      debugPrint('Response body: ${e.response!.data}');
-    } else {
-      debugPrint('Response: null (request never reached server)');
-    }
-    debugPrint('Original error: ${e.error}');
-    debugPrint('Stack: ${e.stackTrace}');
-    debugPrint('--- END DIO EXCEPTION ---');
-  }
-
 }
 
 const _tokenKey = 'auth_token';

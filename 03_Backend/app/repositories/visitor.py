@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.models.visitor import Visitor
 from app.repositories.base import BaseRepository
+from app.utils.date_utils import today_local
 
 
 class VisitorRepository(BaseRepository[Visitor]):
@@ -22,7 +23,7 @@ class VisitorRepository(BaseRepository[Visitor]):
 
     def get_today(self, db: Session) -> list[Visitor]:
         """Fetch visitors whose visit date is today."""
-        return self.get_by_date(db, date.today())
+        return self.get_by_date(db, today_local())
 
     def search_paginated(
         self,

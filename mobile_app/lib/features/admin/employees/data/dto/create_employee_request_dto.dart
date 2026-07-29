@@ -12,9 +12,9 @@ class CreateEmployeeRequestDto {
   });
 
   Map<String, dynamic> toJson() => {
-        'nom': nom,
-        'prenom': prenom,
-        'matricule': matricule,
-        if (statut != null) 'statut': statut,
-      };
+    'nom': nom,
+    'prenom': prenom,
+    'matricule': matricule,
+    if (statut != null) 'statut': statut,
+  };
 }

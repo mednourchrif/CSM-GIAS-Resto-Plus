@@ -50,7 +50,10 @@ class InternCard extends StatelessWidget {
                   const SizedBox(width: Spacing.xs),
                   StatusBadge(status: intern.statut),
                   const SizedBox(width: Spacing.xs),
-                  Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant),
+                  Icon(
+                    Icons.chevron_right,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ],
               ),
               const SizedBox(height: Spacing.xxs),

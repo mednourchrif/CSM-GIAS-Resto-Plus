@@ -8,7 +8,9 @@ import '../../domain/entities/user.dart';
 import '../../domain/repositories/user_repository.dart';
 import 'user_state.dart';
 
-final adminUserRemoteDataSourceProvider = Provider<AdminUserRemoteDataSource>((ref) {
+final adminUserRemoteDataSourceProvider = Provider<AdminUserRemoteDataSource>((
+  ref,
+) {
   return AdminUserRemoteDataSource(dio: ref.watch(apiClientProvider).dio);
 });
 
@@ -20,8 +22,8 @@ final adminUserRepositoryProvider = Provider<AdminUserRepository>((ref) {
 
 final adminUserProvider =
     StateNotifierProvider<AdminUserNotifier, AdminUserState>((ref) {
-  return AdminUserNotifier(ref);
-});
+      return AdminUserNotifier(ref);
+    });
 
 class AdminUserNotifier extends StateNotifier<AdminUserState> {
   final Ref _ref;
@@ -29,8 +31,7 @@ class AdminUserNotifier extends StateNotifier<AdminUserState> {
 
   AdminUserNotifier(this._ref) : super(const AdminUserState());
 
-  AdminUserRepository get _repo =>
-      _ref.read(adminUserRepositoryProvider);
+  AdminUserRepository get _repo => _ref.read(adminUserRepositoryProvider);
 
   Future<void> loadUsers({bool refresh = false}) async {
     if (!refresh && state.isLoading) return;
@@ -38,11 +39,7 @@ class AdminUserNotifier extends StateNotifier<AdminUserState> {
     final loadPage = refresh ? 1 : state.page;
     final version = ++_refreshVersion;
 
-    state = state.copyWith(
-      isLoading: true,
-      clearError: true,
-      page: loadPage,
-    );
+    state = state.copyWith(isLoading: true, clearError: true, page: loadPage);
 
     final result = await _repo.getUsers(
       page: loadPage,
@@ -67,10 +64,7 @@ class AdminUserNotifier extends StateNotifier<AdminUserState> {
         );
       },
       failure: (failure) {
-        state = state.copyWith(
-          isLoading: false,
-          error: failure.message,
-        );
+        state = state.copyWith(isLoading: false, error: failure.message);
       },
     );
   }
@@ -125,7 +119,10 @@ class AdminUserNotifier extends StateNotifier<AdminUserState> {
       );
       await refresh();
       state = state.copyWith(
-        notification: (message: 'Utilisateur créé avec succès.', isError: false),
+        notification: (
+          message: 'Utilisateur créé avec succès.',
+          isError: false,
+        ),
       );
       return true;
     }
@@ -157,7 +154,10 @@ class AdminUserNotifier extends StateNotifier<AdminUserState> {
     if (result is Success) {
       await refresh();
       state = state.copyWith(
-        notification: (message: 'Utilisateur modifié avec succès.', isError: false),
+        notification: (
+          message: 'Utilisateur modifié avec succès.',
+          isError: false,
+        ),
       );
       return true;
     }
@@ -174,7 +174,10 @@ class AdminUserNotifier extends StateNotifier<AdminUserState> {
 
     if (result is Success) {
       state = state.copyWith(
-        notification: (message: 'Mot de passe réinitialisé avec succès.', isError: false),
+        notification: (
+          message: 'Mot de passe réinitialisé avec succès.',
+          isError: false,
+        ),
       );
       return true;
     }
@@ -193,7 +196,10 @@ class AdminUserNotifier extends StateNotifier<AdminUserState> {
       await refresh();
       final label = statut == 'ACTIF' ? 'activé' : 'désactivé';
       state = state.copyWith(
-        notification: (message: 'Utilisateur $label avec succès.', isError: false),
+        notification: (
+          message: 'Utilisateur $label avec succès.',
+          isError: false,
+        ),
       );
       return true;
     }

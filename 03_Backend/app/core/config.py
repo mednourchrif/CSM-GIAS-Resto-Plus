@@ -4,8 +4,9 @@ import os
 from functools import lru_cache
 from pathlib import Path
 from typing import ClassVar
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from pydantic import field_validator
+from pydantic import ValidationInfo, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app.core.constants import (
@@ -46,6 +47,7 @@ class BaseAppSettings(BaseSettings):
     SERVER_PORT: int = 8000
     SERVER_WORKERS: int = 4
     SERVER_TIMEOUT_KEEPALIVE: int = 5
+    TRUSTED_HOSTS: list[str] = ["localhost", "127.0.0.1"]
 
     # ── Database ─────────────────────────────────────────────────────────
     DB_HOST: str = "localhost"
@@ -63,9 +65,13 @@ class BaseAppSettings(BaseSettings):
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     BCRYPT_ROUNDS: int = 12
+    LOGIN_RATE_LIMIT_ATTEMPTS: int = 5
+    LOGIN_RATE_LIMIT_WINDOW_SECONDS: int = 900
 
     # ── Tablet ───────────────────────────────────────────────────────────
     TABLET_API_KEY: str = ""
+    FACE_ENGINE: str = "stub"
+    BIOMETRIC_ENCRYPTION_KEY: str = ""
 
     # ── Logging ──────────────────────────────────────────────────────────
     LOG_LEVEL: str = "INFO"
@@ -92,7 +98,7 @@ class BaseAppSettings(BaseSettings):
 
     @field_validator("APP_SECRET_KEY", "JWT_SECRET_KEY")
     @classmethod
-    def _validate_secret_keys(cls, value: str, info) -> str:
+    def _validate_secret_keys(cls, value: str, info: ValidationInfo) -> str:
         if not value:
             raise ValueError(f"{info.field_name} is required and cannot be empty")
         return value
@@ -114,6 +120,17 @@ class BaseAppSettings(BaseSettings):
                 f"JWT expiry must be between {JWT_MIN_EXPIRE_MINUTES} "
                 f"and {JWT_MAX_EXPIRE_MINUTES} minutes"
             )
+        return value
+
+    @field_validator("TZ")
+    @classmethod
+    def _validate_timezone(cls, value: str) -> str:
+        if not value:
+            return value
+        try:
+            ZoneInfo(value)
+        except ZoneInfoNotFoundError as exc:
+            raise ValueError("TZ must be a valid IANA timezone name") from exc
         return value
 
     # ── Computed Properties ──────────────────────────────────────────────
@@ -154,6 +171,7 @@ class DevelopmentSettings(BaseAppSettings):
     DB_ECHO_SQL: bool = True
     LOG_LEVEL: str = "DEBUG"
     CORS_ORIGINS: list[str] = ["*"]
+    TRUSTED_HOSTS: list[str] = ["*"]
 
 
 class TestingSettings(BaseAppSettings):
@@ -163,6 +181,8 @@ class TestingSettings(BaseAppSettings):
     DB_ECHO_SQL: bool = False
     LOG_LEVEL: str = "DEBUG"
     DB_NAME: str = "resto_plus_test"
+    BCRYPT_ROUNDS: int = BCRYPT_MIN_ROUNDS
+    TRUSTED_HOSTS: list[str] = ["testserver", "localhost", "127.0.0.1"]
 
 
 class ProductionSettings(BaseAppSettings):
@@ -172,6 +192,44 @@ class ProductionSettings(BaseAppSettings):
     DB_ECHO_SQL: bool = False
     LOG_LEVEL: str = "INFO"
     SERVER_WORKERS: int = 4
+    # The requirements specify "local time" but do not establish a country.
+    # Production deployments must therefore select the restaurant IANA zone.
+    TZ: str = ""
+
+    @model_validator(mode="after")
+    def _validate_production_integrations(self) -> ProductionSettings:
+        unsafe_secrets = {
+            "",
+            "change-me",
+            "change-me-to-a-random-64-char-string",
+            "change-me-to-another-random-64-char-string",
+        }
+        if self.APP_SECRET_KEY.strip() in unsafe_secrets or len(self.APP_SECRET_KEY) < 32:
+            raise ValueError("APP_SECRET_KEY must contain at least 32 random characters")
+        if self.JWT_SECRET_KEY.strip() in unsafe_secrets or len(self.JWT_SECRET_KEY) < 32:
+            raise ValueError("JWT_SECRET_KEY must contain at least 32 random characters")
+        if "*" in self.CORS_ORIGINS:
+            raise ValueError("Wildcard CORS origins are forbidden in production")
+        if not self.TRUSTED_HOSTS or "*" in self.TRUSTED_HOSTS:
+            raise ValueError("Explicit TRUSTED_HOSTS are required in production")
+        unsafe_tablet_keys = {"", "change-me", "change-me-to-tablet-api-key"}
+        if self.TABLET_API_KEY.strip() in unsafe_tablet_keys:
+            raise ValueError(
+                "TABLET_API_KEY must be configured with a strong, unique value " "in production"
+            )
+        if self.FACE_ENGINE.strip().lower() == "stub":
+            raise ValueError(
+                "FACE_ENGINE=stub is development-only; configure a reviewed "
+                "face-recognition engine before production"
+            )
+        if not self.TZ.strip():
+            raise ValueError("TZ must be explicitly configured in production")
+        if (
+            self.FACE_ENGINE.strip().lower() != "disabled"
+            and not self.BIOMETRIC_ENCRYPTION_KEY.strip()
+        ):
+            raise ValueError("BIOMETRIC_ENCRYPTION_KEY must be configured in production")
+        return self
 
 
 class SettingsFactory:
@@ -196,8 +254,8 @@ class SettingsFactory:
         if not env_path.exists():
             return {}
         result: dict[str, str] = {}
-        for line in env_path.read_text(encoding="utf-8").splitlines():
-            line = line.strip()
+        for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+            line = raw_line.strip()
             if not line or line.startswith("#") or "=" not in line:
                 continue
             key, _, value = line.partition("=")

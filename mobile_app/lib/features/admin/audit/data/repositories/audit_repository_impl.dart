@@ -10,7 +10,7 @@ import '../../domain/repositories/audit_repository.dart';
 class AuditRepositoryImpl implements AuditRepository {
   final AuditRemoteDataSource _dataSource;
 
-  AuditRepositoryImpl({required AuditRemoteDataSource dataSource}) : _dataSource = dataSource;
+  AuditRepositoryImpl({required this._dataSource});
 
   @override
   Future<Result<AuditLogListResponse>> getAuditLogs({
@@ -38,17 +38,21 @@ class AuditRepositoryImpl implements AuditRepository {
         status: status,
         search: search,
       );
-      return Success(AuditLogListResponse(
-        items: dto.items.map((e) => e.toDomain()).toList(),
-        total: dto.total,
-        page: dto.page,
-        pageSize: dto.pageSize,
-        totalPages: dto.totalPages,
-      ));
+      return Success(
+        AuditLogListResponse(
+          items: dto.items.map((e) => e.toDomain()).toList(),
+          total: dto.total,
+          page: dto.page,
+          pageSize: dto.pageSize,
+          totalPages: dto.totalPages,
+        ),
+      );
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'audit'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors du chargement des logs d\'audit.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors du chargement des logs d\'audit.'),
+      );
     }
   }
 
@@ -60,7 +64,9 @@ class AuditRepositoryImpl implements AuditRepository {
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: "log d'audit"));
     } catch (e) {
-      return Fail(ApiFailure(message: "Erreur lors du chargement du log d'audit."));
+      return const Fail(
+        ApiFailure(message: "Erreur lors du chargement du log d'audit."),
+      );
     }
   }
 
@@ -72,7 +78,9 @@ class AuditRepositoryImpl implements AuditRepository {
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'filtres audit'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors du chargement des filtres.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors du chargement des filtres.'),
+      );
     }
   }
 
@@ -102,7 +110,9 @@ class AuditRepositoryImpl implements AuditRepository {
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'export audit'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors de l\'export des logs.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors de l\'export des logs.'),
+      );
     }
   }
 }

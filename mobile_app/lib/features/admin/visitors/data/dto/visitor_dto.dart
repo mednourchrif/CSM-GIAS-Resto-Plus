@@ -53,17 +53,17 @@ class VisitorDto {
   }
 
   Visitor toDomain() => Visitor(
-        id: id,
-        uuid: uuid,
-        nom: nom,
-        prenom: prenom,
-        email: email,
-        societe: societe,
-        statut: statut,
-        langue: langue,
-        dateVisite: dateVisite,
-        dateSuppression: dateSuppression,
-        createdAt: createdAt,
-        updatedAt: updatedAt,
-      );
+    id: id,
+    uuid: uuid,
+    nom: nom,
+    prenom: prenom,
+    email: email,
+    societe: societe,
+    statut: statut,
+    langue: langue,
+    dateVisite: dateVisite,
+    dateSuppression: dateSuppression,
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+  );
 }

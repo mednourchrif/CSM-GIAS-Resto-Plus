@@ -1,112 +1,65 @@
-# CSM-GIAS Resto+ — Backend
+# CSM-GIAS Resto+ API
 
-Backend API pour la Solution Intelligente de Gestion du Restaurant d'Entreprise.
+FastAPI service for the CSM-GIAS restaurant kiosk and administration
+application.
 
-## Stack Technique
+## Stack
 
-| Composant        | Technologie            |
-|-----------------|------------------------|
-| Framework       | FastAPI (Python 3.13)  |
-| ORM             | SQLAlchemy 2.x         |
-| Migrations      | Alembic                |
-| Base de données | MySQL 8.0              |
-| Validation      | Pydantic v2            |
-| Authentification| JWT + BCrypt           |
-| Logging         | Loguru                 |
-| Tests           | Pytest                 |
+Python 3.13+, FastAPI, Pydantic 2, SQLAlchemy 2, Alembic, MySQL 8, JWT,
+bcrypt, Fernet, Loguru, and Pytest.
 
-## Structure du Projet
+## Setup
 
-```
-backend/
-├── app/                    # Code source principal
-│   ├── api/                # Points d'entrée HTTP (routes)
-│   │   └── v1/             # Version 1 de l'API
-│   ├── core/               # Configuration, constantes, settings
-│   ├── database/           # Session SQLAlchemy, connexion DB
-│   ├── models/             # Modèles ORM (entités SQLAlchemy)
-│   ├── schemas/            # Schémas Pydantic (validation/sérialisation)
-│   ├── repositories/       # Accès aux données (Repository Pattern)
-│   ├── services/           # Logique métier
-│   ├── middlewares/        # Intercepteurs HTTP
-│   ├── utils/              # Fonctions utilitaires
-│   ├── security/           # JWT, hachage, clés API
-│   ├── reports/            # Génération de rapports PDF
-│   ├── statistics/         # Calculs statistiques
-│   └── emails/             # Envoi d'emails SMTP
-├── tests/                  # Tests unitaires et d'intégration
-├── scripts/                # Scripts utilitaires (init, seed, backups)
-├── migrations/             # Migrations Alembic
-├── docs/                   # Documentation technique complémentaire
-├── pyproject.toml          # Configuration du projet Python
-├── requirements.txt        # Dépendances Python
-├── .env.example            # Exemple de configuration d'environnement
-├── .gitignore              # Fichiers ignorés par Git
-└── docker-compose.yml      # Infrastructure locale (MySQL)
-```
-
-## Démarrage Rapide
-
-```bash
-# 1. Cloner le dépôt
-# 2. Créer l'environnement virtuel
+```powershell
 python -m venv .venv
-
-# 3. Activer l'environnement
-#   Windows : .venv\Scripts\Activate.ps1
-#   Linux   : source .venv/bin/activate
-
-# 4. Installer les dépendances
-pip install -r requirements.txt
-
-# 5. Copier et configurer les variables d'environnement
-copy .env.example .env
-
-# 6. Démarrer la base de données (Docker)
-docker-compose up -d
-
-# 7. Exécuter les migrations
+.\.venv\Scripts\Activate.ps1
+python -m pip install -e ".[dev]"
+Copy-Item .env.example .env
+docker compose up -d
 alembic upgrade head
-
-# 8. (Optionnel) Initialiser la base de données
 python scripts/seed.py
-
-# 9. Démarrer le serveur de développement
-uvicorn app.main:create_app --reload
+uvicorn app.main:app --reload
 ```
 
-## Commandes Essentielles
+Configure real secrets and database credentials in `.env`; never commit it.
+Swagger UI is at `http://127.0.0.1:8000/docs`.
 
-```bash
-# Lancer les tests
-pytest
+## Structure
 
-# Vérifier le style
-ruff check app/
-black --check app/
-isort --check-only app/
-
-# Formater le code
-ruff check --fix app/
-black app/
-isort app/
-
-# Vérifier les types
-mypy app/
-
-# Générer une migration
-alembic revision --autogenerate -m "description"
-
-# Appliquer les migrations
-alembic upgrade head
+```text
+app/
+├── api/v1/       # Routes
+├── schemas/      # Request/response validation
+├── services/     # Business rules and transactions
+├── repositories/ # SQLAlchemy queries
+├── models/       # ORM entities
+├── security/     # JWT, passwords, grants, encryption, rate limit
+├── middlewares/  # Request and security middleware
+├── core/         # Settings, errors, logging, lifespan
+└── ai/           # Face-engine contract/development adapter
+tests/
+migrations/
+scripts/
 ```
 
-## Conventions
+## Quality commands
 
-- **Python 3.13+** obligatoire
-- **Type hints** sur toutes les fonctions
-- **Docstrings** en français pour la logique métier
-- Tests unitaires avec couverture minimale de 80%
-- Formatage avec Black (100 caractères max)
-- Import sorting avec isort (profil Black)
-- Linting avec Ruff
+```powershell
+python -m pytest -q
+python -m ruff check .
+python -m black --check app tests scripts migrations
+python -m isort --check-only app tests scripts migrations
+python -m mypy app
+python -m pip check
+alembic heads
+```
+
+The production environment rejects placeholder secrets, wildcard
+hosts/origins, a missing tablet key, a missing explicit IANA timezone, the
+development face adapter, a missing biometric key when face mode is enabled,
+and an unavailable database. `FACE_ENGINE=disabled` is the supported QR-only
+production mode until a reviewed face adapter is installed.
+
+See the repository [README](../README.md),
+[architecture](../docs/ARCHITECTURE.md), and
+[API overview](../docs/API_OVERVIEW.md).

@@ -6,7 +6,6 @@ Covers: CRUD, soft-delete, pagination, search, auth.
 from datetime import UTC, datetime, timedelta
 
 import jwt
-import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 

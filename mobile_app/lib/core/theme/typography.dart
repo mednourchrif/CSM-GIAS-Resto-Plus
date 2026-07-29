@@ -110,38 +110,38 @@ class AppTypography {
 
   /// Large numeric value displayed on stat cards.
   static TextStyle get statValue => GoogleFonts.inter(
-        fontSize: 28,
-        fontWeight: FontWeight.w700,
-        letterSpacing: -0.5,
-        height: 1.0,
-      );
+    fontSize: 28,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.5,
+    height: 1.0,
+  );
 
   /// Compact numeric value on smaller stat cards.
   static TextStyle get statValueSmall => GoogleFonts.inter(
-        fontSize: 22,
-        fontWeight: FontWeight.w700,
-        letterSpacing: -0.25,
-        height: 1.0,
-      );
+    fontSize: 22,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.25,
+    height: 1.0,
+  );
 
   /// Label on a badge / chip.
   static TextStyle get badgeLabel => GoogleFonts.inter(
-        fontSize: 11,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 0.4,
-      );
+    fontSize: 11,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.4,
+  );
 
   /// Monospace-like style for UUIDs / codes.
   static TextStyle get monoCode => GoogleFonts.jetBrainsMono(
-        fontSize: 12,
-        fontWeight: FontWeight.w400,
-        letterSpacing: 0.0,
-      );
+    fontSize: 12,
+    fontWeight: FontWeight.w400,
+    letterSpacing: 0.0,
+  );
 
   /// Button label style — matched to labelLarge.
   static TextStyle get buttonLabel => GoogleFonts.inter(
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 0.1,
-      );
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.1,
+  );
 }

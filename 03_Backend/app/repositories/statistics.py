@@ -1,7 +1,6 @@
 """Statistics aggregation repository."""
 
-from collections import Counter
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
@@ -19,6 +18,7 @@ from app.schemas.statistics import (
     RegistrationMethodItem,
     UserTypeDistributionItem,
 )
+from app.utils.date_utils import now_utc
 
 
 class DashboardStats:
@@ -47,9 +47,7 @@ class DashboardStats:
     # Overview
     # ------------------------------------------------------------------
 
-    def _overview(
-        self, today: date, week_start: date, month_start: date
-    ) -> dict:
+    def _overview(self, today: date, week_start: date, month_start: date) -> dict[str, int]:
         meals_today = self._count_meals(today, today)
         meals_week = self._count_meals(week_start, today)
         meals_month = self._count_meals(month_start, today)
@@ -77,14 +75,14 @@ class DashboardStats:
         }
 
     def _count_meals(self, date_from: date, date_to: date) -> int:
-        stmt = select(func.count()).select_from(Meal).where(
-            Meal.date_repas >= date_from, Meal.date_repas <= date_to
+        stmt = (
+            select(func.count())
+            .select_from(Meal)
+            .where(Meal.date_repas >= date_from, Meal.date_repas <= date_to)
         )
         return self._db.execute(stmt).scalar() or 0
 
-    def _count_meals_by_method(
-        self, date_from: date, date_to: date, method: str
-    ) -> int:
+    def _count_meals_by_method(self, date_from: date, date_to: date, method: str) -> int:
         stmt = (
             select(func.count())
             .select_from(Meal)
@@ -105,16 +103,20 @@ class DashboardStats:
         return self._db.execute(stmt).scalar() or 0
 
     def _qr_code_stats(self) -> tuple[int, int]:
-        now = datetime.utcnow()
+        now = now_utc()
         total = select(func.count()).select_from(QrCode)
-        active = self._db.execute(
-            total.where(QrCode.statut == "ACTIF", QrCode.date_expiration > now)
-        ).scalar() or 0
-        expired = self._db.execute(
-            total.where(
-                or_(QrCode.statut == "EXPIRE", QrCode.date_expiration <= now)
-            )
-        ).scalar() or 0
+        active = (
+            self._db.execute(
+                total.where(QrCode.statut == "ACTIF", QrCode.date_expiration > now)
+            ).scalar()
+            or 0
+        )
+        expired = (
+            self._db.execute(
+                total.where(or_(QrCode.statut == "EXPIRE", QrCode.date_expiration <= now))
+            ).scalar()
+            or 0
+        )
         return active, expired
 
     # ------------------------------------------------------------------
@@ -129,7 +131,7 @@ class DashboardStats:
             .order_by(Meal.date_repas)
         )
         return [
-            MealCountByDate(date=str(row.date_repas), count=row.count)
+            MealCountByDate(date=str(row.date_repas), count=row._mapping["count"])
             for row in self._db.execute(stmt).all()
         ]
 
@@ -137,15 +139,13 @@ class DashboardStats:
     # Meal distribution by category (donut chart)
     # ------------------------------------------------------------------
 
-    def _meal_distribution(
-        self, date_from: date, date_to: date
-    ) -> list[MealDistributionItem]:
+    def _meal_distribution(self, date_from: date, date_to: date) -> list[MealDistributionItem]:
         stmt = (
             select(Meal.categorie_uuid, func.count().label("count"))
             .where(Meal.date_repas >= date_from, Meal.date_repas <= date_to)
             .group_by(Meal.categorie_uuid)
         )
-        counts = {row.categorie_uuid: row.count for row in self._db.execute(stmt).all()}
+        counts = {row.categorie_uuid: row._mapping["count"] for row in self._db.execute(stmt).all()}
 
         cat_stmt = select(MealCategory)
         categories = self._db.execute(cat_stmt).scalars().all()
@@ -169,7 +169,7 @@ class DashboardStats:
             .group_by(User.type)
         )
         return [
-            UserTypeDistributionItem(type=row.type, count=row.count)
+            UserTypeDistributionItem(type=row.type, count=row._mapping["count"])
             for row in self._db.execute(stmt).all()
         ]
 
@@ -177,16 +177,17 @@ class DashboardStats:
     # Registration methods
     # ------------------------------------------------------------------
 
-    def _registration_methods(
-        self, date_from: date, date_to: date
-    ) -> list[RegistrationMethodItem]:
+    def _registration_methods(self, date_from: date, date_to: date) -> list[RegistrationMethodItem]:
         stmt = (
             select(Meal.type_identification, func.count().label("count"))
             .where(Meal.date_repas >= date_from, Meal.date_repas <= date_to)
             .group_by(Meal.type_identification)
         )
         return [
-            RegistrationMethodItem(method=row.type_identification, count=row.count)
+            RegistrationMethodItem(
+                method=row.type_identification,
+                count=row._mapping["count"],
+            )
             for row in self._db.execute(stmt).all()
         ]
 
@@ -205,7 +206,7 @@ class DashboardStats:
             .order_by("hour")
         )
         return [
-            PeakHourItem(hour=int(row.hour), count=row.count)
+            PeakHourItem(hour=int(row.hour), count=row._mapping["count"])
             for row in self._db.execute(stmt).all()
         ]
 
@@ -231,9 +232,7 @@ class DashboardStats:
         )
         items: list[RecentRegistrationItem] = []
         for row in self._db.execute(stmt).all():
-            cat_stmt = select(MealCategory.nom).where(
-                MealCategory.uuid == row.categorie_uuid
-            )
+            cat_stmt = select(MealCategory.nom).where(MealCategory.uuid == row.categorie_uuid)
             cat_name = self._db.execute(cat_stmt).scalar()
             items.append(
                 RecentRegistrationItem(

@@ -15,6 +15,7 @@ generation time and is embedded in the PNG image.
 """
 
 from datetime import datetime
+from typing import cast
 
 from sqlalchemy import DateTime, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
@@ -84,6 +85,15 @@ class QrCode(BaseModel):
         Text,
         default=None,
     )
+
+    @property
+    def raw_token(self) -> str:
+        """Return the response-only token attached immediately after creation."""
+        return cast(str, self.__dict__["_raw_token"])
+
+    @raw_token.setter
+    def raw_token(self, value: str) -> None:
+        self.__dict__["_raw_token"] = value
 
     def __repr__(self) -> str:
         return (

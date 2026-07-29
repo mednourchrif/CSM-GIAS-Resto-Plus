@@ -30,7 +30,9 @@ class SettingDto {
     label: json['label'] as String,
     description: json['description'] as String?,
     fieldType: json['field_type'] as String,
-    options: json['options'] != null ? (json['options'] as List<dynamic>).cast<String>() : null,
+    options: json['options'] != null
+        ? (json['options'] as List<dynamic>).cast<String>()
+        : null,
     defaultValue: json['default_value'] as String,
     order: json['order'] as int? ?? 0,
   );
@@ -53,15 +55,20 @@ class SettingsGroupDto {
   final String label;
   final List<SettingDto> settings;
 
-  const SettingsGroupDto({required this.category, required this.label, required this.settings});
+  const SettingsGroupDto({
+    required this.category,
+    required this.label,
+    required this.settings,
+  });
 
-  factory SettingsGroupDto.fromJson(Map<String, dynamic> json) => SettingsGroupDto(
-    category: json['category'] as String,
-    label: json['label'] as String,
-    settings: (json['settings'] as List<dynamic>)
-        .map((e) => SettingDto.fromJson(e as Map<String, dynamic>))
-        .toList(),
-  );
+  factory SettingsGroupDto.fromJson(Map<String, dynamic> json) =>
+      SettingsGroupDto(
+        category: json['category'] as String,
+        label: json['label'] as String,
+        settings: (json['settings'] as List<dynamic>)
+            .map((e) => SettingDto.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      );
 
   SettingsGroup toDomain() => SettingsGroup(
     category: category,
@@ -76,17 +83,16 @@ class SettingsResponseDto {
 
   const SettingsResponseDto({required this.groups, required this.raw});
 
-  factory SettingsResponseDto.fromJson(Map<String, dynamic> json) => SettingsResponseDto(
-    groups: (json['groups'] as List<dynamic>)
-        .map((e) => SettingsGroupDto.fromJson(e as Map<String, dynamic>))
-        .toList(),
-    raw: Map<String, String>.from(json['raw'] as Map),
-  );
+  factory SettingsResponseDto.fromJson(Map<String, dynamic> json) =>
+      SettingsResponseDto(
+        groups: (json['groups'] as List<dynamic>)
+            .map((e) => SettingsGroupDto.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        raw: Map<String, String>.from(json['raw'] as Map),
+      );
 
-  AppSettings toDomain() => AppSettings(
-    groups: groups.map((e) => e.toDomain()).toList(),
-    raw: raw,
-  );
+  AppSettings toDomain() =>
+      AppSettings(groups: groups.map((e) => e.toDomain()).toList(), raw: raw);
 }
 
 class VersionInfoDto {
@@ -118,13 +124,18 @@ class DatabaseStatusDto {
   final int totalTables;
   final int totalRecords;
 
-  const DatabaseStatusDto({required this.status, required this.totalTables, required this.totalRecords});
+  const DatabaseStatusDto({
+    required this.status,
+    required this.totalTables,
+    required this.totalRecords,
+  });
 
-  factory DatabaseStatusDto.fromJson(Map<String, dynamic> json) => DatabaseStatusDto(
-    status: json['status'] as String,
-    totalTables: json['total_tables'] as int,
-    totalRecords: json['total_records'] as int,
-  );
+  factory DatabaseStatusDto.fromJson(Map<String, dynamic> json) =>
+      DatabaseStatusDto(
+        status: json['status'] as String,
+        totalTables: json['total_tables'] as int,
+        totalRecords: json['total_records'] as int,
+      );
 
   DatabaseStatus toDomain() => DatabaseStatus(
     status: status,

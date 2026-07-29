@@ -75,7 +75,8 @@ async def create_visitor(
     """Create a new visitor."""
     visitor = _service.create(db, body, admin)
     _audit.log_visitor_created(
-        db, admin=admin,
+        db,
+        admin=admin,
         visitor_uuid=visitor.uuid,
         visitor_name=f"{visitor.prenom} {visitor.nom}",
     )
@@ -97,7 +98,8 @@ async def update_visitor(
     """Replace a visitor's data."""
     visitor = _service.update(db, uuid, body, admin)
     _audit.log_visitor_updated(
-        db, admin=admin,
+        db,
+        admin=admin,
         visitor_uuid=uuid,
         visitor_name=f"{visitor.prenom} {visitor.nom}",
     )
@@ -119,7 +121,8 @@ async def patch_visitor(
     """Partially update a visitor."""
     visitor = _service.update(db, uuid, body, admin)
     _audit.log_visitor_updated(
-        db, admin=admin,
+        db,
+        admin=admin,
         visitor_uuid=uuid,
         visitor_name=f"{visitor.prenom} {visitor.nom}",
     )
@@ -142,7 +145,8 @@ async def delete_visitor(
     visitor_name = f"{visitor.prenom} {visitor.nom}"
     _service.delete(db, uuid, admin)
     _audit.log_visitor_deleted(
-        db, admin=admin,
+        db,
+        admin=admin,
         visitor_uuid=uuid,
         visitor_name=visitor_name,
     )

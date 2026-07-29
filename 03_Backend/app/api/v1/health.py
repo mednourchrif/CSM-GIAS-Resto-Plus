@@ -38,11 +38,11 @@ async def health(
     summary="Readiness check",
     description="Returns whether the application is ready to accept traffic. "
     "Fails if the database is unreachable.",
-    response_model=SuccessResponse[dict],
+    response_model=SuccessResponse[dict[str, object]],
 )
 async def ready(
     settings: BaseAppSettings = Depends(get_settings_dependency),
-) -> SuccessResponse[dict]:
+) -> SuccessResponse[dict[str, object]]:
     db_healthy = check_database_health()
 
     return SuccessResponse(

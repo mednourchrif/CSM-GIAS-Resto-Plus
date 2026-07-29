@@ -24,8 +24,9 @@ class ShimmerBox extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Shimmer.fromColors(
       baseColor: isDark ? AppColors.shimmerBaseDark : AppColors.shimmerBase,
-      highlightColor:
-          isDark ? AppColors.shimmerHighlightDark : AppColors.shimmerHighlight,
+      highlightColor: isDark
+          ? AppColors.shimmerHighlightDark
+          : AppColors.shimmerHighlight,
       period: AppDurations.shimmerCycle,
       child: Container(
         width: width,
@@ -50,8 +51,9 @@ class ShimmerCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Shimmer.fromColors(
       baseColor: isDark ? AppColors.shimmerBaseDark : AppColors.shimmerBase,
-      highlightColor:
-          isDark ? AppColors.shimmerHighlightDark : AppColors.shimmerHighlight,
+      highlightColor: isDark
+          ? AppColors.shimmerHighlightDark
+          : AppColors.shimmerHighlight,
       period: AppDurations.shimmerCycle,
       child: Container(
         height: height,
@@ -121,7 +123,7 @@ class ShimmerList extends StatelessWidget {
       ),
       physics: const NeverScrollableScrollPhysics(),
       itemCount: itemCount,
-      itemBuilder: (_, __) => ShimmerCard(height: itemHeight),
+      itemBuilder: (_, _) => ShimmerCard(height: itemHeight),
     );
   }
 }
@@ -137,8 +139,9 @@ class ShimmerDataTable extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Shimmer.fromColors(
       baseColor: isDark ? AppColors.shimmerBaseDark : AppColors.shimmerBase,
-      highlightColor:
-          isDark ? AppColors.shimmerHighlightDark : AppColors.shimmerHighlight,
+      highlightColor: isDark
+          ? AppColors.shimmerHighlightDark
+          : AppColors.shimmerHighlight,
       period: AppDurations.shimmerCycle,
       child: Padding(
         padding: const EdgeInsets.all(Spacing.md),
@@ -147,9 +150,9 @@ class ShimmerDataTable extends StatelessWidget {
             // Header
             Container(
               height: 52,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: Colors.white,
-                borderRadius: const BorderRadius.vertical(
+                borderRadius: BorderRadius.vertical(
                   top: Radius.circular(Spacing.radiusMd),
                 ),
               ),
@@ -179,8 +182,9 @@ class ShimmerStatGrid extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Shimmer.fromColors(
       baseColor: isDark ? AppColors.shimmerBaseDark : AppColors.shimmerBase,
-      highlightColor:
-          isDark ? AppColors.shimmerHighlightDark : AppColors.shimmerHighlight,
+      highlightColor: isDark
+          ? AppColors.shimmerHighlightDark
+          : AppColors.shimmerHighlight,
       period: AppDurations.shimmerCycle,
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -195,7 +199,7 @@ class ShimmerStatGrid extends StatelessWidget {
               mainAxisSpacing: Spacing.sm,
             ),
             itemCount: count,
-            itemBuilder: (_, __) => Container(
+            itemBuilder: (_, _) => Container(
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(Spacing.radiusMd),

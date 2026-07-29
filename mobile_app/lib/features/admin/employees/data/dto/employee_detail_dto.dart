@@ -27,12 +27,12 @@ class MealSummaryDto {
   }
 
   MealSummary toDomain() => MealSummary(
-        uuid: uuid,
-        categorieNom: categorieNom,
-        typeIdentification: typeIdentification,
-        dateRepas: DateTime.tryParse(dateRepas) ?? DateTime.now(),
-        heureRepas: DateTime.tryParse(heureRepas) ?? DateTime.now(),
-      );
+    uuid: uuid,
+    categorieNom: categorieNom,
+    typeIdentification: typeIdentification,
+    dateRepas: DateTime.tryParse(dateRepas) ?? DateTime.now(),
+    heureRepas: DateTime.tryParse(heureRepas) ?? DateTime.now(),
+  );
 }
 
 class EmployeeDetailDto {
@@ -56,7 +56,8 @@ class EmployeeDetailDto {
       todayMeal: json['today_meal'] != null
           ? MealSummaryDto.fromJson(json['today_meal'] as Map<String, dynamic>)
           : null,
-      lastMeals: (json['last_meals'] as List<dynamic>?)
+      lastMeals:
+          (json['last_meals'] as List<dynamic>?)
               ?.map((e) => MealSummaryDto.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
@@ -66,10 +67,10 @@ class EmployeeDetailDto {
   }
 
   EmployeeDetail toDomain() => EmployeeDetail(
-        employee: employeeDto.toDomain(),
-        todayMeal: todayMeal?.toDomain(),
-        lastMeals: lastMeals.map((e) => e.toDomain()).toList(),
-        faceEnrolled: faceEnrolled,
-        qrGenerated: qrGenerated,
-      );
+    employee: employeeDto.toDomain(),
+    todayMeal: todayMeal?.toDomain(),
+    lastMeals: lastMeals.map((e) => e.toDomain()).toList(),
+    faceEnrolled: faceEnrolled,
+    qrGenerated: qrGenerated,
+  );
 }

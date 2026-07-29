@@ -12,8 +12,7 @@ import '../dto/update_user_request_dto.dart';
 class AdminUserRepositoryImpl implements AdminUserRepository {
   final AdminUserRemoteDataSource _dataSource;
 
-  AdminUserRepositoryImpl({required AdminUserRemoteDataSource dataSource})
-      : _dataSource = dataSource;
+  AdminUserRepositoryImpl({required this._dataSource});
 
   @override
   Future<Result<PaginatedAdminUsers>> getUsers({
@@ -35,17 +34,21 @@ class AdminUserRepositoryImpl implements AdminUserRepository {
         typeFilter: typeFilter,
         statutFilter: statutFilter,
       );
-      return Success(PaginatedAdminUsers(
-        items: response.items.map((e) => e.toDomain()).toList(),
-        total: response.total,
-        page: response.page,
-        pageSize: response.pageSize,
-        totalPages: response.totalPages,
-      ));
+      return Success(
+        PaginatedAdminUsers(
+          items: response.items.map((e) => e.toDomain()).toList(),
+          total: response.total,
+          page: response.page,
+          pageSize: response.pageSize,
+          totalPages: response.totalPages,
+        ),
+      );
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'utilisateur'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors du chargement des utilisateurs.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors du chargement des utilisateurs.'),
+      );
     }
   }
 
@@ -57,7 +60,9 @@ class AdminUserRepositoryImpl implements AdminUserRepository {
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'utilisateur'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors du chargement de l\'utilisateur.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors du chargement de l\'utilisateur.'),
+      );
     }
   }
 
@@ -84,7 +89,9 @@ class AdminUserRepositoryImpl implements AdminUserRepository {
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'utilisateur'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors de la création de l\'utilisateur.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors de la création de l\'utilisateur.'),
+      );
     }
   }
 
@@ -110,7 +117,11 @@ class AdminUserRepositoryImpl implements AdminUserRepository {
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'utilisateur'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors de la modification de l\'utilisateur.'));
+      return const Fail(
+        ApiFailure(
+          message: 'Erreur lors de la modification de l\'utilisateur.',
+        ),
+      );
     }
   }
 
@@ -122,7 +133,11 @@ class AdminUserRepositoryImpl implements AdminUserRepository {
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'utilisateur'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors de la réinitialisation du mot de passe.'));
+      return const Fail(
+        ApiFailure(
+          message: 'Erreur lors de la réinitialisation du mot de passe.',
+        ),
+      );
     }
   }
 
@@ -134,7 +149,9 @@ class AdminUserRepositoryImpl implements AdminUserRepository {
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'utilisateur'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors du changement de statut.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors du changement de statut.'),
+      );
     }
   }
 
@@ -146,7 +163,9 @@ class AdminUserRepositoryImpl implements AdminUserRepository {
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'utilisateur'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors de la suppression de l\'utilisateur.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors de la suppression de l\'utilisateur.'),
+      );
     }
   }
 }

@@ -61,7 +61,9 @@ class _UserListScreenState extends ConsumerState<UserListScreen> {
       context: context,
       builder: (_) => _UserFormDialog(
         onSave: (nom, prenom, email, password, type, roleId) async {
-          final success = await ref.read(adminUserProvider.notifier).createUser(
+          final success = await ref
+              .read(adminUserProvider.notifier)
+              .createUser(
                 nom: nom,
                 prenom: prenom,
                 email: email,
@@ -81,7 +83,9 @@ class _UserListScreenState extends ConsumerState<UserListScreen> {
       builder: (_) => _UserFormDialog(
         user: user,
         onSave: (nom, prenom, email, password, type, roleId) async {
-          final success = await ref.read(adminUserProvider.notifier).updateUser(
+          final success = await ref
+              .read(adminUserProvider.notifier)
+              .updateUser(
                 user.uuid,
                 nom: nom,
                 prenom: prenom,
@@ -100,10 +104,9 @@ class _UserListScreenState extends ConsumerState<UserListScreen> {
       builder: (_) => _PasswordResetDialog(
         user: user,
         onReset: (password) async {
-          final success = await ref.read(adminUserProvider.notifier).resetPassword(
-                user.uuid,
-                password,
-              );
+          final success = await ref
+              .read(adminUserProvider.notifier)
+              .resetPassword(user.uuid, password);
           if (success && mounted) Navigator.of(context).pop();
         },
       ),
@@ -128,7 +131,9 @@ class _UserListScreenState extends ConsumerState<UserListScreen> {
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
             onPressed: () async {
-              final success = await ref.read(adminUserProvider.notifier).deleteUser(user.uuid);
+              final success = await ref
+                  .read(adminUserProvider.notifier)
+                  .deleteUser(user.uuid);
               if (success && mounted) Navigator.of(context).pop();
             },
             child: const Text('Supprimer'),
@@ -144,7 +149,9 @@ class _UserListScreenState extends ConsumerState<UserListScreen> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('${user.isActive ? 'Désactiver' : 'Activer'} l\'utilisateur'),
+        title: Text(
+          '${user.isActive ? 'Désactiver' : 'Activer'} l\'utilisateur',
+        ),
         content: Text(
           'Voulez-vous $label l\'utilisateur « ${user.fullName} » ?',
         ),
@@ -155,10 +162,9 @@ class _UserListScreenState extends ConsumerState<UserListScreen> {
           ),
           FilledButton(
             onPressed: () async {
-              final success = await ref.read(adminUserProvider.notifier).toggleStatus(
-                    user.uuid,
-                    newStatus,
-                  );
+              final success = await ref
+                  .read(adminUserProvider.notifier)
+                  .toggleStatus(user.uuid, newStatus);
               if (success && mounted) Navigator.of(context).pop();
             },
             child: Text(user.isActive ? 'Désactiver' : 'Activer'),
@@ -195,14 +201,13 @@ class _UserListScreenState extends ConsumerState<UserListScreen> {
                 : Colors.green,
             behavior: SnackBarBehavior.floating,
             margin: const EdgeInsets.all(Spacing.md),
-            duration: Duration(
-              seconds: notification.isError ? 5 : 3,
-            ),
+            duration: Duration(seconds: notification.isError ? 5 : 3),
             action: notification.isError
                 ? SnackBarAction(
                     label: 'OK',
                     textColor: Colors.white,
-                    onPressed: () {},
+                    onPressed: () =>
+                        ScaffoldMessenger.of(context).hideCurrentSnackBar(),
                   )
                 : null,
           ),
@@ -225,9 +230,7 @@ class _UserListScreenState extends ConsumerState<UserListScreen> {
       body: Column(
         children: [
           _buildFilters(theme, state),
-          Expanded(
-            child: _buildBody(state, theme, isDesktop),
-          ),
+          Expanded(child: _buildBody(state, theme, isDesktop)),
         ],
       ),
       floatingActionButton: !isDesktop
@@ -282,7 +285,9 @@ class _UserListScreenState extends ConsumerState<UserListScreen> {
                   selected: _typeFilter == 'ADMINISTRATEUR',
                   onSelected: () {
                     setState(() => _typeFilter = 'ADMINISTRATEUR');
-                    ref.read(adminUserProvider.notifier).setTypeFilter('ADMINISTRATEUR');
+                    ref
+                        .read(adminUserProvider.notifier)
+                        .setTypeFilter('ADMINISTRATEUR');
                   },
                 ),
                 const SizedBox(width: Spacing.xs),
@@ -291,7 +296,9 @@ class _UserListScreenState extends ConsumerState<UserListScreen> {
                   selected: _typeFilter == 'RECEPTION',
                   onSelected: () {
                     setState(() => _typeFilter = 'RECEPTION');
-                    ref.read(adminUserProvider.notifier).setTypeFilter('RECEPTION');
+                    ref
+                        .read(adminUserProvider.notifier)
+                        .setTypeFilter('RECEPTION');
                   },
                 ),
                 const SizedBox(width: Spacing.md),
@@ -322,13 +329,19 @@ class _UserListScreenState extends ConsumerState<UserListScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline_rounded,
-                  size: 64, color: theme.colorScheme.error),
+              Icon(
+                Icons.error_outline_rounded,
+                size: 64,
+                color: theme.colorScheme.error,
+              ),
               const SizedBox(height: Spacing.md),
-              Text(state.error!,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodyLarge
-                      ?.copyWith(color: theme.colorScheme.error)),
+              Text(
+                state.error!,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
               const SizedBox(height: Spacing.lg),
               FilledButton(
                 onPressed: _onRefresh,
@@ -345,18 +358,25 @@ class _UserListScreenState extends ConsumerState<UserListScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.person_off_rounded,
-                size: 64, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4)),
+            Icon(
+              Icons.person_off_rounded,
+              size: 64,
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+            ),
             const SizedBox(height: Spacing.md),
-            Text('Aucun utilisateur trouvé',
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                )),
+            Text(
+              'Aucun utilisateur trouvé',
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
             const SizedBox(height: Spacing.sm),
-            Text('Ajoutez un administrateur ou réceptionniste.',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                )),
+            Text(
+              'Ajoutez un administrateur ou réceptionniste.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
           ],
         ),
       );
@@ -364,9 +384,7 @@ class _UserListScreenState extends ConsumerState<UserListScreen> {
 
     return RefreshIndicator(
       onRefresh: _onRefresh,
-      child: isDesktop
-          ? _buildTable(state, theme)
-          : _buildList(state, theme),
+      child: isDesktop ? _buildTable(state, theme) : _buildList(state, theme),
     );
   }
 
@@ -401,59 +419,70 @@ class _UserListScreenState extends ConsumerState<UserListScreen> {
       controller: _scrollController,
       child: DataTable(
         sortColumnIndex: 4,
-        columns: [
-          const DataColumn(label: Text('Nom')),
-          const DataColumn(label: Text('Email')),
-          const DataColumn(label: Text('Type')),
-          const DataColumn(label: Text('Rôle')),
-          DataColumn(
-            label: const Text('Statut'),
-            numeric: false,
-          ),
-          const DataColumn(label: Text('Dernière connexion')),
-          const DataColumn(label: Text('Créé le')),
-          const DataColumn(label: Text('Actions')),
+        columns: const [
+          DataColumn(label: Text('Nom')),
+          DataColumn(label: Text('Email')),
+          DataColumn(label: Text('Type')),
+          DataColumn(label: Text('Rôle')),
+          DataColumn(label: Text('Statut')),
+          DataColumn(label: Text('Dernière connexion')),
+          DataColumn(label: Text('Créé le')),
+          DataColumn(label: Text('Actions')),
         ],
         rows: state.users.map((user) {
-          return DataRow(cells: [
-            DataCell(Text(user.fullName, style: const TextStyle(fontWeight: FontWeight.w500))),
-            DataCell(Text(user.email ?? '-')),
-            DataCell(_TypeBadge(type: user.type)),
-            DataCell(Text(user.roleName ?? '-')),
-            DataCell(_StatusBadge(isActive: user.isActive)),
-            DataCell(Text(_formatDate(user.derniereConnexion))),
-            DataCell(Text(_formatDate(user.createdAt))),
-            DataCell(Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.edit_rounded, size: 18),
-                  tooltip: 'Modifier',
-                  onPressed: () => _showEditDialog(user),
+          return DataRow(
+            cells: [
+              DataCell(
+                Text(
+                  user.fullName,
+                  style: const TextStyle(fontWeight: FontWeight.w500),
                 ),
-                IconButton(
-                  icon: Icon(
-                    user.isActive ? Icons.block_rounded : Icons.check_circle_rounded,
-                    size: 18,
-                    color: user.isActive ? Colors.orange : Colors.green,
-                  ),
-                  tooltip: user.isActive ? 'Désactiver' : 'Activer',
-                  onPressed: () => _showToggleStatusConfirm(user),
+              ),
+              DataCell(Text(user.email ?? '-')),
+              DataCell(_TypeBadge(type: user.type)),
+              DataCell(Text(user.roleName ?? '-')),
+              DataCell(_StatusBadge(isActive: user.isActive)),
+              DataCell(Text(_formatDate(user.derniereConnexion))),
+              DataCell(Text(_formatDate(user.createdAt))),
+              DataCell(
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit_rounded, size: 18),
+                      tooltip: 'Modifier',
+                      onPressed: () => _showEditDialog(user),
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        user.isActive
+                            ? Icons.block_rounded
+                            : Icons.check_circle_rounded,
+                        size: 18,
+                        color: user.isActive ? Colors.orange : Colors.green,
+                      ),
+                      tooltip: user.isActive ? 'Désactiver' : 'Activer',
+                      onPressed: () => _showToggleStatusConfirm(user),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.lock_reset_rounded, size: 18),
+                      tooltip: 'Réinitialiser mot de passe',
+                      onPressed: () => _showPasswordDialog(user),
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        Icons.delete_rounded,
+                        size: 18,
+                        color: theme.colorScheme.error,
+                      ),
+                      tooltip: 'Supprimer',
+                      onPressed: () => _showDeleteConfirm(user),
+                    ),
+                  ],
                 ),
-                IconButton(
-                  icon: const Icon(Icons.lock_reset_rounded, size: 18),
-                  tooltip: 'Réinitialiser mot de passe',
-                  onPressed: () => _showPasswordDialog(user),
-                ),
-                IconButton(
-                  icon: Icon(Icons.delete_rounded, size: 18,
-                      color: theme.colorScheme.error),
-                  tooltip: 'Supprimer',
-                  onPressed: () => _showDeleteConfirm(user),
-                ),
-              ],
-            )),
-          ]);
+              ),
+            ],
+          );
         }).toList(),
       ),
     );
@@ -505,10 +534,7 @@ class _StatusFilterDropdown extends StatelessWidget {
   final String? value;
   final ValueChanged<String?> onChanged;
 
-  const _StatusFilterDropdown({
-    required this.value,
-    required this.onChanged,
-  });
+  const _StatusFilterDropdown({required this.value, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -518,9 +544,15 @@ class _StatusFilterDropdown extends StatelessWidget {
       isDense: true,
       underline: const SizedBox(),
       items: const [
-        DropdownMenuItem(value: null, child: Text('Tous', style: TextStyle(fontSize: 12))),
-        DropdownMenuItem(value: 'ACTIF', child: Text('Actif', style: TextStyle(fontSize: 12))),
-        DropdownMenuItem(value: 'INACTIF', child: Text('Désactivé', style: TextStyle(fontSize: 12))),
+        DropdownMenuItem(child: Text('Tous', style: TextStyle(fontSize: 12))),
+        DropdownMenuItem(
+          value: 'ACTIF',
+          child: Text('Actif', style: TextStyle(fontSize: 12)),
+        ),
+        DropdownMenuItem(
+          value: 'INACTIF',
+          child: Text('Désactivé', style: TextStyle(fontSize: 12)),
+        ),
       ],
       onChanged: onChanged,
     );
@@ -564,8 +596,12 @@ class _UserCard extends StatelessWidget {
                       ? AppColors.primary.withValues(alpha: 0.15)
                       : AppColors.secondary.withValues(alpha: 0.15),
                   child: Icon(
-                    user.isAdmin ? Icons.admin_panel_settings_rounded : Icons.person_rounded,
-                    color: user.isAdmin ? AppColors.primary : AppColors.secondary,
+                    user.isAdmin
+                        ? Icons.admin_panel_settings_rounded
+                        : Icons.person_rounded,
+                    color: user.isAdmin
+                        ? AppColors.primary
+                        : AppColors.secondary,
                     size: 20,
                   ),
                 ),
@@ -574,13 +610,19 @@ class _UserCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(user.fullName,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w600)),
+                      Text(
+                        user.fullName,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                       if (user.email != null)
-                        Text(user.email!,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant)),
+                        Text(
+                          user.email!,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -593,9 +635,12 @@ class _UserCard extends StatelessWidget {
                 _TypeBadge(type: user.type),
                 if (user.roleName != null) ...[
                   const SizedBox(width: Spacing.sm),
-                  Text(user.roleName!,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant)),
+                  Text(
+                    user.roleName!,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                 ],
               ],
             ),
@@ -603,12 +648,18 @@ class _UserCard extends StatelessWidget {
               const SizedBox(height: Spacing.xxs),
               Row(
                 children: [
-                  Icon(Icons.login_rounded, size: 12,
-                      color: theme.colorScheme.onSurfaceVariant),
+                  Icon(
+                    Icons.login_rounded,
+                    size: 12,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                   const SizedBox(width: Spacing.xxs),
-                  Text('Dernière connexion: ${_formatDateTime(user.derniereConnexion!)}',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant)),
+                  Text(
+                    'Dernière connexion: ${_formatDateTime(user.derniereConnexion!)}',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -623,7 +674,9 @@ class _UserCard extends StatelessWidget {
                 ),
                 IconButton(
                   icon: Icon(
-                    user.isActive ? Icons.block_rounded : Icons.check_circle_rounded,
+                    user.isActive
+                        ? Icons.block_rounded
+                        : Icons.check_circle_rounded,
                     size: 18,
                     color: user.isActive ? Colors.orange : Colors.green,
                   ),
@@ -636,8 +689,11 @@ class _UserCard extends StatelessWidget {
                   onPressed: onResetPassword,
                 ),
                 IconButton(
-                  icon: Icon(Icons.delete_rounded, size: 18,
-                      color: theme.colorScheme.error),
+                  icon: Icon(
+                    Icons.delete_rounded,
+                    size: 18,
+                    color: theme.colorScheme.error,
+                  ),
                   tooltip: 'Supprimer',
                   onPressed: onDelete,
                 ),
@@ -711,10 +767,10 @@ class _TypeBadge extends StatelessWidget {
       child: Text(
         isAdmin ? 'Admin' : 'Réception',
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w600,
-              fontSize: 11,
-            ),
+          color: color,
+          fontWeight: FontWeight.w600,
+          fontSize: 11,
+        ),
       ),
     );
   }
@@ -726,8 +782,15 @@ class _TypeBadge extends StatelessWidget {
 
 class _UserFormDialog extends StatefulWidget {
   final AdminUser? user;
-  final Future<void> Function(String nom, String prenom, String email,
-      String password, String type, int? roleId) onSave;
+  final Future<void> Function(
+    String nom,
+    String prenom,
+    String email,
+    String password,
+    String type,
+    int? roleId,
+  )
+  onSave;
 
   const _UserFormDialog({this.user, required this.onSave});
 
@@ -782,7 +845,6 @@ class _UserFormDialogState extends State<_UserFormDialog> {
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.user != null;
-    final theme = Theme.of(context);
 
     return AlertDialog(
       title: Text(isEdit ? 'Modifier l\'utilisateur' : 'Nouvel utilisateur'),
@@ -796,14 +858,20 @@ class _UserFormDialogState extends State<_UserFormDialog> {
               children: [
                 if (!isEdit) ...[
                   DropdownButtonFormField<String>(
-                    value: _type,
+                    initialValue: _type,
                     decoration: const InputDecoration(
                       labelText: 'Type',
                       isDense: true,
                     ),
                     items: const [
-                      DropdownMenuItem(value: 'ADMINISTRATEUR', child: Text('Administrateur')),
-                      DropdownMenuItem(value: 'RECEPTION', child: Text('Réceptionniste')),
+                      DropdownMenuItem(
+                        value: 'ADMINISTRATEUR',
+                        child: Text('Administrateur'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'RECEPTION',
+                        child: Text('Réceptionniste'),
+                      ),
                     ],
                     onChanged: (v) {
                       if (v != null) setState(() => _type = v);
@@ -866,8 +934,9 @@ class _UserFormDialogState extends State<_UserFormDialog> {
                               : Icons.visibility_rounded,
                           size: 18,
                         ),
-                        onPressed: () =>
-                            setState(() => _obscurePassword = !_obscurePassword),
+                        onPressed: () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
                       ),
                     ),
                     obscureText: _obscurePassword,

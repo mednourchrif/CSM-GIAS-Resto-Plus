@@ -17,33 +17,4 @@ enum AdminSection {
   final String label;
 
   const AdminSection(this.icon, this.label);
-
-  String get placeholderTitle => label;
-
-  String get placeholderDescription {
-    switch (this) {
-      case AdminSection.employees:
-        return 'La gestion des employés sera implémentée ici.';
-      case AdminSection.interns:
-        return 'Gestion des stagiaires: inscription, suivi, et période de stage.';
-      case AdminSection.visitors:
-        return 'Gestion des visiteurs: enregistrement, suivi, et visite.';
-      case AdminSection.qrCodes:
-        return 'Gestion des QR codes: génération, révocation, et impression.';
-      case AdminSection.faceEnrollment:
-        return "L'inscription des visages sera implémentée ici.";
-      case AdminSection.mealHistory:
-        return "L'historique des repas sera implémenté ici.";
-      case AdminSection.statistics:
-        return 'Statistiques et graphiques du restaurant.';
-      case AdminSection.reports:
-        return 'Rapports d\'activité du restaurant: génération et export.';
-      case AdminSection.users:
-        return 'Gestion des utilisateurs: administrateurs et réceptionnistes.';
-      case AdminSection.settings:
-        return 'Configuration du système: restaurant, reconnaissance, QR codes, sécurité.';
-      case AdminSection.audit:
-        return "Journal d'audit: suivi des actions et modifications du système.";
-    }
-  }
 }

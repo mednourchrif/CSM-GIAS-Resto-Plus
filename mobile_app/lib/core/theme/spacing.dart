@@ -82,15 +82,15 @@ class AppDurations {
 
 /// Animation curve tokens.
 ///
-/// [Curves] members are NOT Dart compile-time constants, so these must be
-/// `static final`, not `static const`.
+/// The [Curves] members used here are all compile-time constants, so these
+/// are declared `static const`.
 class AppCurves {
   AppCurves._();
 
-  static final Curve standard = Curves.easeInOut;
-  static final Curve enter = Curves.easeOut;
-  static final Curve exit = Curves.easeIn;
-  static final Curve emphasized = Curves.easeInOutCubicEmphasized;
-  static final Curve bounce = Curves.elasticOut;
-  static final Curve decelerate = Curves.decelerate;
+  static const Curve standard = Curves.easeInOut;
+  static const Curve enter = Curves.easeOut;
+  static const Curve exit = Curves.easeIn;
+  static const Curve emphasized = Curves.easeInOutCubicEmphasized;
+  static const Curve bounce = Curves.elasticOut;
+  static const Curve decelerate = Curves.decelerate;
 }

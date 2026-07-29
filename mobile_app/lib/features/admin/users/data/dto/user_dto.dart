@@ -44,26 +44,28 @@ class AdminUserDto {
       derniereConnexion: json['derniere_connexion'] != null
           ? DateTime.tryParse(json['derniere_connexion'] as String)
           : null,
-      createdAt: DateTime.tryParse(json['created_at'] as String) ?? DateTime.now(),
-      updatedAt: DateTime.tryParse(json['updated_at'] as String) ?? DateTime.now(),
+      createdAt:
+          DateTime.tryParse(json['created_at'] as String) ?? DateTime.now(),
+      updatedAt:
+          DateTime.tryParse(json['updated_at'] as String) ?? DateTime.now(),
       createdById: json['created_by_id'] as String?,
       updatedById: json['updated_by_id'] as String?,
     );
   }
 
   AdminUser toDomain() => AdminUser(
-        id: id,
-        uuid: uuid,
-        nom: nom,
-        prenom: prenom,
-        email: email,
-        type: type,
-        statut: statut,
-        roleName: roleName,
-        derniereConnexion: derniereConnexion,
-        createdAt: createdAt,
-        updatedAt: updatedAt,
-        createdById: createdById,
-        updatedById: updatedById,
-      );
+    id: id,
+    uuid: uuid,
+    nom: nom,
+    prenom: prenom,
+    email: email,
+    type: type,
+    statut: statut,
+    roleName: roleName,
+    derniereConnexion: derniereConnexion,
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+    createdById: createdById,
+    updatedById: updatedById,
+  );
 }

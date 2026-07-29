@@ -35,8 +35,12 @@ class ReportFilter {
       dateTo: clearDateTo ? null : dateTo ?? this.dateTo,
       granularity: granularity ?? this.granularity,
       userType: clearUserType ? null : userType ?? this.userType,
-      typeIdentification: clearTypeIdentification ? null : typeIdentification ?? this.typeIdentification,
-      categorieUuid: clearCategorieUuid ? null : categorieUuid ?? this.categorieUuid,
+      typeIdentification: clearTypeIdentification
+          ? null
+          : typeIdentification ?? this.typeIdentification,
+      categorieUuid: clearCategorieUuid
+          ? null
+          : categorieUuid ?? this.categorieUuid,
     );
   }
 }

@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.models.intern import Intern
 from app.repositories.base import BaseRepository
+from app.utils.date_utils import today_local
 
 
 class InternRepository(BaseRepository[Intern]):
@@ -30,7 +31,7 @@ class InternRepository(BaseRepository[Intern]):
 
     def get_expired(self, db: Session) -> list[Intern]:
         """Fetch interns whose internship has ended."""
-        today = date.today()
+        today = today_local()
         stmt = select(Intern).where(Intern.date_fin_stage < today)
         return list(db.execute(stmt).scalars().all())
 

@@ -1,8 +1,8 @@
 import json
-from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
+from app.core.exceptions import NotFoundException
 from app.models.admin import Admin
 from app.repositories.audit_repository import AuditLogRepository
 from app.schemas.audit import AuditLogFilterParams, AuditLogResponse
@@ -73,11 +73,10 @@ class AuditLogService:
     def get_by_uuid(self, db: Session, uuid: str) -> AuditLogResponse:
         record = self._repo.get_by_uuid(db, uuid)
         if record is None:
-            from app.core.exceptions import NotFoundException
             raise NotFoundException(message=f"Audit log {uuid} not found.")
         return AuditLogResponse.model_validate(record)
 
-    def get_filters(self, db: Session) -> dict:
+    def get_filters(self, db: Session) -> dict[str, list[str]]:
         return {
             "actions": self._repo.get_actions(db),
             "entity_types": self._repo.get_entity_types(db),
@@ -221,85 +220,131 @@ class AuditLogService:
         self, db: Session, *, admin: Admin, visitor_uuid: str, visitor_name: str
     ) -> None:
         self._log_crud(
-            db, action_prefix="CREATED", entity_type="VISITOR",
-            entity_uuid=visitor_uuid, entity_name=visitor_name, admin=admin,
+            db,
+            action_prefix="CREATED",
+            entity_type="VISITOR",
+            entity_uuid=visitor_uuid,
+            entity_name=visitor_name,
+            admin=admin,
         )
 
     def log_visitor_updated(
         self, db: Session, *, admin: Admin, visitor_uuid: str, visitor_name: str
     ) -> None:
         self._log_crud(
-            db, action_prefix="UPDATED", entity_type="VISITOR",
-            entity_uuid=visitor_uuid, entity_name=visitor_name, admin=admin,
+            db,
+            action_prefix="UPDATED",
+            entity_type="VISITOR",
+            entity_uuid=visitor_uuid,
+            entity_name=visitor_name,
+            admin=admin,
         )
 
     def log_visitor_deleted(
         self, db: Session, *, admin: Admin, visitor_uuid: str, visitor_name: str
     ) -> None:
         self._log_crud(
-            db, action_prefix="DELETED", entity_type="VISITOR",
-            entity_uuid=visitor_uuid, entity_name=visitor_name, admin=admin,
+            db,
+            action_prefix="DELETED",
+            entity_type="VISITOR",
+            entity_uuid=visitor_uuid,
+            entity_name=visitor_name,
+            admin=admin,
         )
 
     def log_intern_created(
         self, db: Session, *, admin: Admin, intern_uuid: str, intern_name: str
     ) -> None:
         self._log_crud(
-            db, action_prefix="CREATED", entity_type="INTERN",
-            entity_uuid=intern_uuid, entity_name=intern_name, admin=admin,
+            db,
+            action_prefix="CREATED",
+            entity_type="INTERN",
+            entity_uuid=intern_uuid,
+            entity_name=intern_name,
+            admin=admin,
         )
 
     def log_intern_updated(
         self, db: Session, *, admin: Admin, intern_uuid: str, intern_name: str
     ) -> None:
         self._log_crud(
-            db, action_prefix="UPDATED", entity_type="INTERN",
-            entity_uuid=intern_uuid, entity_name=intern_name, admin=admin,
+            db,
+            action_prefix="UPDATED",
+            entity_type="INTERN",
+            entity_uuid=intern_uuid,
+            entity_name=intern_name,
+            admin=admin,
         )
 
     def log_intern_deleted(
         self, db: Session, *, admin: Admin, intern_uuid: str, intern_name: str
     ) -> None:
         self._log_crud(
-            db, action_prefix="DELETED", entity_type="INTERN",
-            entity_uuid=intern_uuid, entity_name=intern_name, admin=admin,
+            db,
+            action_prefix="DELETED",
+            entity_type="INTERN",
+            entity_uuid=intern_uuid,
+            entity_name=intern_name,
+            admin=admin,
         )
 
     def log_user_created(
         self, db: Session, *, admin: Admin, user_uuid: str, user_name: str
     ) -> None:
         self._log_crud(
-            db, action_prefix="CREATED", entity_type="USER",
-            entity_uuid=user_uuid, entity_name=user_name, admin=admin,
+            db,
+            action_prefix="CREATED",
+            entity_type="USER",
+            entity_uuid=user_uuid,
+            entity_name=user_name,
+            admin=admin,
         )
 
     def log_user_updated(
         self, db: Session, *, admin: Admin, user_uuid: str, user_name: str
     ) -> None:
         self._log_crud(
-            db, action_prefix="UPDATED", entity_type="USER",
-            entity_uuid=user_uuid, entity_name=user_name, admin=admin,
+            db,
+            action_prefix="UPDATED",
+            entity_type="USER",
+            entity_uuid=user_uuid,
+            entity_name=user_name,
+            admin=admin,
         )
 
     def log_user_deleted(
         self, db: Session, *, admin: Admin, user_uuid: str, user_name: str
     ) -> None:
         self._log_crud(
-            db, action_prefix="DELETED", entity_type="USER",
-            entity_uuid=user_uuid, entity_name=user_name, admin=admin,
+            db,
+            action_prefix="DELETED",
+            entity_type="USER",
+            entity_uuid=user_uuid,
+            entity_name=user_name,
+            admin=admin,
         )
 
     def log_password_changed(
         self, db: Session, *, admin: Admin, user_uuid: str, user_name: str
     ) -> None:
         self._log_crud(
-            db, action_prefix="PASSWORD_CHANGED", entity_type="USER",
-            entity_uuid=user_uuid, entity_name=user_name, admin=admin,
+            db,
+            action_prefix="PASSWORD_CHANGED",
+            entity_type="USER",
+            entity_uuid=user_uuid,
+            entity_name=user_name,
+            admin=admin,
         )
 
     def log_role_changed(
-        self, db: Session, *, admin: Admin, user_uuid: str, user_name: str,
-        old_role: str, new_role: str,
+        self,
+        db: Session,
+        *,
+        admin: Admin,
+        user_uuid: str,
+        user_name: str,
+        old_role: str,
+        new_role: str,
     ) -> None:
         self.log(
             db,
@@ -314,8 +359,13 @@ class AuditLogService:
         )
 
     def log_qr_generated(
-        self, db: Session, *, admin: Admin, qr_uuid: str,
-        owner_type: str, owner_name: str,
+        self,
+        db: Session,
+        *,
+        admin: Admin,
+        qr_uuid: str,
+        owner_type: str,
+        owner_name: str,
     ) -> None:
         self.log(
             db,
@@ -329,71 +379,126 @@ class AuditLogService:
         )
 
     def log_qr_downloaded(
-        self, db: Session, *, admin: Admin, qr_uuid: str,
+        self,
+        db: Session,
+        *,
+        admin: Admin,
+        qr_uuid: str,
         owner_name: str,
     ) -> None:
         self.log(
-            db, action="QR_DOWNLOADED", user_name=f"{admin.prenom} {admin.nom}",
-            user_role="ADMIN", user_uuid=admin.uuid,
-            entity_type="QR_CODE", entity_uuid=qr_uuid,
+            db,
+            action="QR_DOWNLOADED",
+            user_name=f"{admin.prenom} {admin.nom}",
+            user_role="ADMIN",
+            user_uuid=admin.uuid,
+            entity_type="QR_CODE",
+            entity_uuid=qr_uuid,
             entity_name=owner_name,
         )
 
     def log_qr_printed(
-        self, db: Session, *, admin: Admin, qr_uuid: str, owner_name: str,
+        self,
+        db: Session,
+        *,
+        admin: Admin,
+        qr_uuid: str,
+        owner_name: str,
     ) -> None:
         self.log(
-            db, action="QR_PRINTED", user_name=f"{admin.prenom} {admin.nom}",
-            user_role="ADMIN", user_uuid=admin.uuid,
-            entity_type="QR_CODE", entity_uuid=qr_uuid,
+            db,
+            action="QR_PRINTED",
+            user_name=f"{admin.prenom} {admin.nom}",
+            user_role="ADMIN",
+            user_uuid=admin.uuid,
+            entity_type="QR_CODE",
+            entity_uuid=qr_uuid,
             entity_name=owner_name,
         )
 
     def log_qr_deleted(
-        self, db: Session, *, admin: Admin, qr_uuid: str, owner_name: str,
+        self,
+        db: Session,
+        *,
+        admin: Admin,
+        qr_uuid: str,
+        owner_name: str,
     ) -> None:
         self._log_crud(
-            db, action_prefix="DELETED", entity_type="QR_CODE",
-            entity_uuid=qr_uuid, entity_name=owner_name, admin=admin,
+            db,
+            action_prefix="DELETED",
+            entity_type="QR_CODE",
+            entity_uuid=qr_uuid,
+            entity_name=owner_name,
+            admin=admin,
         )
 
     def log_face_enrolled(
-        self, db: Session, *, admin: Admin, employee_uuid: str, employee_name: str,
+        self,
+        db: Session,
+        *,
+        admin: Admin,
+        employee_uuid: str,
+        employee_name: str,
     ) -> None:
         self.log(
-            db, action="FACE_ENROLLED", user_name=f"{admin.prenom} {admin.nom}",
-            user_role="ADMIN", user_uuid=admin.uuid,
-            entity_type="FACE_EMBEDDING", entity_uuid=employee_uuid,
+            db,
+            action="FACE_ENROLLED",
+            user_name=f"{admin.prenom} {admin.nom}",
+            user_role="ADMIN",
+            user_uuid=admin.uuid,
+            entity_type="FACE_EMBEDDING",
+            entity_uuid=employee_uuid,
             entity_name=employee_name,
         )
 
     def log_face_reenrolled(
-        self, db: Session, *, admin: Admin, employee_uuid: str, employee_name: str,
+        self,
+        db: Session,
+        *,
+        admin: Admin,
+        employee_uuid: str,
+        employee_name: str,
     ) -> None:
         self.log(
-            db, action="FACE_REENROLLED", user_name=f"{admin.prenom} {admin.nom}",
-            user_role="ADMIN", user_uuid=admin.uuid,
-            entity_type="FACE_EMBEDDING", entity_uuid=employee_uuid,
+            db,
+            action="FACE_REENROLLED",
+            user_name=f"{admin.prenom} {admin.nom}",
+            user_role="ADMIN",
+            user_uuid=admin.uuid,
+            entity_type="FACE_EMBEDDING",
+            entity_uuid=employee_uuid,
             entity_name=employee_name,
         )
 
     def log_face_removed(
-        self, db: Session, *, admin: Admin, employee_uuid: str, employee_name: str,
+        self,
+        db: Session,
+        *,
+        admin: Admin,
+        employee_uuid: str,
+        employee_name: str,
     ) -> None:
         self.log(
-            db, action="FACE_REMOVED", user_name=f"{admin.prenom} {admin.nom}",
-            user_role="ADMIN", user_uuid=admin.uuid,
-            entity_type="FACE_EMBEDDING", entity_uuid=employee_uuid,
+            db,
+            action="FACE_REMOVED",
+            user_name=f"{admin.prenom} {admin.nom}",
+            user_role="ADMIN",
+            user_uuid=admin.uuid,
+            entity_type="FACE_EMBEDDING",
+            entity_uuid=employee_uuid,
             entity_name=employee_name,
         )
 
     def log_meal_registered(
-        self, db: Session, *,
-        employee_uuid: str, employee_name: str,
+        self,
+        db: Session,
+        *,
+        employee_uuid: str,
+        employee_name: str,
         meal_type: str,
         recognition_method: str,
     ) -> None:
-        from app.models.admin import Admin
         self.log(
             db,
             action="MEAL_REGISTERED",
@@ -403,15 +508,21 @@ class AuditLogService:
             entity_uuid=employee_uuid,
             entity_name=employee_name,
             description=f"Repas {meal_type} via {recognition_method}",
-            metadata_json=json.dumps({
-                "meal_type": meal_type,
-                "recognition_method": recognition_method,
-            }),
+            metadata_json=json.dumps(
+                {
+                    "meal_type": meal_type,
+                    "recognition_method": recognition_method,
+                }
+            ),
         )
 
     def log_settings_updated(
-        self, db: Session, *, admin: Admin,
-        old_value: str | None, new_value: str | None,
+        self,
+        db: Session,
+        *,
+        admin: Admin,
+        old_value: str | None,
+        new_value: str | None,
         setting_key: str,
     ) -> None:
         self.log(
@@ -423,9 +534,11 @@ class AuditLogService:
             entity_type="SETTINGS",
             entity_name=setting_key,
             description=f"Paramètre mis à jour: {old_value} → {new_value}",
-            metadata_json=json.dumps({
-                "key": setting_key,
-                "old_value": old_value,
-                "new_value": new_value,
-            }),
+            metadata_json=json.dumps(
+                {
+                    "key": setting_key,
+                    "old_value": old_value,
+                    "new_value": new_value,
+                }
+            ),
         )

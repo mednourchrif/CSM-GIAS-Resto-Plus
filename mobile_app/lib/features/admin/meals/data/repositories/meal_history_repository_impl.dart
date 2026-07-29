@@ -1,4 +1,5 @@
 import '../datasources/meal_history_remote_datasource.dart';
+import '../dto/meal_history_dto.dart';
 import '../../domain/entities/meal_history.dart';
 import '../../domain/repositories/meal_history_repository.dart';
 
@@ -36,39 +37,39 @@ class MealHistoryRepositoryImpl implements MealHistoryRepository {
       items: dto.data.map(_toEntity).toList(),
       total: dto.total,
       page: dto.page,
-      pageSize: dto.page_size,
-      totalPages: dto.total_pages,
+      pageSize: dto.pageSize,
+      totalPages: dto.totalPages,
     );
   }
 
   @override
-  Future<MealStats> getMealStats({
-    String? dateFrom,
-    String? dateTo,
-  }) async {
-    final dto = await _dataSource.getMealStats(dateFrom: dateFrom, dateTo: dateTo);
+  Future<MealStats> getMealStats({String? dateFrom, String? dateTo}) async {
+    final dto = await _dataSource.getMealStats(
+      dateFrom: dateFrom,
+      dateTo: dateTo,
+    );
     return MealStats(
-      totalMeals: dto.total_meals,
-      totalEmployees: dto.total_employees,
-      totalInterns: dto.total_interns,
-      totalVisitors: dto.total_visitors,
-      faceRegistrations: dto.face_registrations,
-      qrRegistrations: dto.qr_registrations,
+      totalMeals: dto.totalMeals,
+      totalEmployees: dto.totalEmployees,
+      totalInterns: dto.totalInterns,
+      totalVisitors: dto.totalVisitors,
+      faceRegistrations: dto.faceRegistrations,
+      qrRegistrations: dto.qrRegistrations,
     );
   }
 
-  MealHistory _toEntity(dto) {
+  MealHistory _toEntity(MealHistoryDto dto) {
     return MealHistory(
       uuid: dto.uuid,
-      utilisateurUuid: dto.utilisateur_uuid,
+      utilisateurUuid: dto.utilisateurUuid,
       nom: dto.nom,
       prenom: dto.prenom,
       email: dto.email,
-      typeIdentification: _parseTypeIdentification(dto.type_identification),
-      categorieUuid: dto.categorie_uuid,
-      categorieNom: dto.categorie_nom,
-      dateRepas: DateTime.parse(dto.date_repas),
-      heureRepas: dto.heure_repas,
+      typeIdentification: _parseTypeIdentification(dto.typeIdentification),
+      categorieUuid: dto.categorieUuid,
+      categorieNom: dto.categorieNom,
+      dateRepas: DateTime.parse(dto.dateRepas),
+      heureRepas: dto.heureRepas,
     );
   }
 

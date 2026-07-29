@@ -75,7 +75,8 @@ async def create_intern(
     """Create a new intern."""
     intern = _service.create(db, body, admin)
     _audit.log_intern_created(
-        db, admin=admin,
+        db,
+        admin=admin,
         intern_uuid=intern.uuid,
         intern_name=f"{intern.prenom} {intern.nom}",
     )
@@ -97,7 +98,8 @@ async def update_intern(
     """Replace an intern's data."""
     intern = _service.update(db, uuid, body, admin)
     _audit.log_intern_updated(
-        db, admin=admin,
+        db,
+        admin=admin,
         intern_uuid=uuid,
         intern_name=f"{intern.prenom} {intern.nom}",
     )
@@ -119,7 +121,8 @@ async def patch_intern(
     """Partially update an intern."""
     intern = _service.update(db, uuid, body, admin)
     _audit.log_intern_updated(
-        db, admin=admin,
+        db,
+        admin=admin,
         intern_uuid=uuid,
         intern_name=f"{intern.prenom} {intern.nom}",
     )
@@ -142,7 +145,8 @@ async def delete_intern(
     intern_name = f"{intern.prenom} {intern.nom}"
     _service.delete(db, uuid, admin)
     _audit.log_intern_deleted(
-        db, admin=admin,
+        db,
+        admin=admin,
         intern_uuid=uuid,
         intern_name=intern_name,
     )

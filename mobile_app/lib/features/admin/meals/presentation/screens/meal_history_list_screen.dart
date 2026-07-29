@@ -15,15 +15,16 @@ import '../widgets/meal_history_stats.dart';
 import '../widgets/meal_status_badge.dart';
 
 class MealHistoryListScreen extends ConsumerStatefulWidget {
-  const MealHistoryListScreen({super.key});
+  final String? initialSearch;
+
+  const MealHistoryListScreen({super.key, this.initialSearch});
 
   @override
   ConsumerState<MealHistoryListScreen> createState() =>
       _MealHistoryListScreenState();
 }
 
-class _MealHistoryListScreenState
-    extends ConsumerState<MealHistoryListScreen> {
+class _MealHistoryListScreenState extends ConsumerState<MealHistoryListScreen> {
   final _searchController = TextEditingController();
   final _scrollController = ScrollController();
   Timer? _debounce;
@@ -31,9 +32,14 @@ class _MealHistoryListScreenState
   @override
   void initState() {
     super.initState();
+    _searchController.text = widget.initialSearch ?? '';
     _scrollController.addListener(_onScroll);
     Future.microtask(() {
-      ref.read(mealHistoryProvider.notifier).loadMeals(refresh: true);
+      if (widget.initialSearch case final query? when query.isNotEmpty) {
+        ref.read(mealHistoryProvider.notifier).setSearch(query);
+      } else {
+        ref.read(mealHistoryProvider.notifier).loadMeals(refresh: true);
+      }
       ref.read(mealHistoryProvider.notifier).loadStats();
     });
   }
@@ -49,9 +55,9 @@ class _MealHistoryListScreenState
   void _onSearchChanged(String query) {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 400), () {
-      ref.read(mealHistoryProvider.notifier).setSearch(
-            query.isEmpty ? null : query,
-          );
+      ref
+          .read(mealHistoryProvider.notifier)
+          .setSearch(query.isEmpty ? null : query);
     });
   }
 
@@ -82,20 +88,18 @@ class _MealHistoryListScreenState
         currentTypeIdentification: state.typeIdentification,
         currentUserType: state.userType,
         onDateChanged: ({String? dateFrom, String? dateTo}) {
-          ref.read(mealHistoryProvider.notifier).setDateFilter(
-                dateFrom: dateFrom,
-                dateTo: dateTo,
-              );
+          ref
+              .read(mealHistoryProvider.notifier)
+              .setDateFilter(dateFrom: dateFrom, dateTo: dateTo);
         },
         onCategorieChanged: (v) =>
             ref.read(mealHistoryProvider.notifier).setCategorieFilter(v),
-        onTypeIdentificationChanged: (v) =>
-            ref.read(mealHistoryProvider.notifier)
-                .setTypeIdentificationFilter(v),
+        onTypeIdentificationChanged: (v) => ref
+            .read(mealHistoryProvider.notifier)
+            .setTypeIdentificationFilter(v),
         onUserTypeChanged: (v) =>
             ref.read(mealHistoryProvider.notifier).setUserTypeFilter(v),
-        onReset: () =>
-            ref.read(mealHistoryProvider.notifier).resetFilters(),
+        onReset: () => ref.read(mealHistoryProvider.notifier).resetFilters(),
       ),
     );
   }
@@ -116,8 +120,7 @@ class _MealHistoryListScreenState
         content: Text('Export CSV : ${state.meals.length} lignes générées'),
         action: SnackBarAction(
           label: 'Copier',
-          onPressed: () =>
-              _copyToClipboard(buffer.toString()),
+          onPressed: () => _copyToClipboard(buffer.toString()),
         ),
       ),
     );
@@ -177,9 +180,11 @@ class _MealHistoryListScreenState
                     color: theme.colorScheme.primaryContainer,
                     child: Row(
                       children: [
-                        Icon(Icons.filter_alt,
-                            size: 16,
-                            color: theme.colorScheme.onPrimaryContainer),
+                        Icon(
+                          Icons.filter_alt,
+                          size: 16,
+                          color: theme.colorScheme.onPrimaryContainer,
+                        ),
                         const SizedBox(width: Spacing.sm),
                         Expanded(
                           child: Text(
@@ -190,13 +195,15 @@ class _MealHistoryListScreenState
                           ),
                         ),
                         TextButton.icon(
-                          onPressed: () =>
-                              ref.read(mealHistoryProvider.notifier).resetFilters(),
+                          onPressed: () => ref
+                              .read(mealHistoryProvider.notifier)
+                              .resetFilters(),
                           icon: const Icon(Icons.clear_all, size: 16),
                           label: const Text('Effacer'),
                           style: TextButton.styleFrom(
                             visualDensity: VisualDensity.compact,
-                            foregroundColor: theme.colorScheme.onPrimaryContainer,
+                            foregroundColor:
+                                theme.colorScheme.onPrimaryContainer,
                           ),
                         ),
                       ],
@@ -205,7 +212,12 @@ class _MealHistoryListScreenState
                 ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(Spacing.md, Spacing.sm, Spacing.md, 0),
+                  padding: const EdgeInsets.fromLTRB(
+                    Spacing.md,
+                    Spacing.sm,
+                    Spacing.md,
+                    0,
+                  ),
                   child: TextField(
                     controller: _searchController,
                     onChanged: _onSearchChanged,
@@ -234,7 +246,9 @@ class _MealHistoryListScreenState
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: Spacing.md).copyWith(top: Spacing.xs),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: Spacing.md,
+                  ).copyWith(top: Spacing.xs),
                   child: MealHistoryStats(
                     stats: state.stats,
                     isLoading: state.isLoadingStats,
@@ -244,7 +258,9 @@ class _MealHistoryListScreenState
               if (state.totalCount > 0)
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: Spacing.md).copyWith(top: Spacing.xs),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: Spacing.md,
+                    ).copyWith(top: Spacing.xs),
                     child: Row(
                       children: [
                         Text(
@@ -261,8 +277,9 @@ class _MealHistoryListScreenState
                               IconButton(
                                 icon: const Icon(Icons.chevron_left),
                                 onPressed: state.hasPreviousPage
-                                    ? () => ref.read(mealHistoryProvider.notifier)
-                                        .previousPage()
+                                    ? () => ref
+                                          .read(mealHistoryProvider.notifier)
+                                          .previousPage()
                                     : null,
                                 visualDensity: VisualDensity.compact,
                                 tooltip: 'Page précédente',
@@ -274,8 +291,9 @@ class _MealHistoryListScreenState
                               IconButton(
                                 icon: const Icon(Icons.chevron_right),
                                 onPressed: state.hasNextPage
-                                    ? () => ref.read(mealHistoryProvider.notifier)
-                                        .nextPage()
+                                    ? () => ref
+                                          .read(mealHistoryProvider.notifier)
+                                          .nextPage()
                                     : null,
                                 visualDensity: VisualDensity.compact,
                                 tooltip: 'Page suivante',
@@ -294,7 +312,11 @@ class _MealHistoryListScreenState
     );
   }
 
-  Widget _buildMealSliver(MealHistoryState state, ThemeData theme, bool isDesktop) {
+  Widget _buildMealSliver(
+    MealHistoryState state,
+    ThemeData theme,
+    bool isDesktop,
+  ) {
     if (state.isLoading && state.meals.isEmpty) {
       return const SliverFillRemaining(
         child: Center(child: CircularProgressIndicator()),
@@ -308,12 +330,24 @@ class _MealHistoryListScreenState
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.error_outline_rounded, size: 64, color: theme.colorScheme.error),
+                Icon(
+                  Icons.error_outline_rounded,
+                  size: 64,
+                  color: theme.colorScheme.error,
+                ),
                 const SizedBox(height: Spacing.md),
-                Text(state.error!, textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.error)),
+                Text(
+                  state.error!,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: theme.colorScheme.error,
+                  ),
+                ),
                 const SizedBox(height: Spacing.xl),
-                FilledButton(onPressed: _onRefresh, child: const Text('Réessayer')),
+                FilledButton(
+                  onPressed: _onRefresh,
+                  child: const Text('Réessayer'),
+                ),
               ],
             ),
           ),
@@ -328,12 +362,20 @@ class _MealHistoryListScreenState
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.restaurant_outlined, size: 64, color: theme.colorScheme.onSurfaceVariant),
+                Icon(
+                  Icons.restaurant_outlined,
+                  size: 64,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
                 const SizedBox(height: Spacing.md),
                 Text(
-                  state.search != null ? 'Aucun repas trouvé pour "${state.search}"' : 'Aucun repas enregistré',
+                  state.search != null
+                      ? 'Aucun repas trouvé pour "${state.search}"'
+                      : 'Aucun repas enregistré',
                   textAlign: TextAlign.center,
-                  style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -349,16 +391,13 @@ class _MealHistoryListScreenState
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
       sliver: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            final meal = state.meals[index];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: Spacing.sm),
-              child: MealCard(meal: meal, theme: theme),
-            );
-          },
-          childCount: state.meals.length,
-        ),
+        delegate: SliverChildBuilderDelegate((context, index) {
+          final meal = state.meals[index];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: Spacing.sm),
+            child: MealCard(meal: meal, theme: theme),
+          );
+        }, childCount: state.meals.length),
       ),
     );
   }
@@ -377,33 +416,41 @@ class _MealHistoryListScreenState
             columns: [
               DataColumn(
                 label: const Text('Date'),
-                onSort: (_, _) =>
-                    ref.read(mealHistoryProvider.notifier).setSort('date_repas'),
+                onSort: (_, _) => ref
+                    .read(mealHistoryProvider.notifier)
+                    .setSort('date_repas'),
               ),
               const DataColumn(label: Text('Utilisateur')),
               const DataColumn(label: Text('Email')),
-              DataColumn(
-                label: const Text('Type ID'),
-                numeric: false,
-              ),
+              const DataColumn(label: Text('Type ID')),
               const DataColumn(label: Text('Catégorie')),
               const DataColumn(label: Text('Heure')),
             ],
-            rows: state.meals.map((m) => DataRow(
-              onSelectChanged: (_) => _showDetail(m),
-              cells: [
-                DataCell(Text(
-                  '${m.dateRepas.day.toString().padLeft(2, '0')}/'
-                  '${m.dateRepas.month.toString().padLeft(2, '0')}/'
-                  '${m.dateRepas.year}',
-                )),
-                DataCell(Text(m.displayName)),
-                DataCell(Text(m.email ?? '-')),
-                DataCell(Center(child: MealStatusBadge(type: m.typeIdentification))),
-                DataCell(Text(m.categorieNom ?? '-')),
-                DataCell(Text(m.heureRepas)),
-              ],
-            )).toList(),
+            rows: state.meals
+                .map(
+                  (m) => DataRow(
+                    onSelectChanged: (_) => _showDetail(m),
+                    cells: [
+                      DataCell(
+                        Text(
+                          '${m.dateRepas.day.toString().padLeft(2, '0')}/'
+                          '${m.dateRepas.month.toString().padLeft(2, '0')}/'
+                          '${m.dateRepas.year}',
+                        ),
+                      ),
+                      DataCell(Text(m.displayName)),
+                      DataCell(Text(m.email ?? '-')),
+                      DataCell(
+                        Center(
+                          child: MealStatusBadge(type: m.typeIdentification),
+                        ),
+                      ),
+                      DataCell(Text(m.categorieNom ?? '-')),
+                      DataCell(Text(m.heureRepas)),
+                    ],
+                  ),
+                )
+                .toList(),
           ),
         ]),
       ),
@@ -411,10 +458,8 @@ class _MealHistoryListScreenState
   }
 
   void _showDetail(MealHistory meal) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => MealDetailScreen(meal: meal),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => MealDetailScreen(meal: meal)));
   }
 }

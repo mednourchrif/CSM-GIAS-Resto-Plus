@@ -41,16 +41,17 @@ class _OverlayPainter extends CustomPainter {
       Path.combine(
         PathOperation.difference,
         Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height)),
-        Path()..addRRect(RRect.fromRectAndRadius(
-          scanRect,
-          const Radius.circular(Spacing.radiusLg),
-        )),
+        Path()..addRRect(
+          RRect.fromRectAndRadius(
+            scanRect,
+            const Radius.circular(Spacing.radiusLg),
+          ),
+        ),
       ),
       overlayPaint,
     );
 
-    final borderColor =
-        isDetected ? AppColors.success : Colors.white;
+    final borderColor = isDetected ? AppColors.success : Colors.white;
     final borderPaint = Paint()
       ..color = borderColor
       ..style = PaintingStyle.stroke
@@ -71,26 +72,49 @@ class _OverlayPainter extends CustomPainter {
 
     const cl = 24.0;
 
-    canvas.drawLine(scanRect.topLeft,
-        Offset(scanRect.left + cl, scanRect.top), cornerPaint);
-    canvas.drawLine(scanRect.topLeft,
-        Offset(scanRect.left, scanRect.top + cl), cornerPaint);
-    canvas.drawLine(scanRect.topRight,
-        Offset(scanRect.right - cl, scanRect.top), cornerPaint);
-    canvas.drawLine(scanRect.topRight,
-        Offset(scanRect.right, scanRect.top + cl), cornerPaint);
-    canvas.drawLine(scanRect.bottomLeft,
-        Offset(scanRect.left + cl, scanRect.bottom), cornerPaint);
-    canvas.drawLine(scanRect.bottomLeft,
-        Offset(scanRect.left, scanRect.bottom - cl), cornerPaint);
-    canvas.drawLine(scanRect.bottomRight,
-        Offset(scanRect.right - cl, scanRect.bottom), cornerPaint);
-    canvas.drawLine(scanRect.bottomRight,
-        Offset(scanRect.right, scanRect.bottom - cl), cornerPaint);
+    canvas.drawLine(
+      scanRect.topLeft,
+      Offset(scanRect.left + cl, scanRect.top),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      scanRect.topLeft,
+      Offset(scanRect.left, scanRect.top + cl),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      scanRect.topRight,
+      Offset(scanRect.right - cl, scanRect.top),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      scanRect.topRight,
+      Offset(scanRect.right, scanRect.top + cl),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      scanRect.bottomLeft,
+      Offset(scanRect.left + cl, scanRect.bottom),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      scanRect.bottomLeft,
+      Offset(scanRect.left, scanRect.bottom - cl),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      scanRect.bottomRight,
+      Offset(scanRect.right - cl, scanRect.bottom),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      scanRect.bottomRight,
+      Offset(scanRect.right, scanRect.bottom - cl),
+      cornerPaint,
+    );
   }
 
   @override
   bool shouldRepaint(_OverlayPainter oldDelegate) =>
-      oldDelegate.scanRect != scanRect ||
-      oldDelegate.isDetected != isDetected;
+      oldDelegate.scanRect != scanRect || oldDelegate.isDetected != isDetected;
 }

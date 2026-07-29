@@ -12,9 +12,7 @@ final qrRemoteDataSourceProvider = Provider<QrRemoteDataSource>((ref) {
 });
 
 final qrRepositoryProvider = Provider<QrRepository>((ref) {
-  return QrRepositoryImpl(
-    dataSource: ref.watch(qrRemoteDataSourceProvider),
-  );
+  return QrRepositoryImpl(dataSource: ref.watch(qrRemoteDataSourceProvider));
 });
 
 final qrProvider = StateNotifierProvider<QrNotifier, QrState>((ref) {
@@ -156,8 +154,10 @@ class QrNotifier extends StateNotifier<QrState> {
     );
   }
 
-  Future<QrCode?> regenerateQr(String ownerUuid,
-      {String ownerType = 'STAGIAIRE'}) async {
+  Future<QrCode?> regenerateQr(
+    String ownerUuid, {
+    String ownerType = 'STAGIAIRE',
+  }) async {
     final result = await _repo.regenerateQr(ownerUuid, ownerType: ownerType);
     return result.when(
       success: (qr) {

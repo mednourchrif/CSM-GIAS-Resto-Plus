@@ -62,17 +62,12 @@ class _VisitorListScreenState extends ConsumerState<VisitorListScreen> {
 
   void _showDetail(Visitor visitor) {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => VisitorDetailScreen(visitor: visitor),
-      ),
+      MaterialPageRoute(builder: (_) => VisitorDetailScreen(visitor: visitor)),
     );
   }
 
   void _showCreateDialog() {
-    showDialog(
-      context: context,
-      builder: (_) => const VisitorFormScreen(),
-    );
+    showDialog(context: context, builder: (_) => const VisitorFormScreen());
   }
 
   @override
@@ -106,7 +101,8 @@ class _VisitorListScreenState extends ConsumerState<VisitorListScreen> {
               controller: _searchController,
               onChanged: _onSearchChanged,
               decoration: InputDecoration(
-                hintText: 'Rechercher par nom, prénom, email ou organisation...',
+                hintText:
+                    'Rechercher par nom, prénom, email ou organisation...',
                 prefixIcon: const Icon(Icons.search_rounded),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(Spacing.radiusMd),
@@ -128,9 +124,7 @@ class _VisitorListScreenState extends ConsumerState<VisitorListScreen> {
             ),
           ),
           const SizedBox(height: Spacing.sm),
-          Expanded(
-            child: _buildBody(state, theme, isDesktop),
-          ),
+          Expanded(child: _buildBody(state, theme, isDesktop)),
         ],
       ),
       floatingActionButton: isDesktop
@@ -229,8 +223,8 @@ class _VisitorListScreenState extends ConsumerState<VisitorListScreen> {
             }).toList(),
           ),
           if (state.hasMore)
-            Padding(
-              padding: const EdgeInsets.all(Spacing.md),
+            const Padding(
+              padding: EdgeInsets.all(Spacing.md),
               child: Center(child: CircularProgressIndicator()),
             ),
         ],

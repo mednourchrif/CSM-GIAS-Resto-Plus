@@ -13,7 +13,7 @@ from loguru import logger
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.v1 import router as api_v1_router
-from app.core.config import get_settings
+from app.core.config import BaseAppSettings, get_settings
 from app.core.constants import (
     API_DOCS_PREFIX,
     API_REDOC_PREFIX,
@@ -84,7 +84,7 @@ def create_app() -> FastAPI:
     return application
 
 
-def _register_middleware(application: FastAPI, settings) -> None:
+def _register_middleware(application: FastAPI, settings: BaseAppSettings) -> None:
     """Register middleware in order of execution (last added = first executed)."""
     application.add_middleware(
         CORSMiddleware,
@@ -101,10 +101,15 @@ def _register_middleware(application: FastAPI, settings) -> None:
 
     application.add_middleware(
         TrustedHostMiddleware,
-        allowed_hosts=(["*"] if settings.is_development else None),
+        # Physical devices address a development server by its changing LAN IP.
+        # Production still requires and enforces an explicit host allowlist.
+        allowed_hosts=["*"] if settings.is_development else settings.TRUSTED_HOSTS,
     )
 
-    application.add_middleware(SecurityHeadersMiddleware)
+    application.add_middleware(
+        SecurityHeadersMiddleware,
+        enable_hsts=settings.is_production,
+    )
     application.add_middleware(CoreMiddleware)
 
 
@@ -113,9 +118,18 @@ def _register_exception_handlers(application: FastAPI) -> None:
 
     Order matters: more specific handlers must be registered first.
     """
-    application.add_exception_handler(ApplicationException, application_exception_handler)
-    application.add_exception_handler(RequestValidationError, validation_exception_handler)
-    application.add_exception_handler(StarletteHTTPException, http_exception_handler)
+    application.add_exception_handler(
+        ApplicationException,
+        application_exception_handler,  # type: ignore[arg-type]
+    )
+    application.add_exception_handler(
+        RequestValidationError,
+        validation_exception_handler,  # type: ignore[arg-type]
+    )
+    application.add_exception_handler(
+        StarletteHTTPException,
+        http_exception_handler,  # type: ignore[arg-type]
+    )
     application.add_exception_handler(Exception, unhandled_exception_handler)
 
 

@@ -39,17 +39,14 @@ class MealCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(Spacing.radiusLg),
-          border: Border.all(
-            color: borderColor,
-            width: isSelected ? 2.0 : 1.0,
-          ),
+          border: Border.all(color: borderColor, width: isSelected ? 2.0 : 1.0),
           boxShadow: isSelected
               ? [
                   BoxShadow(
                     color: theme.colorScheme.primary.withValues(alpha: 0.18),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
-                  )
+                  ),
                 ]
               : [
                   const BoxShadow(
@@ -67,74 +64,113 @@ class MealCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(Spacing.radiusLg),
             splashColor: theme.colorScheme.primary.withValues(alpha: 0.12),
             highlightColor: theme.colorScheme.primary.withValues(alpha: 0.06),
-            hoverColor: theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
+            hoverColor: theme.colorScheme.primaryContainer.withValues(
+              alpha: 0.5,
+            ),
             child: Semantics(
               button: true,
               label: 'Sélectionner ${type.label}',
               selected: isSelected,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: Spacing.xl,
-                  horizontal: Spacing.lg,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Icon with animated background
-                    AnimatedContainer(
-                      duration: AppDurations.fast,
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(Spacing.radiusMd),
-                      ),
-                      child: Icon(
-                        icon,
-                        size: Spacing.iconLg,
-                        color: isSelected
-                            ? theme.colorScheme.onPrimary
-                            : theme.colorScheme.primary,
-                      ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final horizontal =
+                      constraints.maxWidth >= 300 && constraints.maxWidth < 520;
+                  return Padding(
+                    padding: EdgeInsets.symmetric(
+                      vertical: horizontal ? Spacing.md : Spacing.xl,
+                      horizontal: Spacing.lg,
                     ),
-                    const SizedBox(height: Spacing.md),
-                    Text(
-                      type.label,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: isSelected
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.onSurface,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: Spacing.xxs),
-                    Text(
-                      subtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (isSelected) ...[
-                      const SizedBox(height: Spacing.sm),
-                      Icon(
-                        Icons.check_circle_rounded,
-                        size: Spacing.iconSm,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ],
-                  ],
-                ),
+                    child: horizontal
+                        ? Row(
+                            children: [
+                              _iconTile(theme, 56),
+                              const SizedBox(width: Spacing.md),
+                              Expanded(child: _labels(theme, TextAlign.start)),
+                              if (isSelected) ...[
+                                const SizedBox(width: Spacing.sm),
+                                Icon(
+                                  Icons.check_circle_rounded,
+                                  size: Spacing.iconSm,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ],
+                            ],
+                          )
+                        : Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _iconTile(theme, 64),
+                              const SizedBox(height: Spacing.md),
+                              _labels(theme, TextAlign.center),
+                              if (isSelected) ...[
+                                const SizedBox(height: Spacing.sm),
+                                Icon(
+                                  Icons.check_circle_rounded,
+                                  size: Spacing.iconSm,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ],
+                            ],
+                          ),
+                  );
+                },
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _iconTile(ThemeData theme, double size) {
+    return AnimatedContainer(
+      duration: AppDurations.fast,
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: isSelected
+            ? theme.colorScheme.primary
+            : theme.colorScheme.primaryContainer.withValues(alpha: 0.65),
+        borderRadius: BorderRadius.circular(Spacing.radiusMd),
+      ),
+      child: Icon(
+        icon,
+        size: Spacing.iconLg,
+        color: isSelected
+            ? theme.colorScheme.onPrimary
+            : theme.colorScheme.primary,
+      ),
+    );
+  }
+
+  Widget _labels(ThemeData theme, TextAlign alignment) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: alignment == TextAlign.start
+          ? CrossAxisAlignment.start
+          : CrossAxisAlignment.center,
+      children: [
+        Text(
+          type.label,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w800,
+            color: isSelected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurface,
+          ),
+          textAlign: alignment,
+        ),
+        const SizedBox(height: Spacing.xxs),
+        Text(
+          subtitle,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+          textAlign: alignment,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
     );
   }
 }

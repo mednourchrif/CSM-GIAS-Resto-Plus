@@ -9,36 +9,42 @@ class AppColors {
 
   // ─── Brand Primary — Deep Teal ────────────────────────────────────────────
   /// Enterprise-grade deep teal — professional, calm, modern.
-  static const Color primary = Color(0xFF0D6E6E);
+  static const Color primary = Color(0xFF073F68);
   static const Color onPrimary = Color(0xFFFFFFFF);
-  static const Color primaryContainer = Color(0xFFB2F5F5);
-  static const Color onPrimaryContainer = Color(0xFF002020);
-  static const Color primaryDark = Color(0xFF5ECECE);
-  static const Color onPrimaryDark = Color(0xFF003737);
-  static const Color primaryContainerDark = Color(0xFF004F4F);
-  static const Color onPrimaryContainerDark = Color(0xFFB2F5F5);
+  static const Color primaryContainer = Color(0xFFD7E9F6);
+  static const Color onPrimaryContainer = Color(0xFF061F32);
+  static const Color primaryDark = Color(0xFF9ACCF0);
+  static const Color onPrimaryDark = Color(0xFF00344F);
+  static const Color primaryContainerDark = Color(0xFF124F79);
+  static const Color onPrimaryContainerDark = Color(0xFFD7E9F6);
 
   // ─── Brand Secondary — Warm Amber-Orange ─────────────────────────────────
   /// Warm, energetic accent — restaurant warmth and appetite cues.
-  static const Color secondary = Color(0xFFE8683A);
-  static const Color onSecondary = Color(0xFFFFFFFF);
-  static const Color secondaryContainer = Color(0xFFFFDBCE);
-  static const Color onSecondaryContainer = Color(0xFF3A0E00);
-  static const Color secondaryDark = Color(0xFFFFB59B);
-  static const Color onSecondaryDark = Color(0xFF55200B);
-  static const Color secondaryContainerDark = Color(0xFF6E3120);
-  static const Color onSecondaryContainerDark = Color(0xFFFFDBCE);
+  static const Color secondary = Color(0xFFD99B00);
+  static const Color onSecondary = Color(0xFF261A00);
+  static const Color secondaryContainer = Color(0xFFFFE9AD);
+  static const Color onSecondaryContainer = Color(0xFF2C2100);
+  static const Color secondaryDark = Color(0xFFFFD45A);
+  static const Color onSecondaryDark = Color(0xFF3B2F00);
+  static const Color secondaryContainerDark = Color(0xFF5B4500);
+  static const Color onSecondaryContainerDark = Color(0xFFFFE9AD);
 
   // ─── Tertiary — Slate Blue ────────────────────────────────────────────────
   /// Info accent, used for secondary actions and informational elements.
-  static const Color tertiary = Color(0xFF4B6587);
+  static const Color tertiary = Color(0xFF4D8B69);
   static const Color onTertiary = Color(0xFFFFFFFF);
-  static const Color tertiaryContainer = Color(0xFFD6E3FF);
-  static const Color onTertiaryContainer = Color(0xFF041B37);
-  static const Color tertiaryDark = Color(0xFFB0C6E8);
-  static const Color onTertiaryDark = Color(0xFF1B3050);
-  static const Color tertiaryContainerDark = Color(0xFF334B6C);
-  static const Color onTertiaryContainerDark = Color(0xFFD6E3FF);
+  static const Color tertiaryContainer = Color(0xFFCFEBD8);
+  static const Color onTertiaryContainer = Color(0xFF092617);
+  static const Color tertiaryDark = Color(0xFFA8D8B7);
+  static const Color onTertiaryDark = Color(0xFF123923);
+  static const Color tertiaryContainerDark = Color(0xFF28573D);
+  static const Color onTertiaryContainerDark = Color(0xFFCFEBD8);
+
+  static const Color brandBlue = Color(0xFF1681AE);
+  static const Color brandGreen = Color(0xFF4D8B69);
+  static const Color brandYellow = Color(0xFFF2C23D);
+  static const Color brandOrange = Color(0xFFE9782D);
+  static const Color brandRed = Color(0xFFC83C38);
 
   // ─── Error ────────────────────────────────────────────────────────────────
   static const Color error = Color(0xFFC62828);
@@ -51,22 +57,22 @@ class AppColors {
   static const Color onErrorContainerDark = Color(0xFFFFDAD6);
 
   // ─── Surface / Background — Light ────────────────────────────────────────
-  static const Color surfaceLight = Color(0xFFF5F7FA);
-  static const Color onSurfaceLight = Color(0xFF181C1E);
-  static const Color surfaceContainerLight = Color(0xFFEBEEF2);
-  static const Color surfaceContainerHighestLight = Color(0xFFDDE1E6);
-  static const Color onSurfaceVariantLight = Color(0xFF404749);
-  static const Color outlineLight = Color(0xFF707779);
-  static const Color outlineVariantLight = Color(0xFFC0C7CA);
+  static const Color surfaceLight = Color(0xFFF7F9FC);
+  static const Color onSurfaceLight = Color(0xFF17232D);
+  static const Color surfaceContainerLight = Color(0xFFEDF2F7);
+  static const Color surfaceContainerHighestLight = Color(0xFFE1E9F0);
+  static const Color onSurfaceVariantLight = Color(0xFF435563);
+  static const Color outlineLight = Color(0xFF687A87);
+  static const Color outlineVariantLight = Color(0xFFC3CFD8);
 
   // ─── Surface / Background — Dark ─────────────────────────────────────────
-  static const Color surfaceDark = Color(0xFF111517);
-  static const Color onSurfaceDark = Color(0xFFE1E3E6);
-  static const Color surfaceContainerDark = Color(0xFF1E2326);
-  static const Color surfaceContainerHighestDark = Color(0xFF2A2F33);
-  static const Color onSurfaceVariantDark = Color(0xFFC0C7CA);
-  static const Color outlineDark = Color(0xFF8A9194);
-  static const Color outlineVariantDark = Color(0xFF404749);
+  static const Color surfaceDark = Color(0xFF0D1720);
+  static const Color onSurfaceDark = Color(0xFFE2EAF0);
+  static const Color surfaceContainerDark = Color(0xFF172630);
+  static const Color surfaceContainerHighestDark = Color(0xFF22343F);
+  static const Color onSurfaceVariantDark = Color(0xFFBCCAD4);
+  static const Color outlineDark = Color(0xFF8798A4);
+  static const Color outlineVariantDark = Color(0xFF3D505D);
 
   // ─── Outline ───────────────────────────────────────────────────────────────
   /// Default outline color (light mode).
@@ -100,22 +106,48 @@ class AppColors {
   // ─── Chart Colors ─────────────────────────────────────────────────────────
   /// Curated 6-color palette for charts — harmonious and accessible.
   static const List<Color> chartColors = [
-    Color(0xFF0D6E6E), // primary teal
-    Color(0xFFE8683A), // secondary orange
-    Color(0xFF4B6587), // tertiary slate
-    Color(0xFF2E7D32), // success green
-    Color(0xFF7B1FA2), // purple
-    Color(0xFFF57C00), // amber
+    primary,
+    brandBlue,
+    brandGreen,
+    brandYellow,
+    brandOrange,
+    brandRed,
   ];
 
   static const List<Color> chartColorsDark = [
-    Color(0xFF5ECECE), // primary teal light
-    Color(0xFFFFB59B), // secondary orange light
-    Color(0xFFB0C6E8), // tertiary slate light
-    Color(0xFF81C784), // success green light
-    Color(0xFFCE93D8), // purple light
-    Color(0xFFFFCC80), // amber light
+    Color(0xFF9ACCF0),
+    Color(0xFF72C5E5),
+    Color(0xFFA8D8B7),
+    Color(0xFFFFD86B),
+    Color(0xFFFFAB72),
+    Color(0xFFFF8E88),
   ];
+
+  // ─── Brand Gradients ──────────────────────────────────────────────────────
+  /// Primary teal gradient — for hero surfaces, app bars, splash.
+  static const LinearGradient primaryGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF073F68), Color(0xFF126E9A)],
+  );
+
+  /// Warm secondary gradient — for appetite-cue accents and CTAs.
+  static const LinearGradient warmGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [brandYellow, brandOrange],
+  );
+
+  static const LinearGradient brandRibbonGradient = LinearGradient(
+    colors: [brandGreen, brandYellow, brandOrange, brandRed],
+  );
+
+  /// Success gradient — for the meal-registered success screen.
+  static const LinearGradient successGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF1B8A1B), Color(0xFF146914)],
+  );
 
   // ─── Convenience ──────────────────────────────────────────────────────────
   /// Transparent black for overlays.

@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/theme/spacing.dart';
 import '../../../../../shared/widgets/error_state.dart';
 import '../../../../../shared/widgets/shimmer_loading.dart';
-import '../../domain/entities/dashboard_stats.dart';
 import '../providers/statistics_provider.dart';
 import '../providers/statistics_state.dart';
 import '../widgets/charts.dart';
@@ -29,9 +28,7 @@ class _StatisticsDashboardScreenState
   @override
   void initState() {
     super.initState();
-    Future.microtask(
-      () => ref.read(statisticsProvider.notifier).load(),
-    );
+    Future.microtask(() => ref.read(statisticsProvider.notifier).load());
   }
 
   Future<void> _onRefresh() async {
@@ -59,7 +56,7 @@ class _StatisticsDashboardScreenState
             const ShimmerStatGrid(count: 10),
             const SizedBox(height: Spacing.md),
             ShimmerCard(height: isDesktop ? 320 : 280),
-            ShimmerCard(height: 280),
+            const ShimmerCard(height: 280),
           ],
         ),
       );
@@ -150,7 +147,9 @@ class _StatisticsDashboardScreenState
                   title: 'Méthode d\'inscription',
                   child: SizedBox(
                     height: 240,
-                    child: RegistrationMethodChart(items: stats.registrationMethods),
+                    child: RegistrationMethodChart(
+                      items: stats.registrationMethods,
+                    ),
                   ),
                 ),
               ),
@@ -201,7 +200,9 @@ class _StatisticsDashboardScreenState
                   title: 'Activité récente',
                   child: SizedBox(
                     height: 400,
-                    child: RecentActivityWidget(items: stats.recentRegistrations),
+                    child: RecentActivityWidget(
+                      items: stats.recentRegistrations,
+                    ),
                   ),
                 ),
               ),
@@ -212,7 +213,9 @@ class _StatisticsDashboardScreenState
                   title: 'Accès rapides',
                   child: SizedBox(
                     height: 240,
-                    child: QuickActions(onSectionTap: widget.onSectionTap ?? _navigateTo),
+                    child: QuickActions(
+                      onSectionTap: widget.onSectionTap ?? _navigateTo,
+                    ),
                   ),
                 ),
               ),
@@ -230,7 +233,9 @@ class _StatisticsDashboardScreenState
             title: 'Accès rapides',
             child: SizedBox(
               height: 240,
-              child: QuickActions(onSectionTap: widget.onSectionTap ?? _navigateTo),
+              child: QuickActions(
+                onSectionTap: widget.onSectionTap ?? _navigateTo,
+              ),
             ),
           ),
         ],
@@ -265,9 +270,12 @@ class _SectionCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title,
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w600)),
+              Text(
+                title,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               const SizedBox(height: Spacing.sm),
               child,
             ],

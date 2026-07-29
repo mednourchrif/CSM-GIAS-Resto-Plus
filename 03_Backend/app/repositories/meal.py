@@ -40,9 +40,7 @@ class MealRepository(BaseRepository[Meal]):
         stmt = select(Meal).where(Meal.uuid == uuid)
         return db.execute(stmt).scalar_one_or_none()
 
-    def get_today_count_by_user(
-        self, db: Session, user_uuid: str, meal_date: date
-    ) -> int:
+    def get_today_count_by_user(self, db: Session, user_uuid: str, meal_date: date) -> int:
         stmt = (
             select(func.count())
             .select_from(Meal)
@@ -51,11 +49,7 @@ class MealRepository(BaseRepository[Meal]):
         return db.execute(stmt).scalar() or 0
 
     def get_today(self, db: Session, meal_date: date) -> list[Meal]:
-        stmt = (
-            select(Meal)
-            .where(Meal.date_repas == meal_date)
-            .order_by(Meal.heure_repas.desc())
-        )
+        stmt = select(Meal).where(Meal.date_repas == meal_date).order_by(Meal.heure_repas.desc())
         return list(db.execute(stmt).scalars().all())
 
     def get_history_by_user(
@@ -114,9 +108,7 @@ class MealRepository(BaseRepository[Meal]):
 
         if sort and hasattr(Meal, sort):
             sort_col = getattr(Meal, sort)
-            base_stmt = base_stmt.order_by(
-                sort_col.asc() if order == "asc" else sort_col.desc()
-            )
+            base_stmt = base_stmt.order_by(sort_col.asc() if order == "asc" else sort_col.desc())
         else:
             base_stmt = base_stmt.order_by(Meal.id.desc())
 

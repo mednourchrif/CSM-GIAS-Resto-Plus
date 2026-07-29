@@ -43,10 +43,7 @@ class EmployeeCard extends StatelessWidget {
                 height: 48,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [
-                      avatarColor,
-                      avatarColor.withValues(alpha: 0.7),
-                    ],
+                    colors: [avatarColor, avatarColor.withValues(alpha: 0.7)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -102,7 +99,9 @@ class EmployeeCard extends StatelessWidget {
               const SizedBox(width: Spacing.xs),
               Icon(
                 Icons.chevron_right_rounded,
-                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                color: theme.colorScheme.onSurfaceVariant.withValues(
+                  alpha: 0.5,
+                ),
                 size: Spacing.iconSm,
               ),
             ],

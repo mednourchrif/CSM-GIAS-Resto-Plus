@@ -19,7 +19,7 @@ class AppTheme {
 
   // ─── Color Schemes ────────────────────────────────────────────────────────
 
-  static final ColorScheme _lightColorScheme = ColorScheme(
+  static const ColorScheme _lightColorScheme = ColorScheme(
     brightness: Brightness.light,
     primary: AppColors.primary,
     onPrimary: AppColors.onPrimary,
@@ -50,7 +50,7 @@ class AppTheme {
     surfaceTint: AppColors.primary,
   );
 
-  static final ColorScheme _darkColorScheme = ColorScheme(
+  static const ColorScheme _darkColorScheme = ColorScheme(
     brightness: Brightness.dark,
     primary: AppColors.primaryDark,
     onPrimary: AppColors.onPrimaryDark,
@@ -115,28 +115,25 @@ class AppTheme {
           color: colorScheme.onSurfaceVariant,
           size: Spacing.iconMd,
         ),
-        shape: Border(
-          bottom: BorderSide(
-            color: colorScheme.outlineVariant,
-            width: 1,
-          ),
-        ),
+        shape: Border(bottom: BorderSide(color: colorScheme.outlineVariant)),
         shadowColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
       ),
 
       // ── Card ──────────────────────────────────────────────────────────────
       cardTheme: CardThemeData(
-        elevation: 0,
-        color: isDark
-            ? AppColors.surfaceContainerDark
-            : Colors.white,
+        elevation: Spacing.elevationXs,
+        shadowColor: isDark
+            ? Colors.black.withValues(alpha: 0.4)
+            : AppColors.primary.withValues(alpha: 0.10),
+        color: isDark ? AppColors.surfaceContainerDark : Colors.white,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(Spacing.radiusMd),
+          borderRadius: BorderRadius.circular(Spacing.radiusLg),
           side: BorderSide(
-            color: colorScheme.outlineVariant,
-            width: 1,
+            color: colorScheme.outlineVariant.withValues(
+              alpha: isDark ? 1.0 : 0.6,
+            ),
           ),
         ),
         clipBehavior: Clip.antiAlias,
@@ -145,18 +142,27 @@ class AppTheme {
 
       // ── Filled Button ─────────────────────────────────────────────────────
       filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          minimumSize: const Size(0, Spacing.minTouchTarget),
-          padding: const EdgeInsets.symmetric(
-            horizontal: Spacing.lg,
-            vertical: Spacing.sm + 2,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(Spacing.radiusMd),
-          ),
-          textStyle: textTheme.labelLarge,
-          elevation: 0,
-        ),
+        style:
+            FilledButton.styleFrom(
+              minimumSize: const Size(0, Spacing.minTouchTarget),
+              padding: const EdgeInsets.symmetric(
+                horizontal: Spacing.lg,
+                vertical: Spacing.sm + 2,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(Spacing.radiusMd),
+              ),
+              textStyle: textTheme.labelLarge,
+              elevation: 0,
+            ).copyWith(
+              elevation: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.pressed)) {
+                  return Spacing.elevationSm;
+                }
+                return 0;
+              }),
+              shadowColor: WidgetStateProperty.all(AppColors.primary),
+            ),
       ),
 
       // ── Outlined Button ───────────────────────────────────────────────────
@@ -209,7 +215,10 @@ class AppTheme {
       // ── Icon Button ───────────────────────────────────────────────────────
       iconButtonTheme: IconButtonThemeData(
         style: IconButton.styleFrom(
-          minimumSize: const Size(Spacing.minTouchTarget, Spacing.minTouchTarget),
+          minimumSize: const Size(
+            Spacing.minTouchTarget,
+            Spacing.minTouchTarget,
+          ),
           iconSize: Spacing.iconMd,
         ),
       ),
@@ -271,9 +280,7 @@ class AppTheme {
           color: colorScheme.primary,
           fontWeight: FontWeight.w600,
         ),
-        errorStyle: textTheme.bodySmall?.copyWith(
-          color: colorScheme.error,
-        ),
+        errorStyle: textTheme.bodySmall?.copyWith(color: colorScheme.error),
         prefixIconColor: WidgetStateColor.resolveWith((states) {
           if (states.contains(WidgetState.focused)) {
             return colorScheme.primary;
@@ -293,18 +300,14 @@ class AppTheme {
         backgroundColor: isDark
             ? const Color(0xFF2A3038)
             : const Color(0xFF1F2428),
-        contentTextStyle: textTheme.bodyMedium?.copyWith(
-          color: Colors.white,
-        ),
+        contentTextStyle: textTheme.bodyMedium?.copyWith(color: Colors.white),
         actionTextColor: AppColors.primaryContainer,
       ),
 
       // ── Dialog ────────────────────────────────────────────────────────────
       dialogTheme: DialogThemeData(
         elevation: Spacing.elevationXl,
-        backgroundColor: isDark
-            ? AppColors.surfaceContainerDark
-            : Colors.white,
+        backgroundColor: isDark ? AppColors.surfaceContainerDark : Colors.white,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(Spacing.radiusXl),
@@ -325,9 +328,7 @@ class AppTheme {
       bottomSheetTheme: BottomSheetThemeData(
         showDragHandle: true,
         elevation: Spacing.elevationLg,
-        backgroundColor: isDark
-            ? AppColors.surfaceContainerDark
-            : Colors.white,
+        backgroundColor: isDark ? AppColors.surfaceContainerDark : Colors.white,
         surfaceTintColor: Colors.transparent,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(
@@ -479,9 +480,7 @@ class AppTheme {
 
       // ── Tooltip ───────────────────────────────────────────────────────────
       tooltipTheme: TooltipThemeData(
-        textStyle: textTheme.bodySmall?.copyWith(
-          color: Colors.white,
-        ),
+        textStyle: textTheme.bodySmall?.copyWith(color: Colors.white),
         decoration: BoxDecoration(
           color: colorScheme.onSurface.withValues(alpha: 0.9),
           borderRadius: BorderRadius.circular(Spacing.radiusSm),
@@ -543,9 +542,7 @@ class AppTheme {
         }),
         checkColor: WidgetStateProperty.all(colorScheme.onPrimary),
         side: BorderSide(color: colorScheme.outline, width: 2),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(4),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
       ),
 
       // ── Radio ─────────────────────────────────────────────────────────────

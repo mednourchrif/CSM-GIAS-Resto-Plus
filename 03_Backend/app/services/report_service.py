@@ -1,6 +1,6 @@
 """Report service — aggregated restaurant activity reports."""
 
-from datetime import date, datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import func, select
@@ -43,7 +43,7 @@ class ReportService:
         period_label = self._period_label()
         date_from = str(params.date_from) if params.date_from else ""
         date_to = str(params.date_to) if params.date_to else ""
-        generated_at = datetime.now(timezone.utc).isoformat()
+        generated_at = datetime.now(UTC).isoformat()
 
         return ReportResponse(
             overview=overview,
@@ -134,27 +134,21 @@ class ReportService:
         return self._db.execute(stmt).scalar() or 0
 
     def _find_peak_hour(self) -> tuple[str | None, int]:
-        stmt = (
-            select(
-                func.extract("hour", Meal.heure_repas).label("hour"),
-                func.count().label("count"),
-            )
-            .select_from(Meal)
-        )
+        stmt = select(
+            func.extract("hour", Meal.heure_repas).label("hour"),
+            func.count().label("count"),
+        ).select_from(Meal)
         if self._params.user_type:
             stmt = stmt.join(User, Meal.utilisateur_uuid == User.uuid)
         stmt = self._apply_filters(stmt)
         stmt = stmt.group_by(func.extract("hour", Meal.heure_repas)).order_by(func.count().desc())
         row = self._db.execute(stmt).first()
         if row:
-            return f"{int(row.hour):02d}:00", row.count
+            return f"{int(row.hour):02d}:00", row._mapping["count"]
         return None, 0
 
     def _find_most_selected_meal(self) -> str | None:
-        stmt = (
-            select(Meal.categorie_uuid, func.count().label("count"))
-            .select_from(Meal)
-        )
+        stmt = select(Meal.categorie_uuid, func.count().label("count")).select_from(Meal)
         if self._params.user_type:
             stmt = stmt.join(User, Meal.utilisateur_uuid == User.uuid)
         stmt = self._apply_filters(stmt)
@@ -178,59 +172,55 @@ class ReportService:
         return self._meals_daily()
 
     def _meals_daily(self) -> list[ReportTimeSeriesItem]:
-        stmt = (
-            select(Meal.date_repas, func.count().label("count"))
-            .select_from(Meal)
-        )
+        stmt = select(Meal.date_repas, func.count().label("count")).select_from(Meal)
         if self._params.user_type:
             stmt = stmt.join(User, Meal.utilisateur_uuid == User.uuid)
         stmt = self._apply_filters(stmt)
         stmt = stmt.group_by(Meal.date_repas).order_by(Meal.date_repas)
         return [
-            ReportTimeSeriesItem(period=str(row.date_repas), count=row.count)
+            ReportTimeSeriesItem(
+                period=str(row.date_repas),
+                count=row._mapping["count"],
+            )
             for row in self._db.execute(stmt).all()
         ]
 
     def _meals_weekly(self) -> list[ReportTimeSeriesItem]:
-        stmt = (
-            select(
-                func.year(Meal.date_repas).label("year"),
-                func.week(Meal.date_repas).label("week"),
-                func.count().label("count"),
-            )
-            .select_from(Meal)
-        )
+        stmt = select(
+            func.year(Meal.date_repas).label("year"),
+            func.week(Meal.date_repas).label("week"),
+            func.count().label("count"),
+        ).select_from(Meal)
         if self._params.user_type:
             stmt = stmt.join(User, Meal.utilisateur_uuid == User.uuid)
         stmt = self._apply_filters(stmt)
-        stmt = stmt.group_by(
+        stmt = stmt.group_by(func.year(Meal.date_repas), func.week(Meal.date_repas)).order_by(
             func.year(Meal.date_repas), func.week(Meal.date_repas)
-        ).order_by(func.year(Meal.date_repas), func.week(Meal.date_repas))
+        )
         return [
             ReportTimeSeriesItem(
-                period=f"{row.year}-W{int(row.week):02d}", count=row.count
+                period=f"{row.year}-W{int(row.week):02d}",
+                count=row._mapping["count"],
             )
             for row in self._db.execute(stmt).all()
         ]
 
     def _meals_monthly(self) -> list[ReportTimeSeriesItem]:
-        stmt = (
-            select(
-                func.year(Meal.date_repas).label("year"),
-                func.month(Meal.date_repas).label("month"),
-                func.count().label("count"),
-            )
-            .select_from(Meal)
-        )
+        stmt = select(
+            func.year(Meal.date_repas).label("year"),
+            func.month(Meal.date_repas).label("month"),
+            func.count().label("count"),
+        ).select_from(Meal)
         if self._params.user_type:
             stmt = stmt.join(User, Meal.utilisateur_uuid == User.uuid)
         stmt = self._apply_filters(stmt)
-        stmt = stmt.group_by(
+        stmt = stmt.group_by(func.year(Meal.date_repas), func.month(Meal.date_repas)).order_by(
             func.year(Meal.date_repas), func.month(Meal.date_repas)
-        ).order_by(func.year(Meal.date_repas), func.month(Meal.date_repas))
+        )
         return [
             ReportTimeSeriesItem(
-                period=f"{row.year}-{int(row.month):02d}", count=row.count
+                period=f"{row.year}-{int(row.month):02d}",
+                count=row._mapping["count"],
             )
             for row in self._db.execute(stmt).all()
         ]
@@ -240,19 +230,16 @@ class ReportService:
     # ------------------------------------------------------------------
 
     def _peak_hours(self) -> list[ReportPeakHourItem]:
-        stmt = (
-            select(
-                func.extract("hour", Meal.heure_repas).label("hour"),
-                func.count().label("count"),
-            )
-            .select_from(Meal)
-        )
+        stmt = select(
+            func.extract("hour", Meal.heure_repas).label("hour"),
+            func.count().label("count"),
+        ).select_from(Meal)
         if self._params.user_type:
             stmt = stmt.join(User, Meal.utilisateur_uuid == User.uuid)
         stmt = self._apply_filters(stmt)
         stmt = stmt.group_by(func.extract("hour", Meal.heure_repas)).order_by("hour")
         return [
-            ReportPeakHourItem(hour=int(row.hour), count=row.count)
+            ReportPeakHourItem(hour=int(row.hour), count=row._mapping["count"])
             for row in self._db.execute(stmt).all()
         ]
 
@@ -261,16 +248,13 @@ class ReportService:
     # ------------------------------------------------------------------
 
     def _meal_distribution(self) -> list[ReportDistributionItem]:
-        stmt = (
-            select(Meal.categorie_uuid, func.count().label("count"))
-            .select_from(Meal)
-        )
+        stmt = select(Meal.categorie_uuid, func.count().label("count")).select_from(Meal)
         if self._params.user_type:
             stmt = stmt.join(User, Meal.utilisateur_uuid == User.uuid)
         stmt = self._apply_filters(stmt)
         stmt = stmt.group_by(Meal.categorie_uuid)
 
-        counts = {row.categorie_uuid: row.count for row in self._db.execute(stmt).all()}
+        counts = {row.categorie_uuid: row._mapping["count"] for row in self._db.execute(stmt).all()}
 
         cat_stmt = select(MealCategory)
         categories = self._db.execute(cat_stmt).scalars().all()
@@ -285,16 +269,16 @@ class ReportService:
     # ------------------------------------------------------------------
 
     def _registration_methods(self) -> list[ReportDistributionItem]:
-        stmt = (
-            select(Meal.type_identification, func.count().label("count"))
-            .select_from(Meal)
-        )
+        stmt = select(Meal.type_identification, func.count().label("count")).select_from(Meal)
         if self._params.user_type:
             stmt = stmt.join(User, Meal.utilisateur_uuid == User.uuid)
         stmt = self._apply_filters(stmt)
         stmt = stmt.group_by(Meal.type_identification)
         return [
-            ReportDistributionItem(label=row.type_identification, count=row.count)
+            ReportDistributionItem(
+                label=row.type_identification,
+                count=row._mapping["count"],
+            )
             for row in self._db.execute(stmt).all()
         ]
 
@@ -311,7 +295,7 @@ class ReportService:
         stmt = self._apply_filters(stmt)
         stmt = stmt.group_by(User.type)
         return [
-            ReportDistributionItem(label=row.type, count=row.count)
+            ReportDistributionItem(label=row.type, count=row._mapping["count"])
             for row in self._db.execute(stmt).all()
         ]
 

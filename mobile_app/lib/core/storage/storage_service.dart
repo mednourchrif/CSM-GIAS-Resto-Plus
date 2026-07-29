@@ -3,6 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:universal_platform/universal_platform.dart';
 
+import '../errors/exceptions.dart';
+import '../errors/failures.dart';
+
 abstract class StorageService {
   Future<void> write({required String key, required String value});
   Future<String?> read({required String key});
@@ -20,7 +23,8 @@ final class SecureStorageService implements StorageService {
     LinuxOptions linuxOptions = const LinuxOptions(),
     MacOsOptions macOsOptions = const MacOsOptions(),
     WebOptions webOptions = const WebOptions(),
-  }) : _storage = storage ??
+  }) : _storage =
+           storage ??
            FlutterSecureStorage(
              aOptions: androidOptions,
              iOptions: iosOptions,
@@ -41,7 +45,12 @@ final class SecureStorageService implements StorageService {
     try {
       await _storage.write(key: key, value: value);
     } on PlatformException catch (e) {
-      debugPrint('Storage: write failed for key=$key: $e');
+      throw CacheException(
+        CacheFailure(
+          message: 'Impossible de sécuriser la session sur cet appareil.',
+          originalError: e,
+        ),
+      );
     }
   }
 
@@ -57,8 +66,12 @@ final class SecureStorageService implements StorageService {
     try {
       return await _storage.read(key: key);
     } on PlatformException catch (e) {
-      debugPrint('Storage: read failed for key=$key: $e');
-      return null;
+      throw CacheException(
+        CacheFailure(
+          message: 'Impossible de lire la session sécurisée.',
+          originalError: e,
+        ),
+      );
     }
   }
 
@@ -70,7 +83,12 @@ final class SecureStorageService implements StorageService {
     try {
       await _storage.delete(key: key);
     } on PlatformException catch (e) {
-      debugPrint('Storage: delete failed for key=$key: $e');
+      throw CacheException(
+        CacheFailure(
+          message: 'Impossible de supprimer la session sécurisée.',
+          originalError: e,
+        ),
+      );
     }
   }
 
@@ -82,7 +100,12 @@ final class SecureStorageService implements StorageService {
     try {
       await _storage.deleteAll();
     } on PlatformException catch (e) {
-      debugPrint('Storage: deleteAll failed: $e');
+      throw CacheException(
+        CacheFailure(
+          message: 'Impossible de réinitialiser le stockage sécurisé.',
+          originalError: e,
+        ),
+      );
     }
   }
 }

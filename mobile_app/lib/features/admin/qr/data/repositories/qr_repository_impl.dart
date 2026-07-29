@@ -10,8 +10,7 @@ import '../datasources/qr_remote_datasource.dart';
 class QrRepositoryImpl implements QrRepository {
   final QrRemoteDataSource _dataSource;
 
-  QrRepositoryImpl({required QrRemoteDataSource dataSource})
-      : _dataSource = dataSource;
+  QrRepositoryImpl({required this._dataSource});
 
   @override
   Future<Result<PaginatedQrCodes>> getQrCodes({
@@ -33,17 +32,21 @@ class QrRepositoryImpl implements QrRepository {
         sort: sort,
         order: order,
       );
-      return Success(PaginatedQrCodes(
-        items: response.items.map((e) => e.toDomain()).toList(),
-        total: response.total,
-        page: response.page,
-        pageSize: response.pageSize,
-        totalPages: response.totalPages,
-      ));
+      return Success(
+        PaginatedQrCodes(
+          items: response.items.map((e) => e.toDomain()).toList(),
+          total: response.total,
+          page: response.page,
+          pageSize: response.pageSize,
+          totalPages: response.totalPages,
+        ),
+      );
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'QR code'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors du chargement des QR codes.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors du chargement des QR codes.'),
+      );
     }
   }
 
@@ -55,7 +58,9 @@ class QrRepositoryImpl implements QrRepository {
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'QR code'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors du chargement du QR code.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors du chargement du QR code.'),
+      );
     }
   }
 
@@ -67,7 +72,9 @@ class QrRepositoryImpl implements QrRepository {
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'QR code'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors de la génération du QR.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors de la génération du QR.'),
+      );
     }
   }
 
@@ -79,7 +86,9 @@ class QrRepositoryImpl implements QrRepository {
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'QR code'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors de la génération du QR.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors de la génération du QR.'),
+      );
     }
   }
 
@@ -91,20 +100,29 @@ class QrRepositoryImpl implements QrRepository {
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'QR code'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors de la révocation du QR.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors de la révocation du QR.'),
+      );
     }
   }
 
   @override
-  Future<Result<QrCode>> regenerateQr(String ownerUuid,
-      {String ownerType = 'STAGIAIRE'}) async {
+  Future<Result<QrCode>> regenerateQr(
+    String ownerUuid, {
+    String ownerType = 'STAGIAIRE',
+  }) async {
     try {
-      final dto = await _dataSource.regenerateQr(ownerUuid, ownerType: ownerType);
+      final dto = await _dataSource.regenerateQr(
+        ownerUuid,
+        ownerType: ownerType,
+      );
       return Success(dto.toDomain());
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'QR code'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors de la régénération du QR.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors de la régénération du QR.'),
+      );
     }
   }
 
@@ -116,7 +134,9 @@ class QrRepositoryImpl implements QrRepository {
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'QR code'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors du téléchargement du QR.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors du téléchargement du QR.'),
+      );
     }
   }
 
@@ -128,7 +148,9 @@ class QrRepositoryImpl implements QrRepository {
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'QR code'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors du chargement de l\'historique.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors du chargement de l\'historique.'),
+      );
     }
   }
 }

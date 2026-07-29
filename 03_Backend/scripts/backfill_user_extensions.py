@@ -1,9 +1,13 @@
 """Backfill missing extension table rows for users with buggy User(...) creation."""
-import sys; sys.path.insert(0, '')
+
+import sys
+
+sys.path.insert(0, "")
+from sqlalchemy import text
+
 from app.database.session import SessionLocal
 from app.models.admin import Admin, Receptionist
 from app.models.user import User
-from sqlalchemy import select, text
 
 db = SessionLocal()
 try:

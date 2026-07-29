@@ -43,7 +43,7 @@ class QrCode {
 
   String get proprietaireFullName {
     if (proprietaireNom != null && proprietairePrenom != null) {
-      return '${proprietairePrenom} ${proprietaireNom}';
+      return '$proprietairePrenom $proprietaireNom';
     }
     return proprietaireUuid;
   }

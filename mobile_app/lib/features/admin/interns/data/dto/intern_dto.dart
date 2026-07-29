@@ -56,17 +56,17 @@ class InternDto {
   }
 
   Intern toDomain() => Intern(
-        id: id,
-        uuid: uuid,
-        nom: nom,
-        prenom: prenom,
-        matricule: matricule,
-        statut: statut,
-        langue: langue,
-        dateDebutStage: dateDebutStage,
-        dateFinStage: dateFinStage,
-        dateSuppression: dateSuppression,
-        createdAt: createdAt,
-        updatedAt: updatedAt,
-      );
+    id: id,
+    uuid: uuid,
+    nom: nom,
+    prenom: prenom,
+    matricule: matricule,
+    statut: statut,
+    langue: langue,
+    dateDebutStage: dateDebutStage,
+    dateFinStage: dateFinStage,
+    dateSuppression: dateSuppression,
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+  );
 }

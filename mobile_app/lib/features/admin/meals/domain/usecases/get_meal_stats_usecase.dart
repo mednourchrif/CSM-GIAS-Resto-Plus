@@ -6,13 +6,7 @@ class GetMealStatsUseCase {
 
   GetMealStatsUseCase(this._repository);
 
-  Future<MealStats> call({
-    String? dateFrom,
-    String? dateTo,
-  }) {
-    return _repository.getMealStats(
-      dateFrom: dateFrom,
-      dateTo: dateTo,
-    );
+  Future<MealStats> call({String? dateFrom, String? dateTo}) {
+    return _repository.getMealStats(dateFrom: dateFrom, dateTo: dateTo);
   }
 }

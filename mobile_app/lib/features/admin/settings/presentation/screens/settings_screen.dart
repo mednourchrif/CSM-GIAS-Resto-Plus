@@ -58,9 +58,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         actions: [
           if (state.hasUnsavedChanges)
             TextButton.icon(
-              onPressed: state.isSaving ? null : () => ref.read(settingsProvider.notifier).saveChanges(),
+              onPressed: state.isSaving
+                  ? null
+                  : () => ref.read(settingsProvider.notifier).saveChanges(),
               icon: state.isSaving
-                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Icon(Icons.save_rounded),
               label: Text(state.isSaving ? 'Enregistrement…' : 'Enregistrer'),
             ),
@@ -70,7 +76,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget _buildBody(BuildContext context, ThemeData theme, SettingsState state) {
+  Widget _buildBody(
+    BuildContext context,
+    ThemeData theme,
+    SettingsState state,
+  ) {
     if (state.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -82,12 +92,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error_outline_rounded, size: 64, color: theme.colorScheme.error),
+              Icon(
+                Icons.error_outline_rounded,
+                size: 64,
+                color: theme.colorScheme.error,
+              ),
               const SizedBox(height: 16),
-              Text(state.error!, style: theme.textTheme.bodyLarge, textAlign: TextAlign.center),
+              Text(
+                state.error!,
+                style: theme.textTheme.bodyLarge,
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 24),
               FilledButton.icon(
-                onPressed: () => ref.read(settingsProvider.notifier).loadSettings(),
+                onPressed: () =>
+                    ref.read(settingsProvider.notifier).loadSettings(),
                 icon: const Icon(Icons.refresh_rounded),
                 label: const Text('Réessayer'),
               ),
@@ -117,12 +136,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline_rounded, color: theme.colorScheme.onTertiaryContainer, size: 20),
+                  Icon(
+                    Icons.info_outline_rounded,
+                    color: theme.colorScheme.onTertiaryContainer,
+                    size: 20,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       'Modifications non enregistrées',
-                      style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onTertiaryContainer),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onTertiaryContainer,
+                      ),
                     ),
                   ),
                 ],
@@ -132,22 +157,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             if (group.category == 'maintenance') {
               return MaintenanceSection(
                 group: group,
-                onReset: () => ref.read(settingsProvider.notifier).resetToDefaults(),
+                onReset: () =>
+                    ref.read(settingsProvider.notifier).resetToDefaults(),
                 isResetting: state.isResetting,
               );
             }
             return SettingsGroupCard(
               group: group,
               pendingChanges: state.pendingChanges,
-              onChanged: (key, value) => ref.read(settingsProvider.notifier).updateValue(key, value),
+              onChanged: (key, value) =>
+                  ref.read(settingsProvider.notifier).updateValue(key, value),
             );
           }),
           const SizedBox(height: 8),
-          VersionCard(version: state.version, onTap: () => ref.read(settingsProvider.notifier).loadVersion()),
+          VersionCard(
+            version: state.version,
+            onTap: () => ref.read(settingsProvider.notifier).loadVersion(),
+          ),
           const SizedBox(height: 8),
           DatabaseStatusCard(
             databaseStatus: state.databaseStatus,
-            onTap: () => ref.read(settingsProvider.notifier).loadDatabaseStatus(),
+            onTap: () =>
+                ref.read(settingsProvider.notifier).loadDatabaseStatus(),
           ),
           const SizedBox(height: 32),
         ],

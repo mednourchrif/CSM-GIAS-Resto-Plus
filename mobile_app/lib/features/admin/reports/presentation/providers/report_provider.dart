@@ -18,7 +18,9 @@ final reportRepositoryProvider = Provider<ReportRepository>((ref) {
   );
 });
 
-final reportProvider = StateNotifierProvider<ReportNotifier, ReportState>((ref) {
+final reportProvider = StateNotifierProvider<ReportNotifier, ReportState>((
+  ref,
+) {
   return ReportNotifier(ref.watch(reportRepositoryProvider));
 });
 
@@ -29,22 +31,15 @@ class ReportNotifier extends StateNotifier<ReportState> {
 
   Future<void> generate({ReportFilter? filter}) async {
     final f = filter ?? state.filter;
-    state = state.copyWith(isLoading: true, error: null, clearReport: true);
+    state = state.copyWith(isLoading: true, clearReport: true);
 
     final result = await _repository.generate(f);
     result.when(
       success: (report) {
-        state = state.copyWith(
-          isLoading: false,
-          report: report,
-          filter: f,
-        );
+        state = state.copyWith(isLoading: false, report: report, filter: f);
       },
       failure: (failure) {
-        state = state.copyWith(
-          isLoading: false,
-          error: failure.message,
-        );
+        state = state.copyWith(isLoading: false, error: failure.message);
       },
     );
   }

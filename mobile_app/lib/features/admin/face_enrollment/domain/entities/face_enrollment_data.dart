@@ -2,10 +2,7 @@ class CapturedImage {
   final String filePath;
   final DateTime capturedAt;
 
-  const CapturedImage({
-    required this.filePath,
-    required this.capturedAt,
-  });
+  const CapturedImage({required this.filePath, required this.capturedAt});
 }
 
 class FaceEnrollmentResult {

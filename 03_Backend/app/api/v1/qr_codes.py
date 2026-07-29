@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 
 from app.core.dependencies import get_db
 from app.models.admin import Admin
+from app.repositories.user import UserRepository
 from app.schemas.pagination import PaginationParams
 from app.schemas.qr_code import (
     QrCodeResponse,
@@ -80,7 +81,6 @@ async def list_qr_codes(
                 motif_revocation=qr.motif_revocation,
                 derniere_validation=qr.derniere_validation,
                 nombre_validations=qr.nombre_validations,
-                metadata_json=qr.metadata_json,
                 proprietaire_nom=nom,
                 proprietaire_prenom=prenom,
             )
@@ -116,8 +116,11 @@ async def generate_intern_qr(
     """
     qr = _service.generate_for_intern(db, uuid, admin)
     _audit.log_qr_generated(
-        db, admin=admin, qr_uuid=qr.uuid,
-        owner_type="STAGIAIRE", owner_name=qr._raw_token,
+        db,
+        admin=admin,
+        qr_uuid=qr.uuid,
+        owner_type="STAGIAIRE",
+        owner_name=uuid,
     )
     return SuccessResponse(
         data=QrGenerateResponse(
@@ -130,8 +133,8 @@ async def generate_intern_qr(
             type_proprietaire=qr.type_proprietaire,
             statut=qr.statut,
             date_expiration=qr.date_expiration,
-            qr_token=qr._raw_token,
-            qr_base64=generate_qr_base64(qr._raw_token),
+            qr_token=qr.raw_token,
+            qr_base64=generate_qr_base64(qr.raw_token),
             cree_par_uuid=qr.cree_par_uuid,
         ),
     )
@@ -160,8 +163,11 @@ async def generate_visitor_qr(
     """
     qr = _service.generate_for_visitor(db, uuid, admin)
     _audit.log_qr_generated(
-        db, admin=admin, qr_uuid=qr.uuid,
-        owner_type="VISITEUR", owner_name=qr._raw_token,
+        db,
+        admin=admin,
+        qr_uuid=qr.uuid,
+        owner_type="VISITEUR",
+        owner_name=uuid,
     )
     return SuccessResponse(
         data=QrGenerateResponse(
@@ -174,8 +180,8 @@ async def generate_visitor_qr(
             type_proprietaire=qr.type_proprietaire,
             statut=qr.statut,
             date_expiration=qr.date_expiration,
-            qr_token=qr._raw_token,
-            qr_base64=generate_qr_base64(qr._raw_token),
+            qr_token=qr.raw_token,
+            qr_base64=generate_qr_base64(qr.raw_token),
             cree_par_uuid=qr.cree_par_uuid,
         ),
     )
@@ -233,7 +239,9 @@ async def revoke_qr(
     """
     qr = _service.revoke(db, uuid, admin)
     _audit.log_qr_deleted(
-        db, admin=admin, qr_uuid=uuid,
+        db,
+        admin=admin,
+        qr_uuid=uuid,
         owner_name=qr.proprietaire_uuid or uuid,
     )
     return SuccessResponse(
@@ -253,7 +261,6 @@ async def revoke_qr(
             motif_revocation=qr.motif_revocation,
             derniere_validation=qr.derniere_validation,
             nombre_validations=qr.nombre_validations,
-            metadata_json=qr.metadata_json,
         ),
     )
 
@@ -283,8 +290,11 @@ async def regenerate_qr(
     """
     qr = _service.regenerate(db, uuid, owner_type, admin)
     _audit.log_qr_generated(
-        db, admin=admin, qr_uuid=qr.uuid,
-        owner_type=owner_type, owner_name=qr._raw_token,
+        db,
+        admin=admin,
+        qr_uuid=qr.uuid,
+        owner_type=owner_type,
+        owner_name=uuid,
     )
     return SuccessResponse(
         data=QrGenerateResponse(
@@ -297,8 +307,8 @@ async def regenerate_qr(
             type_proprietaire=qr.type_proprietaire,
             statut=qr.statut,
             date_expiration=qr.date_expiration,
-            qr_token=qr._raw_token,
-            qr_base64=generate_qr_base64(qr._raw_token),
+            qr_token=qr.raw_token,
+            qr_base64=generate_qr_base64(qr.raw_token),
             cree_par_uuid=qr.cree_par_uuid,
         ),
     )
@@ -321,8 +331,6 @@ async def get_qr(
     """
     qr = _service.get(db, uuid)
 
-    from app.repositories.user import UserRepository
-
     owner = UserRepository().get_by_uuid(db, qr.proprietaire_uuid)
 
     return SuccessResponse(
@@ -342,8 +350,7 @@ async def get_qr(
             motif_revocation=qr.motif_revocation,
             derniere_validation=qr.derniere_validation,
             nombre_validations=qr.nombre_validations,
-            metadata_json=qr.metadata_json,
-            qr_base64=qr.metadata_json,
+            qr_base64=_service.get_image_base64(qr),
             proprietaire_nom=owner.nom if owner else None,
             proprietaire_prenom=owner.prenom if owner else None,
         ),
@@ -370,7 +377,9 @@ async def download_qr(
     """
     png_bytes, owner_type = _service.download(db, uuid)
     _audit.log_qr_downloaded(
-        db, admin=admin, qr_uuid=uuid,
+        db,
+        admin=admin,
+        qr_uuid=uuid,
         owner_name=uuid,
     )
     return Response(
@@ -385,7 +394,9 @@ async def download_qr(
 @router.get(
     "/history/{owner_uuid}",
     summary="Historique des QR d'un propriétaire",
-    description="Retourne tous les codes QR émis pour un propriétaire (du plus récent au plus ancien).",
+    description=(
+        "Retourne tous les codes QR émis pour un propriétaire " "(du plus récent au plus ancien)."
+    ),
     response_model=SuccessResponse[list[QrCodeResponse]],
 )
 async def get_qr_history(
@@ -413,7 +424,6 @@ async def get_qr_history(
                 motif_revocation=qr.motif_revocation,
                 derniere_validation=qr.derniere_validation,
                 nombre_validations=qr.nombre_validations,
-                metadata_json=qr.metadata_json,
             )
             for qr in history
         ],

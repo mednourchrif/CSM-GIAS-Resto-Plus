@@ -121,12 +121,14 @@ class _ChartCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 220,
-              child: child,
+            Text(
+              title,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
             ),
+            const SizedBox(height: 16),
+            SizedBox(height: 220, child: child),
           ],
         ),
       ),
@@ -142,39 +144,56 @@ class _MealsLineChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final maxY = data.fold<int>(0, (max, item) => item.count > max ? item.count : max);
-    final spots = data.asMap().entries.map((e) => FlSpot(e.key.toDouble(), e.value.count.toDouble())).toList();
+    final maxY = data.fold<int>(
+      0,
+      (max, item) => item.count > max ? item.count : max,
+    );
+    final spots = data
+        .asMap()
+        .entries
+        .map((e) => FlSpot(e.key.toDouble(), e.value.count.toDouble()))
+        .toList();
 
     return LineChart(
       LineChartData(
         minY: 0,
         maxY: (maxY * 1.2).ceilToDouble().clamp(1, double.infinity),
         gridData: FlGridData(
-          show: true,
-          drawHorizontalLine: true,
           drawVerticalLine: false,
-          horizontalInterval: (maxY * 1.2 / 4).ceilToDouble().clamp(1, double.infinity),
+          horizontalInterval: (maxY * 1.2 / 4).ceilToDouble().clamp(
+            1,
+            double.infinity,
+          ),
           getDrawingHorizontalLine: (value) => FlLine(
             color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
             strokeWidth: 1,
           ),
         ),
         titlesData: FlTitlesData(
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(),
+          rightTitles: const AxisTitles(),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 32,
-              interval: (data.length / 5).ceilToDouble().clamp(1, double.infinity),
+              interval: (data.length / 5).ceilToDouble().clamp(
+                1,
+                double.infinity,
+              ),
               getTitlesWidget: (value, meta) {
                 final idx = value.toInt();
-                if (idx < 0 || idx >= data.length) return const SizedBox.shrink();
+                if (idx < 0 || idx >= data.length) {
+                  return const SizedBox.shrink();
+                }
                 return Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
-                    data[idx].period.length > 6 ? '${data[idx].period.substring(0, 6)}...' : data[idx].period,
-                    style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                    data[idx].period.length > 6
+                        ? '${data[idx].period.substring(0, 6)}...'
+                        : data[idx].period,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 );
               },
@@ -190,7 +209,9 @@ class _MealsLineChart extends StatelessWidget {
                   padding: const EdgeInsets.only(right: 8),
                   child: Text(
                     value.toInt().toString(),
-                    style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 );
               },
@@ -207,7 +228,6 @@ class _MealsLineChart extends StatelessWidget {
             barWidth: 3,
             isStrokeCapRound: true,
             dotData: FlDotData(
-              show: true,
               getDotPainter: (spot, percent, barData, index) {
                 return FlDotCirclePainter(
                   radius: 4,
@@ -224,7 +244,6 @@ class _MealsLineChart extends StatelessWidget {
           ),
         ],
         lineTouchData: LineTouchData(
-          enabled: true,
           touchTooltipData: LineTouchTooltipData(
             getTooltipItems: (touchedSpots) {
               return touchedSpots.map((spot) {
@@ -232,7 +251,7 @@ class _MealsLineChart extends StatelessWidget {
                 final label = idx < data.length ? data[idx].period : '';
                 return LineTooltipItem(
                   '$label\n${spot.y.toInt()}',
-                  TextStyle(
+                  const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
                     fontSize: 12,
@@ -255,7 +274,10 @@ class _HourBarChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final maxY = data.fold<int>(0, (max, item) => item.count > max ? item.count : max);
+    final maxY = data.fold<int>(
+      0,
+      (max, item) => item.count > max ? item.count : max,
+    );
 
     return BarChart(
       BarChartData(
@@ -268,26 +290,34 @@ class _HourBarChart extends StatelessWidget {
               final item = data[groupIndex];
               return BarTooltipItem(
                 '${item.hour}h\n${item.count}',
-                TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 12),
+                const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
               );
             },
           ),
         ),
         titlesData: FlTitlesData(
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(),
+          rightTitles: const AxisTitles(),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 28,
               getTitlesWidget: (value, meta) {
                 final idx = value.toInt();
-                if (idx < 0 || idx >= data.length) return const SizedBox.shrink();
+                if (idx < 0 || idx >= data.length) {
+                  return const SizedBox.shrink();
+                }
                 return Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
                     '${data[idx].hour}h',
-                    style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 );
               },
@@ -303,7 +333,9 @@ class _HourBarChart extends StatelessWidget {
                   padding: const EdgeInsets.only(right: 8),
                   child: Text(
                     value.toInt().toString(),
-                    style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 );
               },
@@ -312,8 +344,6 @@ class _HourBarChart extends StatelessWidget {
         ),
         borderData: FlBorderData(show: false),
         gridData: FlGridData(
-          show: true,
-          drawHorizontalLine: true,
           drawVerticalLine: false,
           getDrawingHorizontalLine: (value) => FlLine(
             color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
@@ -354,7 +384,12 @@ class _DistributionDonutChart extends StatelessWidget {
 
     if (total == 0) {
       return Center(
-        child: Text('Aucune donnée', style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+        child: Text(
+          'Aucune donnée',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
       );
     }
 
@@ -394,7 +429,6 @@ class _DistributionDonutChart extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: data.asMap().entries.map((e) {
-              final percentage = total > 0 ? (e.value.count / total) * 100 : 0.0;
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 3),
                 child: Row(
@@ -411,14 +445,18 @@ class _DistributionDonutChart extends StatelessWidget {
                     Expanded(
                       child: Text(
                         e.value.label,
-                        style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     Text(
                       '${e.value.count}',
-                      style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),

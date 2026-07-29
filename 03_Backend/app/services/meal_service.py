@@ -2,11 +2,10 @@
 
 Design
 ------
-The service is **identification-method agnostic** by design.  Currently,
-meals are registered via QR-code validation (``register_by_qr``).  In
-the future, the Face Recognition module will identify the employee and
-call ``register_by_user_uuid`` directly — no changes to this service
-are needed.
+The service is **identification-method agnostic** by design. The kiosk-facing
+path consumes a one-use grant issued by either QR or face identification.
+Legacy direct QR/user entry points remain internal compatibility helpers and
+are never exposed by the registration API.
 
 Single source of truth
 ----------------------
@@ -20,19 +19,25 @@ from datetime import UTC, date, datetime, time
 
 from loguru import logger
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import BusinessException, ConflictException, NotFoundException
 from app.models.admin import Admin
+from app.models.employee import Employee
+from app.models.intern import Intern
 from app.models.meal import Meal
 from app.models.meal_category import MealCategory
-from app.repositories.meal import MealRepository
+from app.models.user import StatutUtilisateur, User
+from app.models.visitor import Visitor
+from app.repositories.meal import MealRepository, MealStats
+from app.repositories.setting import SettingRepository
 from app.repositories.user import UserRepository
-from app.repositories.meal import MealStats
 from app.schemas.pagination import PaginatedResult, PaginationParams
 from app.services.audit_service import AuditLogService
+from app.services.identification_service import IdentificationService
 from app.services.qr_code_service import QrCodeService
-from app.utils.date_utils import today_utc
+from app.utils.date_utils import to_business_timezone, today_local
 
 _audit_service = AuditLogService()
 
@@ -41,24 +46,20 @@ _audit_service = AuditLogService()
 # ---------------------------------------------------------------------------
 
 RESTAURANT_OPEN: time = time(12, 30)
-RESTAURANT_CLOSE: time = time(22, 0)
-CASABLANCA_UTC_OFFSET: int = 1  # Africa/Casablanca standard time is UTC+1
+RESTAURANT_CLOSE: time = time(14, 0)
 
 
-def is_restaurant_open(now: datetime | None = None) -> bool:
+def is_restaurant_open(
+    now: datetime | None = None,
+    opening: time = RESTAURANT_OPEN,
+    closing: time = RESTAURANT_CLOSE,
+) -> bool:
     """Check whether the restaurant is currently open.
 
-    Opening hours: 12:30–00:00 Africa/Casablanca local time (UTC+1).
+    Hours are interpreted in the configured restaurant timezone.
     """
-    ref = now or datetime.now(UTC)
-    if ref.tzinfo is not None:
-        ref = ref.astimezone(UTC)
-    local_hour = (ref.hour + CASABLANCA_UTC_OFFSET) % 24
-    local_min = ref.minute
-    minutes_since_midnight = local_hour * 60 + local_min
-    open_minutes = RESTAURANT_OPEN.hour * 60 + RESTAURANT_OPEN.minute
-    close_minutes = RESTAURANT_CLOSE.hour * 60 + RESTAURANT_CLOSE.minute
-    return open_minutes <= minutes_since_midnight < close_minutes
+    local_time = to_business_timezone(now).time().replace(tzinfo=None)
+    return opening <= local_time < closing
 
 
 # ---------------------------------------------------------------------------
@@ -73,25 +74,67 @@ CATEGORIES: list[dict[str, str]] = [
 
 
 class MealService:
-    """Business logic for meal registration.
-
-    Currently supports QR-code-based registration.
-    Future Face Recognition will call ``register_by_user_uuid()``.
-    """
+    """Business logic shared by grant, QR, and internal face workflows."""
 
     def __init__(
         self,
         meal_repo: MealRepository | None = None,
         qr_service: QrCodeService | None = None,
         user_repo: UserRepository | None = None,
+        identification_service: IdentificationService | None = None,
+        setting_repo: SettingRepository | None = None,
     ) -> None:
         self._meal_repo = meal_repo or MealRepository()
         self._qr_service = qr_service or QrCodeService()
         self._user_repo = user_repo or UserRepository()
+        self._identification_service = identification_service or IdentificationService()
+        self._setting_repo = setting_repo or SettingRepository()
 
     # ==================================================================
     # Registration methods
     # ==================================================================
+
+    def ensure_no_meal_today(
+        self,
+        db: Session,
+        user_uuid: str,
+        _now: datetime | None = None,
+    ) -> None:
+        """Reject an identified person who already received today's meal.
+
+        Identification endpoints call this before issuing a kiosk grant so
+        the user gets immediate feedback instead of choosing a category
+        first. Registration still repeats the check and the database unique
+        constraint remains the final protection against concurrent requests.
+        """
+        meal_date = today_local(_now)
+        if self._meal_repo.get_today_count_by_user(db, user_uuid, meal_date) > 0:
+            raise ConflictException(
+                message="Votre repas a déjà été enregistré aujourd'hui.",
+                details={"date": str(meal_date), "reason": "MEAL_ALREADY_REGISTERED"},
+            )
+
+    def register_by_identification(
+        self,
+        db: Session,
+        identification_token: str,
+        categorie_uuid: str,
+        _now: datetime | None = None,
+    ) -> Meal:
+        """Consume a one-use identification grant and register the meal."""
+        with db.begin_nested():
+            grant = self._identification_service.consume(
+                db,
+                identification_token,
+            )
+            return self._register(
+                db=db,
+                user_uuid=grant.utilisateur_uuid,
+                categorie_uuid=categorie_uuid,
+                qr_uuid=grant.qr_uuid,
+                type_identification=grant.identification_type,
+                _now=_now,
+            )
 
     def register_by_qr(
         self,
@@ -140,11 +183,7 @@ class MealService:
         admin: Admin | None = None,
         _now: datetime | None = None,
     ) -> Meal:
-        """Register a meal for a user identified directly by UUID.
-
-        This method is designed for the **Face Recognition** module:
-        once the module identifies the employee, it calls this method
-        with the employee's UUID — no QR token needed.
+        """Internal compatibility helper for an already-identified user.
 
         :param user_uuid: UUID of the user (employee, intern, visitor).
         :param categorie_uuid: UUID of the meal category.
@@ -172,7 +211,7 @@ class MealService:
         admin: Admin | None = None,
         _now: datetime | None = None,
     ) -> Meal:
-        """Core registration logic — shared by QR and future Face identification.
+        """Core registration logic shared by all identification methods.
 
         Validates in order:
         1. Restaurant is open.
@@ -182,46 +221,54 @@ class MealService:
         :param _now: Internal override for testing time-dependent logic.
         """
         now = _now or datetime.now(UTC)
+        opening, closing = self._restaurant_hours(db)
 
-        if not is_restaurant_open(now):
+        if not is_restaurant_open(now, opening, closing):
             raise BusinessException(
-                message="Le restaurant est fermé. Service de 12h30 à 00h00.",
-                details={"heure": now.strftime("%H:%M")},
+                message=(
+                    "Le restaurant est fermé. "
+                    f"Service de {opening.strftime('%H:%M')} "
+                    f"a {closing.strftime('%H:%M')}."
+                ),
+                details={
+                    "heure_locale": to_business_timezone(now).strftime("%H:%M"),
+                    "ouverture": opening.strftime("%H:%M"),
+                    "fermeture": closing.strftime("%H:%M"),
+                },
             )
 
         category = self._get_category(db, categorie_uuid)
-        today = now.date()
-
-        existing = self._meal_repo.get_today_count_by_user(db, user_uuid, today)
-        if existing > 0:
-            raise ConflictException(
-                message="Un repas a déjà été enregistré pour cette personne aujourd'hui.",
-                details={"date": str(today)},
-            )
-
-        meal = self._meal_repo.create(
+        today = today_local(now)
+        user = self._get_eligible_user(
             db,
-            utilisateur_uuid=user_uuid,
-            qr_uuid=qr_uuid,
-            categorie_uuid=categorie_uuid,
-            type_identification=type_identification,
-            date_repas=today,
-            heure_repas=now,
-            enregistre_par_uuid=admin.uuid if admin else None,
+            user_uuid=user_uuid,
+            identification_type=type_identification,
+            meal_date=today,
         )
 
-        logger.info(
-            "Meal registered",
-            extra={
-                "meal_uuid": meal.uuid,
-                "user_uuid": user_uuid,
-                "category": category.nom,
-                "type": type_identification,
-            },
-        )
+        self.ensure_no_meal_today(db, user_uuid, _now=now)
 
-        user = self._user_repo.get_by_uuid(db, user_uuid)
-        user_name = f"{user.prenom} {user.nom}" if user else user_uuid
+        try:
+            with db.begin_nested():
+                meal = self._meal_repo.create(
+                    db,
+                    utilisateur_uuid=user_uuid,
+                    qr_uuid=qr_uuid,
+                    categorie_uuid=categorie_uuid,
+                    type_identification=type_identification,
+                    date_repas=today,
+                    heure_repas=now,
+                    enregistre_par_uuid=admin.uuid if admin else None,
+                )
+        except IntegrityError as exc:
+            raise ConflictException(
+                message=("Un repas a déjà été enregistré pour cette personne aujourd'hui."),
+                details={"date": str(today)},
+            ) from exc
+
+        logger.info("Meal registered")
+
+        user_name = f"{user.prenom} {user.nom}"
 
         _audit_service.log_meal_registered(
             db,
@@ -232,6 +279,23 @@ class MealService:
         )
 
         return meal
+
+    def _restaurant_hours(self, db: Session) -> tuple[time, time]:
+        """Read the configured service window, falling back to safe defaults."""
+        opening_setting = self._setting_repo.get_by_key(db, "opening_hour")
+        closing_setting = self._setting_repo.get_by_key(db, "closing_hour")
+        try:
+            opening = time.fromisoformat(
+                opening_setting.value if opening_setting else RESTAURANT_OPEN.isoformat()
+            )
+            closing = time.fromisoformat(
+                closing_setting.value if closing_setting else RESTAURANT_CLOSE.isoformat()
+            )
+        except ValueError:
+            return RESTAURANT_OPEN, RESTAURANT_CLOSE
+        if opening >= closing:
+            return RESTAURANT_OPEN, RESTAURANT_CLOSE
+        return opening, closing
 
     # ==================================================================
     # Query methods
@@ -246,7 +310,7 @@ class MealService:
 
     def get_today(self, db: Session) -> list[Meal]:
         """Get all meals registered today."""
-        return self._meal_repo.get_today(db, today_utc())
+        return self._meal_repo.get_today(db, today_local())
 
     def get_history(self, db: Session, user_uuid: str) -> list[Meal]:
         """Get all meals for a user (newest first)."""
@@ -312,6 +376,50 @@ class MealService:
                 message=f"Catégorie de repas {categorie_uuid} introuvable.",
             )
         return category
+
+    def _get_eligible_user(
+        self,
+        db: Session,
+        *,
+        user_uuid: str,
+        identification_type: str,
+        meal_date: date,
+    ) -> User:
+        """Load a user and enforce status, date, and identification rules."""
+        user = self._user_repo.get_by_uuid(db, user_uuid)
+        if user is None or user.date_suppression is not None:
+            raise NotFoundException(message="Utilisateur introuvable.")
+        if user.statut != StatutUtilisateur.ACTIF:
+            raise BusinessException(message="Ce compte n'est pas actif.")
+
+        method = identification_type.upper()
+        if method == "FACE":
+            if not isinstance(user, Employee):
+                raise BusinessException(
+                    message="La reconnaissance faciale est réservée aux employés.",
+                )
+            return user
+
+        if method != "QR":
+            raise BusinessException(message="Méthode d'identification invalide.")
+
+        if isinstance(user, Intern):
+            if not user.date_debut_stage <= meal_date <= user.date_fin_stage:
+                raise BusinessException(
+                    message="Le stage n'est pas actif à cette date.",
+                )
+            return user
+
+        if isinstance(user, Visitor):
+            if user.date_visite != meal_date:
+                raise BusinessException(
+                    message="Le QR visiteur n'est valable que le jour de la visite.",
+                )
+            return user
+
+        raise BusinessException(
+            message="Ce type d'utilisateur ne peut pas s'identifier par QR code.",
+        )
 
     def get_categories(self, db: Session) -> list[MealCategory]:
         """Return all meal categories."""

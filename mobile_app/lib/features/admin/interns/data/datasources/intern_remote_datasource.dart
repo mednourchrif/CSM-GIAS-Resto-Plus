@@ -7,7 +7,7 @@ import '../dto/update_intern_request_dto.dart';
 class InternRemoteDataSource {
   final Dio _dio;
 
-  InternRemoteDataSource({required Dio dio}) : _dio = dio;
+  InternRemoteDataSource({required this._dio});
 
   Future<InternsListResponse> getInterns({
     required int page,
@@ -20,8 +20,8 @@ class InternRemoteDataSource {
       'page': page,
       'page_size': pageSize,
       if (search != null && search.isNotEmpty) 'search': search,
-      if (sort != null) 'sort': sort,
-      if (order != null) 'order': order,
+      'sort': ?sort,
+      'order': ?order,
     };
 
     final response = await _dio.get<Map<String, dynamic>>(

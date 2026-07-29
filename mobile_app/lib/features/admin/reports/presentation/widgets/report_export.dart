@@ -15,7 +15,9 @@ import '../../domain/entities/report_entity.dart';
 /// Returns the file path on success. Throws on error.
 Future<String> exportPdf(Report report) async {
   final dir = await getTemporaryDirectory();
-  final file = File('${dir.path}/rapport_${DateTime.now().millisecondsSinceEpoch}.pdf');
+  final file = File(
+    '${dir.path}/rapport_${DateTime.now().millisecondsSinceEpoch}.pdf',
+  );
 
   final doc = pw.Document();
 
@@ -25,14 +27,20 @@ Future<String> exportPdf(Report report) async {
       margin: const pw.EdgeInsets.all(40),
       header: (context) => pw.Header(
         level: 0,
-        child: pw.Text('CSM-GIAS Resto+', style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+        child: pw.Text(
+          'CSM-GIAS Resto+',
+          style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+        ),
       ),
       footer: (context) => pw.Container(
         alignment: pw.Alignment.center,
-        child: pw.Text('Page ${context.pageNumber}', style: const pw.TextStyle(fontSize: 10)),
+        child: pw.Text(
+          'Page ${context.pageNumber}',
+          style: const pw.TextStyle(fontSize: 10),
+        ),
       ),
       build: (context) => [
-        pw.Header(level: 1, text: 'Rapport de statistiques'),
+        pw.Header(text: 'Rapport de statistiques'),
         pw.Paragraph(text: 'Généré le ${report.generatedAt}'),
         pw.SizedBox(height: 20),
         pw.Header(level: 2, text: 'Filtres'),
@@ -53,9 +61,14 @@ Future<String> exportPdf(Report report) async {
             ['Stagiaires', report.overview.totalInterns.toString()],
             ['Visiteurs', report.overview.totalVisitors.toString()],
             ['QR Code', report.overview.qrRegistrations.toString()],
-            ['Reconnaissance faciale', report.overview.faceRegistrations.toString()],
-            if (report.overview.peakHour != null) ['Heure de pointe', report.overview.peakHour!],
-            if (report.overview.mostSelectedMeal != null) ['Repas le plus choisi', report.overview.mostSelectedMeal!],
+            [
+              'Reconnaissance faciale',
+              report.overview.faceRegistrations.toString(),
+            ],
+            if (report.overview.peakHour != null)
+              ['Heure de pointe', report.overview.peakHour!],
+            if (report.overview.mostSelectedMeal != null)
+              ['Repas le plus choisi', report.overview.mostSelectedMeal!],
           ],
           border: pw.TableBorder.all(),
         ),
@@ -64,7 +77,9 @@ Future<String> exportPdf(Report report) async {
           pw.Header(level: 2, text: 'Repas par période'),
           pw.TableHelper.fromTextArray(
             headers: ['Période', 'Nombre'],
-            data: report.mealsPerDay.map((e) => [e.period, e.count.toString()]).toList(),
+            data: report.mealsPerDay
+                .map((e) => [e.period, e.count.toString()])
+                .toList(),
             border: pw.TableBorder.all(),
           ),
           pw.SizedBox(height: 20),
@@ -73,7 +88,9 @@ Future<String> exportPdf(Report report) async {
           pw.Header(level: 2, text: 'Répartition horaire'),
           pw.TableHelper.fromTextArray(
             headers: ['Heure', 'Nombre'],
-            data: report.mealsByHour.map((e) => ['${e.hour}h', e.count.toString()]).toList(),
+            data: report.mealsByHour
+                .map((e) => ['${e.hour}h', e.count.toString()])
+                .toList(),
             border: pw.TableBorder.all(),
           ),
           pw.SizedBox(height: 20),
@@ -82,7 +99,9 @@ Future<String> exportPdf(Report report) async {
           pw.Header(level: 2, text: 'Par catégorie'),
           pw.TableHelper.fromTextArray(
             headers: ['Catégorie', 'Nombre'],
-            data: report.mealsByCategory.map((e) => [e.label, e.count.toString()]).toList(),
+            data: report.mealsByCategory
+                .map((e) => [e.label, e.count.toString()])
+                .toList(),
             border: pw.TableBorder.all(),
           ),
           pw.SizedBox(height: 20),
@@ -91,7 +110,9 @@ Future<String> exportPdf(Report report) async {
           pw.Header(level: 2, text: 'Méthodes d\'enregistrement'),
           pw.TableHelper.fromTextArray(
             headers: ['Méthode', 'Nombre'],
-            data: report.registrationMethods.map((e) => [e.label, e.count.toString()]).toList(),
+            data: report.registrationMethods
+                .map((e) => [e.label, e.count.toString()])
+                .toList(),
             border: pw.TableBorder.all(),
           ),
           pw.SizedBox(height: 20),
@@ -100,7 +121,9 @@ Future<String> exportPdf(Report report) async {
           pw.Header(level: 2, text: 'Par type de personne'),
           pw.TableHelper.fromTextArray(
             headers: ['Type', 'Nombre'],
-            data: report.peopleByType.map((e) => [e.label, e.count.toString()]).toList(),
+            data: report.peopleByType
+                .map((e) => [e.label, e.count.toString()])
+                .toList(),
             border: pw.TableBorder.all(),
           ),
         ],
@@ -117,7 +140,9 @@ Future<String> exportPdf(Report report) async {
 /// Returns the file path on success. Throws on error.
 Future<String> exportExcel(Report report) async {
   final dir = await getTemporaryDirectory();
-  final file = File('${dir.path}/rapport_${DateTime.now().millisecondsSinceEpoch}.xlsx');
+  final file = File(
+    '${dir.path}/rapport_${DateTime.now().millisecondsSinceEpoch}.xlsx',
+  );
 
   final workbook = excel.Excel.createExcel();
   final sheet = workbook['Rapport'];
@@ -125,7 +150,11 @@ Future<String> exportExcel(Report report) async {
 
   void writeRow(List<String> values) {
     for (var i = 0; i < values.length; i++) {
-      sheet.cell(excel.CellIndex.indexByColumnRow(columnIndex: i, rowIndex: row)).value = excel.TextCellValue(values[i]);
+      sheet
+          .cell(excel.CellIndex.indexByColumnRow(columnIndex: i, rowIndex: row))
+          .value = excel.TextCellValue(
+        values[i],
+      );
     }
     row++;
   }
@@ -147,9 +176,16 @@ Future<String> exportExcel(Report report) async {
   writeRow(['Stagiaires', report.overview.totalInterns.toString()]);
   writeRow(['Visiteurs', report.overview.totalVisitors.toString()]);
   writeRow(['QR Code', report.overview.qrRegistrations.toString()]);
-  writeRow(['Reconnaissance faciale', report.overview.faceRegistrations.toString()]);
-  if (report.overview.peakHour != null) writeRow(['Heure de pointe', report.overview.peakHour!]);
-  if (report.overview.mostSelectedMeal != null) writeRow(['Repas le plus choisi', report.overview.mostSelectedMeal!]);
+  writeRow([
+    'Reconnaissance faciale',
+    report.overview.faceRegistrations.toString(),
+  ]);
+  if (report.overview.peakHour != null) {
+    writeRow(['Heure de pointe', report.overview.peakHour!]);
+  }
+  if (report.overview.mostSelectedMeal != null) {
+    writeRow(['Repas le plus choisi', report.overview.mostSelectedMeal!]);
+  }
   writeRow([]);
 
   if (report.mealsPerDay.isNotEmpty) {
@@ -205,7 +241,9 @@ Future<String> exportExcel(Report report) async {
 /// Returns the file path on success. Throws on error.
 Future<String> exportCsv(Report report) async {
   final dir = await getTemporaryDirectory();
-  final file = File('${dir.path}/rapport_${DateTime.now().millisecondsSinceEpoch}.csv');
+  final file = File(
+    '${dir.path}/rapport_${DateTime.now().millisecondsSinceEpoch}.csv',
+  );
 
   final csv = StringBuffer();
   _csvLine(csv, ['CSM-GIAS Resto+ - Rapport de statistiques']);
@@ -223,9 +261,16 @@ Future<String> exportCsv(Report report) async {
   _csvLine(csv, ['Stagiaires', report.overview.totalInterns.toString()]);
   _csvLine(csv, ['Visiteurs', report.overview.totalVisitors.toString()]);
   _csvLine(csv, ['QR Code', report.overview.qrRegistrations.toString()]);
-  _csvLine(csv, ['Reconnaissance faciale', report.overview.faceRegistrations.toString()]);
-  if (report.overview.peakHour != null) _csvLine(csv, ['Heure de pointe', report.overview.peakHour!]);
-  if (report.overview.mostSelectedMeal != null) _csvLine(csv, ['Repas le plus choisi', report.overview.mostSelectedMeal!]);
+  _csvLine(csv, [
+    'Reconnaissance faciale',
+    report.overview.faceRegistrations.toString(),
+  ]);
+  if (report.overview.peakHour != null) {
+    _csvLine(csv, ['Heure de pointe', report.overview.peakHour!]);
+  }
+  if (report.overview.mostSelectedMeal != null) {
+    _csvLine(csv, ['Repas le plus choisi', report.overview.mostSelectedMeal!]);
+  }
   _csvLine(csv, []);
 
   if (report.mealsPerDay.isNotEmpty) {
@@ -277,12 +322,16 @@ Future<String> exportCsv(Report report) async {
 }
 
 void _csvLine(StringBuffer buffer, List<String> values) {
-  buffer.writeln(values.map((v) {
-    if (v.contains(',') || v.contains('"') || v.contains('\n')) {
-      return '"${v.replaceAll('"', '""')}"';
-    }
-    return v;
-  }).join(','));
+  buffer.writeln(
+    values
+        .map((v) {
+          if (v.contains(',') || v.contains('"') || v.contains('\n')) {
+            return '"${v.replaceAll('"', '""')}"';
+          }
+          return v;
+        })
+        .join(','),
+  );
 }
 
 /// Shares a file using the system share sheet.
@@ -302,17 +351,26 @@ class ReportExportDialog extends StatelessWidget {
   final Report report;
   final ValueNotifier<bool> isExporting;
 
-  const ReportExportDialog({super.key, required this.report, required this.isExporting});
+  const ReportExportDialog({
+    super.key,
+    required this.report,
+    required this.isExporting,
+  });
 
   static Future<void> show(BuildContext context, Report report) {
     final isExporting = ValueNotifier<bool>(false);
     return showDialog(
       context: context,
-      builder: (context) => ReportExportDialog(report: report, isExporting: isExporting),
+      builder: (context) =>
+          ReportExportDialog(report: report, isExporting: isExporting),
     );
   }
 
-  Future<void> _export(BuildContext context, String format, Future<String> Function(Report) exportFn) async {
+  Future<void> _export(
+    BuildContext context,
+    String format,
+    Future<String> Function(Report) exportFn,
+  ) async {
     isExporting.value = true;
     try {
       final path = await exportFn(report);
@@ -331,7 +389,11 @@ class ReportExportDialog extends StatelessWidget {
     }
   }
 
-  void _showExportActions(BuildContext context, String filePath, String format) {
+  void _showExportActions(
+    BuildContext context,
+    String filePath,
+    String format,
+  ) {
     showModalBottomSheet(
       context: context,
       builder: (ctx) => SafeArea(
@@ -408,7 +470,9 @@ class ReportExportDialog extends StatelessWidget {
       ),
       actions: [
         TextButton(
-          onPressed: isExporting.value ? null : () => Navigator.of(context).pop(),
+          onPressed: isExporting.value
+              ? null
+              : () => Navigator.of(context).pop(),
           child: const Text('Annuler'),
         ),
       ],

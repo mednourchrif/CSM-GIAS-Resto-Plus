@@ -20,7 +20,10 @@ abstract class QrRepository {
 
   Future<Result<QrCode>> revokeQr(String uuid);
 
-  Future<Result<QrCode>> regenerateQr(String ownerUuid, {String ownerType = 'STAGIAIRE'});
+  Future<Result<QrCode>> regenerateQr(
+    String ownerUuid, {
+    String ownerType = 'STAGIAIRE',
+  });
 
   Future<Result<List<int>>> downloadQr(String uuid);
 

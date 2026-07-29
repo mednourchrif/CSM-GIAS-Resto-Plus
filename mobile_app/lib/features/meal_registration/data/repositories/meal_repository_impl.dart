@@ -10,27 +10,24 @@ import '../datasources/meal_remote_datasource.dart';
 class MealRepositoryImpl implements MealRepository {
   final MealRemoteDataSource _remoteDataSource;
 
-  MealRepositoryImpl({required MealRemoteDataSource remoteDataSource})
-      : _remoteDataSource = remoteDataSource;
+  MealRepositoryImpl({required this._remoteDataSource});
 
   @override
   Future<Result<MealRegistration>> registerMeal({
-    String? qrToken,
-    String? userUuid,
+    required String identificationToken,
     required String categorieUuid,
   }) async {
     try {
       final response = await _remoteDataSource.registerMeal(
-        qrToken: qrToken,
-        userUuid: userUuid,
+        identificationToken: identificationToken,
         categorieUuid: categorieUuid,
       );
       return Success(response.toDomain());
     } on DioException catch (e) {
       return Fail(_mapError(e));
     } catch (e) {
-      return Fail(
-        const ApiFailure(message: 'Erreur lors de l\'enregistrement du repas.'),
+      return const Fail(
+        ApiFailure(message: 'Erreur lors de l\'enregistrement du repas.'),
       );
     }
   }
@@ -43,8 +40,8 @@ class MealRepositoryImpl implements MealRepository {
     } on DioException catch (e) {
       return Fail(_mapError(e));
     } catch (e) {
-      return Fail(
-        const ApiFailure(message: 'Erreur lors du chargement des catégories.'),
+      return const Fail(
+        ApiFailure(message: 'Erreur lors du chargement des catégories.'),
       );
     }
   }
@@ -65,8 +62,19 @@ class MealRepositoryImpl implements MealRepository {
     }
 
     if (statusCode == 400) {
+      return ValidationFailure(message: message ?? 'Requête invalide.');
+    }
+
+    if (statusCode == 401) {
+      return ApiFailure(
+        message: message ?? 'Identification expirée. Veuillez recommencer.',
+        statusCode: statusCode,
+      );
+    }
+
+    if (statusCode == 422) {
       return ValidationFailure(
-        message: message ?? 'Requête invalide.',
+        message: message ?? 'Données de repas invalides.',
       );
     }
 
@@ -85,14 +93,9 @@ class MealRepositoryImpl implements MealRepository {
     }
 
     if (statusCode != null && statusCode >= 500) {
-      return ServerFailure(
-        message: message ?? 'Erreur interne du serveur.',
-        statusCode: statusCode,
-      );
+      return ServerFailure(message: message ?? 'Erreur interne du serveur.');
     }
 
-    return const NetworkFailure(
-      message: 'Erreur réseau. Veuillez réessayer.',
-    );
+    return const NetworkFailure(message: 'Erreur réseau. Veuillez réessayer.');
   }
 }

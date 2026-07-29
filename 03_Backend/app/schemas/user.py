@@ -7,7 +7,7 @@ modules and typically inherit from ``UserCreate``.
 
 from datetime import datetime
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from app.models.user import (
     Langue,
@@ -15,6 +15,7 @@ from app.models.user import (
     TypeUtilisateur,
 )
 from app.schemas.base import BaseResponse, BaseSchema
+from app.utils.validators import validate_email_format
 
 
 class UserAdminCreate(BaseSchema):
@@ -31,6 +32,13 @@ class UserAdminCreate(BaseSchema):
     statut: StatutUtilisateur = StatutUtilisateur.ACTIF
     role_id: int | None = Field(None, description="FK to role table (admins only)")
 
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value: str) -> str:
+        if not validate_email_format(value):
+            raise ValueError("Adresse email invalide.")
+        return value.casefold()
+
 
 class UserAdminUpdate(BaseSchema):
     """Payload for updating an admin or receptionist user (all fields optional)."""
@@ -40,6 +48,13 @@ class UserAdminUpdate(BaseSchema):
     email: str | None = Field(None, max_length=255)
     statut: StatutUtilisateur | None = None
     role_id: int | None = Field(None, description="FK to role table (admins only)")
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value: str | None) -> str | None:
+        if value is not None and not validate_email_format(value):
+            raise ValueError("Adresse email invalide.")
+        return value.casefold() if value else value
 
 
 class UserAdminPasswordReset(BaseSchema):
@@ -110,6 +125,13 @@ class UserCreate(BaseSchema):
         description="Preferred UI language on the tablet.",
     )
 
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value: str | None) -> str | None:
+        if value is not None and not validate_email_format(value):
+            raise ValueError("Adresse email invalide.")
+        return value.casefold() if value else value
+
 
 class UserUpdate(BaseSchema):
     """Payload for updating an existing user (all fields optional)."""
@@ -120,6 +142,13 @@ class UserUpdate(BaseSchema):
     mot_de_passe: str | None = Field(None, min_length=8, max_length=128)
     statut: StatutUtilisateur | None = None
     langue: Langue | None = None
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value: str | None) -> str | None:
+        if value is not None and not validate_email_format(value):
+            raise ValueError("Adresse email invalide.")
+        return value.casefold() if value else value
 
 
 class UserResponse(UserCreate, BaseResponse):

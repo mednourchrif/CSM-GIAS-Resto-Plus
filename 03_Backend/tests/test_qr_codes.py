@@ -7,18 +7,15 @@ revocation, regeneration, history, download, auth.
 from datetime import UTC, date, datetime, timedelta
 
 import jwt
-import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.models.admin import Admin
+from app.models.admin import Receptionist
 from app.models.intern import Intern
-from app.models.role import Role
 from app.models.user import StatutUtilisateur
 from app.models.visitor import Visitor
 from app.security.password import PasswordService
-from app.utils.qr_code import generate_token, hash_token
 from tests.test_auth import _auth_header, _login_payload, _seed_admin
 
 _PASSWORD = PasswordService()
@@ -123,7 +120,9 @@ class TestQRGeneration:
         )
         assert resp.status_code == 404
 
-    def test_generate_duplicate_revokes_previous(self, client: TestClient, db_session: Session) -> None:
+    def test_generate_duplicate_revokes_previous(
+        self, client: TestClient, db_session: Session
+    ) -> None:
         token = _login(client, db_session)
         intern = _seed_intern(db_session)
 
@@ -415,7 +414,7 @@ class TestQRDownload:
         )
         assert resp.status_code == 200
         assert resp.headers["content-type"] == "image/png"
-        assert resp.headers["content-disposition"] == f'attachment; filename=qr_{qr_uuid}.png'
+        assert resp.headers["content-disposition"] == f"attachment; filename=qr_{qr_uuid}.png"
         assert int(resp.headers["content-length"]) > 100
 
 
@@ -504,17 +503,17 @@ class TestQRAuth:
         )
         assert resp.status_code == 401
 
-    def test_receptionist_cannot_generate_intern_qr(self, client: TestClient, db_session: Session) -> None:
+    def test_receptionist_cannot_generate_intern_qr(
+        self, client: TestClient, db_session: Session
+    ) -> None:
         _seed_admin(db_session)
-        role = db_session.query(Role).first()
-        receptionist = Admin(
+        receptionist = Receptionist(
             nom="Recep",
             prenom="Test",
             email="recep@test.com",
             mot_de_passe=_PASSWORD.hash("StrongPass1!"),
             type="RECEPTION",
             statut=StatutUtilisateur.ACTIF,
-            role_id=role.id,
             langue="FR",
         )
         db_session.add(receptionist)

@@ -22,7 +22,6 @@ if str(_project_root) not in sys.path:
     sys.path.insert(0, str(_project_root))
 
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 from loguru import logger
 from sqlalchemy import select
@@ -31,7 +30,6 @@ from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models.admin import Admin, Receptionist
 from app.models.meal_category import MealCategory
-from app.models.role import Role
 from app.models.user import StatutUtilisateur, User
 from app.repositories.role import RoleRepository
 from app.services.meal_service import MealService
@@ -186,7 +184,7 @@ def _format_summary(results: Mapping[str, Sequence[str]]) -> str:
     lines.append("=" * 40)
     lines.append("          Database Seed")
     lines.append("=" * 40)
-    for section, messages in results.items():
+    for _section, messages in results.items():
         for msg in messages:
             lines.append(f"  {msg}")
     lines.append("=" * 40)

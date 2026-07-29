@@ -32,5 +32,6 @@ class EmployeeDetail {
   });
 
   bool get hasTodayMeal => todayMeal != null;
-  String get mealStatus => hasTodayMeal ? 'Repas enregistré' : 'Aucun repas aujourd\'hui';
+  String get mealStatus =>
+      hasTodayMeal ? 'Repas enregistré' : 'Aucun repas aujourd\'hui';
 }

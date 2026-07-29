@@ -6,7 +6,7 @@ import '../dto/qr_generate_response_dto.dart';
 class QrRemoteDataSource {
   final Dio _dio;
 
-  QrRemoteDataSource({required Dio dio}) : _dio = dio;
+  QrRemoteDataSource({required this._dio});
 
   Future<QrListResponse> getQrCodes({
     required int page,
@@ -21,10 +21,10 @@ class QrRemoteDataSource {
       'page': page,
       'page_size': pageSize,
       if (search != null && search.isNotEmpty) 'search': search,
-      if (typeFilter != null) 'type': typeFilter,
-      if (statusFilter != null) 'status': statusFilter,
-      if (sort != null) 'sort': sort,
-      if (order != null) 'order': order,
+      'type': ?typeFilter,
+      'status': ?statusFilter,
+      'sort': ?sort,
+      'order': ?order,
     };
 
     final response = await _dio.get<Map<String, dynamic>>(
@@ -89,9 +89,7 @@ class QrRemoteDataSource {
   Future<List<int>> downloadQr(String uuid) async {
     final response = await _dio.get<List<int>>(
       '/qr/download/$uuid',
-      options: Options(
-        responseType: ResponseType.bytes,
-      ),
+      options: Options(responseType: ResponseType.bytes),
     );
     return response.data!;
   }

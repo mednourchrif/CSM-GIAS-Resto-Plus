@@ -65,10 +65,7 @@ class _MealHistoryFiltersState extends ConsumerState<MealHistoryFilters> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              'Filtres',
-              style: theme.textTheme.titleLarge,
-            ),
+            Text('Filtres', style: theme.textTheme.titleLarge),
             const SizedBox(height: Spacing.md),
             Text('Période', style: theme.textTheme.labelLarge),
             const SizedBox(height: Spacing.sm),
@@ -80,7 +77,10 @@ class _MealHistoryFiltersState extends ConsumerState<MealHistoryFilters> {
                     decoration: InputDecoration(
                       labelText: 'Date début',
                       hintText: 'YYYY-MM-DD',
-                      prefixIcon: const Icon(Icons.calendar_today, size: Spacing.iconSm),
+                      prefixIcon: const Icon(
+                        Icons.calendar_today,
+                        size: Spacing.iconSm,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(Spacing.radiusSm),
                       ),
@@ -97,7 +97,10 @@ class _MealHistoryFiltersState extends ConsumerState<MealHistoryFilters> {
                     decoration: InputDecoration(
                       labelText: 'Date fin',
                       hintText: 'YYYY-MM-DD',
-                      prefixIcon: const Icon(Icons.calendar_today, size: Spacing.iconSm),
+                      prefixIcon: const Icon(
+                        Icons.calendar_today,
+                        size: Spacing.iconSm,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(Spacing.radiusSm),
                       ),

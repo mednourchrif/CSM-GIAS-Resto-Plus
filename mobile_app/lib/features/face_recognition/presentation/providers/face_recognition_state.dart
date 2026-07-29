@@ -5,11 +5,7 @@ class FaceRecognitionState {
   final FaceRecognitionResult? result;
   final String? error;
 
-  const FaceRecognitionState({
-    this.isLoading = false,
-    this.result,
-    this.error,
-  });
+  const FaceRecognitionState({this.isLoading = false, this.result, this.error});
 
   FaceRecognitionState copyWith({
     bool? isLoading,

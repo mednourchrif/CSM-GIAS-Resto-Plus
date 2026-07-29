@@ -5,7 +5,7 @@ import '../dto/setting_dto.dart';
 class SettingsRemoteDataSource {
   final Dio _dio;
 
-  SettingsRemoteDataSource({required Dio dio}) : _dio = dio;
+  SettingsRemoteDataSource({required this._dio});
 
   Future<SettingsResponseDto> getSettings() async {
     final response = await _dio.get<Map<String, dynamic>>('/settings');
@@ -13,8 +13,19 @@ class SettingsRemoteDataSource {
     return SettingsResponseDto.fromJson(data);
   }
 
-  Future<SettingsResponseDto> updateSettings(Map<String, String> settings) async {
-    final response = await _dio.put<Map<String, dynamic>>('/settings', data: {'settings': settings});
+  Future<SettingsResponseDto> getKioskSettings() async {
+    final response = await _dio.get<Map<String, dynamic>>('/settings/kiosk');
+    final data = response.data!['data'] as Map<String, dynamic>;
+    return SettingsResponseDto.fromJson(data);
+  }
+
+  Future<SettingsResponseDto> updateSettings(
+    Map<String, String> settings,
+  ) async {
+    final response = await _dio.put<Map<String, dynamic>>(
+      '/settings',
+      data: {'settings': settings},
+    );
     final data = response.data!['data'] as Map<String, dynamic>;
     return SettingsResponseDto.fromJson(data);
   }

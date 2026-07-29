@@ -67,7 +67,9 @@ class _VisitorFormScreenState extends ConsumerState<VisitorFormScreen> {
 
     bool success;
     if (_isEditing) {
-      success = await ref.read(visitorProvider.notifier).updateVisitor(
+      success = await ref
+          .read(visitorProvider.notifier)
+          .updateVisitor(
             widget.visitor!.uuid,
             nom: _nomController.text.trim(),
             prenom: _prenomController.text.trim(),
@@ -81,7 +83,9 @@ class _VisitorFormScreenState extends ConsumerState<VisitorFormScreen> {
             statut: _statut,
           );
     } else {
-      success = await ref.read(visitorProvider.notifier).createVisitor(
+      success = await ref
+          .read(visitorProvider.notifier)
+          .createVisitor(
             nom: _nomController.text.trim(),
             prenom: _prenomController.text.trim(),
             email: _emailController.text.trim().isEmpty
@@ -152,8 +156,10 @@ class _VisitorFormScreenState extends ConsumerState<VisitorFormScreen> {
                             labelText: 'Nom *',
                             border: OutlineInputBorder(),
                           ),
-                          validator: (v) =>
-                              Validators.required(v, fieldName: 'Le nom')?.message,
+                          validator: (v) => Validators.required(
+                            v,
+                            fieldName: 'Le nom',
+                          )?.message,
                         ),
                         const SizedBox(height: Spacing.md),
                         TextFormField(
@@ -162,8 +168,10 @@ class _VisitorFormScreenState extends ConsumerState<VisitorFormScreen> {
                             labelText: 'Prénom *',
                             border: OutlineInputBorder(),
                           ),
-                          validator: (v) =>
-                              Validators.required(v, fieldName: 'Le prénom')?.message,
+                          validator: (v) => Validators.required(
+                            v,
+                            fieldName: 'Le prénom',
+                          )?.message,
                         ),
                         const SizedBox(height: Spacing.md),
                         TextFormField(
@@ -173,8 +181,9 @@ class _VisitorFormScreenState extends ConsumerState<VisitorFormScreen> {
                             border: OutlineInputBorder(),
                           ),
                           keyboardType: TextInputType.emailAddress,
-                          validator: (v) =>
-                              v == null || v.trim().isEmpty ? null : Validators.email(v)?.message,
+                          validator: (v) => v == null || v.trim().isEmpty
+                              ? null
+                              : Validators.email(v)?.message,
                         ),
                         const SizedBox(height: Spacing.md),
                         TextFormField(

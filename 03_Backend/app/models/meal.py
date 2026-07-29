@@ -19,9 +19,9 @@ and call ``MealService.register_by_user_uuid()`` — no changes to this
 model are required.
 """
 
-from datetime import date, datetime, time
+from datetime import date, datetime
 
-from sqlalchemy import Date, DateTime, ForeignKey, String, Time, UniqueConstraint
+from sqlalchemy import Date, DateTime, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import BaseModel

@@ -77,7 +77,9 @@ class AppDialog extends StatelessWidget {
             ],
           ),
           content: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: Spacing.maxContentWidthNarrow),
+            constraints: const BoxConstraints(
+              maxWidth: Spacing.maxContentWidthNarrow,
+            ),
             child: content,
           ),
           actions: actions,

@@ -12,23 +12,32 @@ import '../../domain/entities/qr_code.dart';
 import '../providers/qr_provider.dart';
 
 class QrGenerateScreen extends ConsumerStatefulWidget {
-  const QrGenerateScreen({super.key});
+  final String? initialOwnerType;
+  final String? initialOwnerUuid;
+  final String? initialOwnerName;
+
+  const QrGenerateScreen({
+    super.key,
+    this.initialOwnerType,
+    this.initialOwnerUuid,
+    this.initialOwnerName,
+  });
 
   @override
   ConsumerState<QrGenerateScreen> createState() => _QrGenerateScreenState();
 }
 
 class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
-  String _ownerType = 'STAGIAIRE';
+  late String _ownerType;
   bool _isGenerating = false;
   String? _selectedOwnerUuid;
-  String? _selectedOwnerName;
   String? _generatedQrBase64;
-  String? _generatedToken;
 
   @override
   void initState() {
     super.initState();
+    _ownerType = widget.initialOwnerType ?? 'STAGIAIRE';
+    _selectedOwnerUuid = widget.initialOwnerUuid;
     _loadOwners();
   }
 
@@ -46,15 +55,18 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
     setState(() {
       _isGenerating = true;
       _generatedQrBase64 = null;
-      _generatedToken = null;
     });
 
     QrCode? qr;
     if (_ownerType == 'STAGIAIRE') {
-      final result = await ref.read(qrProvider.notifier).generateInternQr(_selectedOwnerUuid!);
+      final result = await ref
+          .read(qrProvider.notifier)
+          .generateInternQr(_selectedOwnerUuid!);
       qr = result;
     } else {
-      final result = await ref.read(qrProvider.notifier).generateVisitorQr(_selectedOwnerUuid!);
+      final result = await ref
+          .read(qrProvider.notifier)
+          .generateVisitorQr(_selectedOwnerUuid!);
       qr = result;
     }
 
@@ -66,10 +78,15 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
       setState(() {
         _generatedQrBase64 = qr!.qrBase64;
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('QR code généré avec succès.')),
+      );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(ref.read(qrProvider).error ?? 'Erreur lors de la génération.'),
+          content: Text(
+            ref.read(qrProvider).error ?? 'Erreur lors de la génération.',
+          ),
         ),
       );
     }
@@ -93,32 +110,54 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
             children: [
               Text(
                 'Générer un QR code',
-                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: Spacing.lg),
-              SegmentedButton<String>(
-                segments: const [
-                  ButtonSegment(value: 'STAGIAIRE', label: Text('Stagiaire')),
-                  ButtonSegment(value: 'VISITEUR', label: Text('Visiteur')),
-                ],
-                selected: {_ownerType},
-                onSelectionChanged: (v) {
-                  setState(() {
-                    _ownerType = v.first;
-                    _selectedOwnerUuid = null;
-                    _selectedOwnerName = null;
-                    _generatedQrBase64 = null;
-                    _generatedToken = null;
-                  });
-                  _loadOwners();
-                },
-              ),
+              if (widget.initialOwnerUuid == null)
+                SegmentedButton<String>(
+                  segments: const [
+                    ButtonSegment(value: 'STAGIAIRE', label: Text('Stagiaire')),
+                    ButtonSegment(value: 'VISITEUR', label: Text('Visiteur')),
+                  ],
+                  selected: {_ownerType},
+                  onSelectionChanged: (v) {
+                    setState(() {
+                      _ownerType = v.first;
+                      _selectedOwnerUuid = null;
+                      _generatedQrBase64 = null;
+                    });
+                    _loadOwners();
+                  },
+                )
+              else
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                    Icons.person_outline_rounded,
+                    color: theme.colorScheme.primary,
+                  ),
+                  title: Text(widget.initialOwnerName ?? 'Bénéficiaire'),
+                  subtitle: Text(
+                    _ownerType == 'STAGIAIRE' ? 'Stagiaire' : 'Visiteur',
+                  ),
+                ),
               const SizedBox(height: Spacing.md),
-              Expanded(
-                child: _ownerType == 'STAGIAIRE'
-                    ? _buildInternList(theme, internState)
-                    : _buildVisitorList(theme, visitorState),
-              ),
+              if (widget.initialOwnerUuid == null)
+                Expanded(
+                  child: _ownerType == 'STAGIAIRE'
+                      ? _buildInternList(theme, internState)
+                      : _buildVisitorList(theme, visitorState),
+                )
+              else
+                Text(
+                  'Le QR précédent sera révoqué automatiquement. '
+                  'Remettez uniquement le nouveau code à la personne concernée.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
               const SizedBox(height: Spacing.md),
               if (_generatedQrBase64 != null) ...[
                 Center(
@@ -155,12 +194,17 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
                   ),
                   const SizedBox(width: Spacing.sm),
                   FilledButton(
-                    onPressed: _selectedOwnerUuid == null || _isGenerating ? null : _generate,
+                    onPressed: _selectedOwnerUuid == null || _isGenerating
+                        ? null
+                        : _generate,
                     child: _isGenerating
                         ? SizedBox(
                             width: 20,
                             height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: theme.colorScheme.onPrimary),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: theme.colorScheme.onPrimary,
+                            ),
                           )
                         : const Text('Générer'),
                   ),
@@ -180,12 +224,15 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
     }
     if (interns.isEmpty) {
       return Center(
-        child: Text('Aucun stagiaire actif.', style: theme.textTheme.bodyMedium),
+        child: Text(
+          'Aucun stagiaire actif.',
+          style: theme.textTheme.bodyMedium,
+        ),
       );
     }
     return ListView.separated(
       itemCount: interns.length,
-      separatorBuilder: (_, __) => const Divider(height: 1),
+      separatorBuilder: (_, _) => const Divider(height: 1),
       itemBuilder: (context, index) {
         final intern = interns[index];
         final selected = _selectedOwnerUuid == intern.uuid;
@@ -207,11 +254,12 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
           title: Text(intern.fullName),
           subtitle: Text(intern.matricule),
           selected: selected,
-          trailing: selected ? Icon(Icons.check_circle, color: theme.colorScheme.primary) : null,
+          trailing: selected
+              ? Icon(Icons.check_circle, color: theme.colorScheme.primary)
+              : null,
           onTap: () {
             setState(() {
               _selectedOwnerUuid = intern.uuid;
-              _selectedOwnerName = intern.fullName;
               _generatedQrBase64 = null;
             });
           },
@@ -232,7 +280,7 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
     }
     return ListView.separated(
       itemCount: visitors.length,
-      separatorBuilder: (_, __) => const Divider(height: 1),
+      separatorBuilder: (_, _) => const Divider(height: 1),
       itemBuilder: (context, index) {
         final visitor = visitors[index];
         final selected = _selectedOwnerUuid == visitor.uuid;
@@ -254,11 +302,12 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
           title: Text(visitor.fullName),
           subtitle: Text(visitor.societe ?? visitor.formattedDate),
           selected: selected,
-          trailing: selected ? Icon(Icons.check_circle, color: theme.colorScheme.primary) : null,
+          trailing: selected
+              ? Icon(Icons.check_circle, color: theme.colorScheme.primary)
+              : null,
           onTap: () {
             setState(() {
               _selectedOwnerUuid = visitor.uuid;
-              _selectedOwnerName = visitor.fullName;
               _generatedQrBase64 = null;
             });
           },

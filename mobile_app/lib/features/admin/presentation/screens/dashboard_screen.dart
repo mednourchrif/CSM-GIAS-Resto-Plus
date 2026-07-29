@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/spacing.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../identification/presentation/providers/kiosk_flow_provider.dart';
 import '../../../admin/employees/presentation/screens/employee_list_screen.dart';
+import '../../../admin/face_enrollment/presentation/screens/face_enrollment_directory_screen.dart';
 import '../../../admin/reports/presentation/screens/report_screen.dart';
 import '../../domain/enums/admin_section.dart';
 import '../../../admin/interns/presentation/screens/intern_list_screen.dart';
@@ -17,7 +19,6 @@ import '../../../admin/visitors/presentation/screens/visitor_list_screen.dart';
 import '../../audit/presentation/screens/audit_log_list_screen.dart';
 import '../widgets/admin_drawer.dart';
 import '../widgets/admin_navigation_rail.dart';
-import 'admin_placeholder_screen.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -34,6 +35,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   Future<void> _onLogout() async {
+    ref.read(resetKioskFlowProvider)();
     await ref.read(authStateProvider.notifier).logout();
     if (!mounted) return;
     context.go('/login');
@@ -52,30 +54,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         onSectionTap: (index) => setState(() => _selectedIndex = index),
       );
     }
-    switch (_selectedIndex) {
-      case 0:
-        return const EmployeeListScreen();
-      case 1:
-        return const InternListScreen();
-      case 2:
-        return const VisitorListScreen();
-      case 3:
-        return const QrListScreen();
-      case 5:
-        return const MealHistoryListScreen();
-      case 6:
-        return const StatisticsDashboardScreen();
-      case 7:
-        return const ReportScreen();
-      case 8:
-        return const UserListScreen();
-      case 9:
-        return const SettingsScreen();
-      case 10:
-        return const AuditLogListScreen();
-      default:
-        return AdminPlaceholderScreen(section: AdminSection.values[_selectedIndex]);
-    }
+    return switch (AdminSection.values[_selectedIndex]) {
+      AdminSection.employees => const EmployeeListScreen(),
+      AdminSection.interns => const InternListScreen(),
+      AdminSection.visitors => const VisitorListScreen(),
+      AdminSection.qrCodes => const QrListScreen(),
+      AdminSection.faceEnrollment => const FaceEnrollmentDirectoryScreen(),
+      AdminSection.mealHistory => const MealHistoryListScreen(),
+      AdminSection.statistics => const StatisticsDashboardScreen(),
+      AdminSection.reports => const ReportScreen(),
+      AdminSection.users => const UserListScreen(),
+      AdminSection.settings => const SettingsScreen(),
+      AdminSection.audit => const AuditLogListScreen(),
+    };
   }
 
   @override
@@ -84,11 +75,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final theme = Theme.of(context);
     final screenWidth = MediaQuery.sizeOf(context).width;
     final isDesktop = screenWidth >= Spacing.tabletBreakpoint;
-    final isMobile = screenWidth < Spacing.mobileBreakpoint;
 
     final adminName = authState.user?.fullName ?? 'Administrateur';
 
-    if (isMobile) {
+    if (!isDesktop) {
       return Scaffold(
         appBar: AppBar(
           title: Text(_currentTitle),
@@ -137,7 +127,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       border: Border(
                         bottom: BorderSide(
                           color: theme.colorScheme.outlineVariant,
-                          width: 1,
                         ),
                       ),
                     ),
@@ -147,7 +136,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         if (!_isOnDashboard) ...[
                           InkWell(
                             onTap: () => setState(() => _selectedIndex = -1),
-                            borderRadius: BorderRadius.circular(Spacing.radiusXs),
+                            borderRadius: BorderRadius.circular(
+                              Spacing.radiusXs,
+                            ),
                             child: Text(
                               'Tableau de bord',
                               style: theme.textTheme.bodyMedium?.copyWith(
@@ -201,12 +192,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               vertical: Spacing.xs,
                             ),
                           ),
-                          child: Row(
+                          child: const Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.logout_rounded, size: 16),
-                              const SizedBox(width: Spacing.xs),
-                              const Text('Déconnexion'),
+                              Icon(Icons.logout_rounded, size: 16),
+                              SizedBox(width: Spacing.xs),
+                              Text('Déconnexion'),
                             ],
                           ),
                         ),

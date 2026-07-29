@@ -25,19 +25,14 @@ class UserDto {
     );
   }
 
-  User toDomain() => User(
-        id: id,
-        nom: nom,
-        prenom: prenom,
-        email: email,
-        role: role,
-      );
+  User toDomain() =>
+      User(id: id, nom: nom, prenom: prenom, email: email, role: role);
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'nom': nom,
-        'prenom': prenom,
-        'email': email,
-        'role': role,
-      };
+    'id': id,
+    'nom': nom,
+    'prenom': prenom,
+    'email': email,
+    'role': role,
+  };
 }

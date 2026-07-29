@@ -44,8 +44,9 @@ class QrState {
     return QrState(
       isLoading: isLoading ?? this.isLoading,
       qrCodes: qrCodes ?? this.qrCodes,
-      selectedQrCode:
-          clearSelected ? null : (selectedQrCode ?? this.selectedQrCode),
+      selectedQrCode: clearSelected
+          ? null
+          : (selectedQrCode ?? this.selectedQrCode),
       error: clearError ? null : (error ?? this.error),
       page: page ?? this.page,
       totalPages: totalPages ?? this.totalPages,

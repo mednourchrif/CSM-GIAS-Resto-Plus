@@ -1,5 +1,7 @@
 """Statistics response schemas."""
 
+from typing import Any
+
 from pydantic import BaseModel
 
 
@@ -40,7 +42,7 @@ class RecentRegistrationItem(BaseModel):
 
 
 class DashboardStatsResponse(BaseModel):
-    overview: dict
+    overview: dict[str, Any]
     meals_per_day: list[MealCountByDate]
     meal_distribution: list[MealDistributionItem]
     user_type_distribution: list[UserTypeDistributionItem]

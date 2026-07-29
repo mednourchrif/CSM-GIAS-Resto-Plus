@@ -41,6 +41,19 @@ class UserRepository(BaseRepository[User]):
         stmt = select(User).where(User.statut == StatutUtilisateur.ACTIF)
         return list(db.execute(stmt).scalars().all())
 
+    def count_active_admins(self, db: Session) -> int:
+        """Count non-deleted administrator accounts that can authenticate."""
+        stmt = (
+            select(func.count())
+            .select_from(User)
+            .where(
+                User.type == TypeUtilisateur.ADMINISTRATEUR,
+                User.statut == StatutUtilisateur.ACTIF,
+                User.date_suppression.is_(None),
+            )
+        )
+        return db.execute(stmt).scalar() or 0
+
     def search(
         self,
         db: Session,

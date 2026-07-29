@@ -17,8 +17,9 @@ final internRepositoryProvider = Provider<InternRepository>((ref) {
   );
 });
 
-final internProvider =
-    StateNotifierProvider<InternNotifier, InternState>((ref) {
+final internProvider = StateNotifierProvider<InternNotifier, InternState>((
+  ref,
+) {
   return InternNotifier(ref);
 });
 
@@ -169,7 +170,6 @@ class InternNotifier extends StateNotifier<InternState> {
     return result.when(
       success: (_) {
         state = state.copyWith(
-          selectedIntern: null,
           interns: state.interns.where((i) => i.uuid != uuid).toList(),
           total: state.total - 1,
         );

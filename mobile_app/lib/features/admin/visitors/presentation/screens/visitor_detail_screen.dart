@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/theme/spacing.dart';
 import '../../../../../shared/widgets/detail_row.dart';
 import '../../../../../shared/widgets/status_badge.dart';
+import '../../../qr/presentation/screens/qr_generate_screen.dart';
 import '../../domain/entities/visitor.dart';
 import '../providers/visitor_provider.dart';
 import 'visitor_form_screen.dart';
@@ -109,11 +110,14 @@ class VisitorDetailScreen extends ConsumerWidget {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Génération de QR code à venir.')),
-                    );
-                  },
+                  onPressed: () => showDialog<void>(
+                    context: context,
+                    builder: (_) => QrGenerateScreen(
+                      initialOwnerType: 'VISITEUR',
+                      initialOwnerUuid: visitor.uuid,
+                      initialOwnerName: visitor.fullName,
+                    ),
+                  ),
                   icon: const Icon(Icons.qr_code_rounded),
                   label: const Text('Générer un QR code'),
                 ),
@@ -161,7 +165,8 @@ class VisitorDetailScreen extends ConsumerWidget {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                        ref.read(visitorProvider).error ?? 'Erreur lors de la suppression.',
+                        ref.read(visitorProvider).error ??
+                            'Erreur lors de la suppression.',
                       ),
                     ),
                   );

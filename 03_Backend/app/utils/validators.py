@@ -13,6 +13,7 @@ Usage::
 """
 
 import re
+from datetime import date
 
 # Regex for basic email structure: local-part@domain.tld
 _EMAIL_PATTERN = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
@@ -30,7 +31,7 @@ def validate_email_format(email: str) -> bool:
     return bool(_EMAIL_PATTERN.match(email.strip()))
 
 
-def validate_date_range(start, end) -> bool:
+def validate_date_range(start: date | None, end: date | None) -> bool:
     """Check that the start date is before or equal to the end date.
 
     Used to validate internship periods (``date_debut_stage`` vs.

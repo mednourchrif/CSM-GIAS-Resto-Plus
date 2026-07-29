@@ -15,7 +15,11 @@ class MealStatusBadge extends StatelessWidget {
     final (label, color, icon) = switch (type) {
       TypeIdentification.face => ('Visage', AppColors.success, Icons.face),
       TypeIdentification.qr => ('QR Code', AppColors.info, Icons.qr_code),
-      TypeIdentification.unknown => ('Inconnu', AppColors.outline, Icons.help_outline),
+      TypeIdentification.unknown => (
+        'Inconnu',
+        AppColors.outline,
+        Icons.help_outline,
+      ),
     };
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -32,10 +36,7 @@ class MealStatusBadge extends StatelessWidget {
         children: [
           Icon(icon, size: 11, color: color),
           const SizedBox(width: 3),
-          Text(
-            label,
-            style: AppTypography.badgeLabel.copyWith(color: color),
-          ),
+          Text(label, style: AppTypography.badgeLabel.copyWith(color: color)),
         ],
       ),
     );

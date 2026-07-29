@@ -9,11 +9,14 @@ import 'face_enrollment_state.dart';
 
 final faceEnrollmentRemoteDataSourceProvider =
     Provider<FaceEnrollmentRemoteDataSource>((ref) {
-  return FaceEnrollmentRemoteDataSource(dio: ref.watch(apiClientProvider).dio);
-});
+      return FaceEnrollmentRemoteDataSource(
+        dio: ref.watch(apiClientProvider).dio,
+      );
+    });
 
-final faceEnrollmentRepositoryProvider =
-    Provider<FaceEnrollmentRepository>((ref) {
+final faceEnrollmentRepositoryProvider = Provider<FaceEnrollmentRepository>((
+  ref,
+) {
   return FaceEnrollmentRepositoryImpl(
     dataSource: ref.watch(faceEnrollmentRemoteDataSourceProvider),
   );
@@ -21,8 +24,8 @@ final faceEnrollmentRepositoryProvider =
 
 final faceEnrollmentProvider =
     StateNotifierProvider<FaceEnrollmentNotifier, FaceEnrollmentState>((ref) {
-  return FaceEnrollmentNotifier(ref);
-});
+      return FaceEnrollmentNotifier(ref);
+    });
 
 class FaceEnrollmentNotifier extends StateNotifier<FaceEnrollmentState> {
   final Ref _ref;
@@ -63,8 +66,7 @@ class FaceEnrollmentNotifier extends StateNotifier<FaceEnrollmentState> {
       clearError: true,
     );
 
-    final imagePaths =
-        state.capturedImages.map((img) => img.filePath).toList();
+    final imagePaths = state.capturedImages.map((img) => img.filePath).toList();
 
     final result = await _repo.enrollFace(
       utilisateurUuid: utilisateurUuid,
@@ -86,6 +88,17 @@ class FaceEnrollmentNotifier extends StateNotifier<FaceEnrollmentState> {
           isUploading: false,
           errorMessage: failure.message,
         );
+      },
+    );
+  }
+
+  Future<bool> deleteFace(String utilisateurUuid) async {
+    final result = await _repo.deleteFace(utilisateurUuid);
+    return result.when(
+      success: (_) => true,
+      failure: (failure) {
+        state = state.copyWith(errorMessage: failure.message);
+        return false;
       },
     );
   }

@@ -62,17 +62,12 @@ class _InternListScreenState extends ConsumerState<InternListScreen> {
 
   void _showDetail(Intern intern) {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => InternDetailScreen(intern: intern),
-      ),
+      MaterialPageRoute(builder: (_) => InternDetailScreen(intern: intern)),
     );
   }
 
   void _showCreateDialog() {
-    showDialog(
-      context: context,
-      builder: (_) => const InternFormScreen(),
-    );
+    showDialog(context: context, builder: (_) => const InternFormScreen());
   }
 
   @override
@@ -128,9 +123,7 @@ class _InternListScreenState extends ConsumerState<InternListScreen> {
             ),
           ),
           const SizedBox(height: Spacing.sm),
-          Expanded(
-            child: _buildBody(state, theme, isDesktop),
-          ),
+          Expanded(child: _buildBody(state, theme, isDesktop)),
         ],
       ),
       floatingActionButton: isDesktop
@@ -187,10 +180,7 @@ class _InternListScreenState extends ConsumerState<InternListScreen> {
           final intern = state.interns[index];
           return Padding(
             padding: const EdgeInsets.only(bottom: Spacing.sm),
-            child: InternCard(
-              intern: intern,
-              onTap: () => _showDetail(intern),
-            ),
+            child: InternCard(intern: intern, onTap: () => _showDetail(intern)),
           );
         },
       ),
@@ -229,8 +219,8 @@ class _InternListScreenState extends ConsumerState<InternListScreen> {
             }).toList(),
           ),
           if (state.hasMore)
-            Padding(
-              padding: const EdgeInsets.all(Spacing.md),
+            const Padding(
+              padding: EdgeInsets.all(Spacing.md),
               child: Center(child: CircularProgressIndicator()),
             ),
         ],

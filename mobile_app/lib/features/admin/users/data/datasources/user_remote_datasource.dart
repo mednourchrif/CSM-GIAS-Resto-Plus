@@ -7,7 +7,7 @@ import '../dto/user_dto.dart';
 class AdminUserRemoteDataSource {
   final Dio _dio;
 
-  AdminUserRemoteDataSource({required Dio dio}) : _dio = dio;
+  AdminUserRemoteDataSource({required this._dio});
 
   Future<UsersListResponse> getUsers({
     required int page,
@@ -22,10 +22,10 @@ class AdminUserRemoteDataSource {
       'page': page,
       'page_size': pageSize,
       if (search != null && search.isNotEmpty) 'search': search,
-      if (sort != null) 'sort': sort,
-      if (order != null) 'order': order,
-      if (typeFilter != null) 'type': typeFilter,
-      if (statutFilter != null) 'statut': statutFilter,
+      'sort': ?sort,
+      'order': ?order,
+      'type': ?typeFilter,
+      'statut': ?statutFilter,
     };
 
     final response = await _dio.get<Map<String, dynamic>>(

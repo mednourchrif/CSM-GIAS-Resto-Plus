@@ -38,8 +38,9 @@ class InternState {
     return InternState(
       isLoading: isLoading ?? this.isLoading,
       interns: interns ?? this.interns,
-      selectedIntern:
-          clearSelected ? null : (selectedIntern ?? this.selectedIntern),
+      selectedIntern: clearSelected
+          ? null
+          : (selectedIntern ?? this.selectedIntern),
       error: clearError ? null : (error ?? this.error),
       page: page ?? this.page,
       totalPages: totalPages ?? this.totalPages,

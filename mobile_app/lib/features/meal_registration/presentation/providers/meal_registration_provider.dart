@@ -24,41 +24,44 @@ final registerMealUseCaseProvider = Provider<RegisterMealUseCase>((ref) {
   return RegisterMealUseCase(ref.watch(mealRepositoryProvider));
 });
 
-final mealRegistrationResultProvider =
-    StateProvider<MealRegistration?>((ref) => null);
+final mealRegistrationResultProvider = StateProvider<MealRegistration?>(
+  (ref) => null,
+);
 
 final mealRegistrationProvider =
     StateNotifierProvider<MealRegistrationNotifier, MealRegistrationState>(
-  (ref) => MealRegistrationNotifier(ref),
-);
+      (ref) => MealRegistrationNotifier(ref),
+    );
 
 final mealCategoriesProvider = FutureProvider<List<MealCategory>>((ref) async {
   final repository = ref.watch(mealRepositoryProvider);
   final result = await repository.getCategories();
   return result.when(
     success: (categories) => categories,
-    failure: (_) => <MealCategory>[],
+    failure: (failure) => throw StateError(failure.message),
   );
 });
 
 class MealRegistrationNotifier extends StateNotifier<MealRegistrationState> {
   final Ref _ref;
+  int _operationId = 0;
 
   MealRegistrationNotifier(this._ref) : super(const MealRegistrationState());
 
   Future<void> registerMeal({
-    String? qrToken,
-    String? userUuid,
+    required String identificationToken,
     required String categorieUuid,
   }) async {
+    if (state.isLoading) return;
+    final operationId = ++_operationId;
     state = state.copyWith(isLoading: true, clearError: true);
 
     final useCase = _ref.read(registerMealUseCaseProvider);
     final result = await useCase(
-      qrToken: qrToken,
-      userUuid: userUuid,
+      identificationToken: identificationToken,
       categorieUuid: categorieUuid,
     );
+    if (operationId != _operationId) return;
 
     result.when(
       success: (registration) {
@@ -72,6 +75,7 @@ class MealRegistrationNotifier extends StateNotifier<MealRegistrationState> {
   }
 
   void reset() {
+    _operationId++;
     _ref.read(mealRegistrationResultProvider.notifier).state = null;
     state = const MealRegistrationState();
   }

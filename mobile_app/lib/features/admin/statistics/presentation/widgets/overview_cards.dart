@@ -6,7 +6,7 @@ import '../../domain/entities/dashboard_stats.dart';
 
 class OverviewCards extends StatelessWidget {
   final DashboardStats stats;
-  const OverviewCards({required this.stats});
+  const OverviewCards({super.key, required this.stats});
 
   @override
   Widget build(BuildContext context) {
@@ -78,8 +78,8 @@ class OverviewCards extends StatelessWidget {
         final crossAxisCount = constraints.maxWidth > 900
             ? 5
             : constraints.maxWidth > 600
-                ? 4
-                : 2;
+            ? 4
+            : 2;
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -147,7 +147,7 @@ class _StatCard extends StatelessWidget {
               tween: IntTween(begin: 0, end: int.tryParse(value) ?? 0),
               duration: AppDurations.slowest,
               curve: Curves.easeOutCubic,
-              builder: (_, v, __) => Text(
+              builder: (_, v, _) => Text(
                 v.toString(),
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w800,

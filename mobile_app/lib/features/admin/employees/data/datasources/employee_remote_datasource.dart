@@ -8,7 +8,7 @@ import '../dto/update_employee_request_dto.dart';
 class EmployeeRemoteDataSource {
   final Dio _dio;
 
-  EmployeeRemoteDataSource({required Dio dio}) : _dio = dio;
+  EmployeeRemoteDataSource({required this._dio});
 
   Future<EmployeesListResponse> getEmployees({
     required int page,
@@ -21,8 +21,8 @@ class EmployeeRemoteDataSource {
       'page': page,
       'page_size': pageSize,
       if (search != null && search.isNotEmpty) 'search': search,
-      if (sort != null) 'sort': sort,
-      if (order != null) 'order': order,
+      'sort': ?sort,
+      'order': ?order,
     };
 
     final response = await _dio.get<Map<String, dynamic>>(

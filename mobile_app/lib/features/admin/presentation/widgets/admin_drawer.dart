@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/colors.dart';
 import '../../../../core/theme/spacing.dart';
+import '../../../../shared/widgets/brand_logo.dart';
 import '../../domain/enums/admin_section.dart';
 
 class AdminDrawer extends StatelessWidget {
@@ -19,7 +20,7 @@ class AdminDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final sections = AdminSection.values;
+    const sections = AdminSection.values;
     final isDark = theme.brightness == Brightness.dark;
 
     return Drawer(
@@ -45,31 +46,10 @@ class AdminDrawer extends StatelessWidget {
                 ),
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(Spacing.radiusMd),
-                    ),
-                    child: const Icon(
-                      Icons.restaurant_menu_rounded,
-                      size: 26,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'CSM-GIAS Resto+',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
+                  const BrandLogo(width: 150),
+                  const SizedBox(height: Spacing.xs),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: Spacing.sm,
@@ -80,9 +60,11 @@ class AdminDrawer extends StatelessWidget {
                       borderRadius: BorderRadius.circular(Spacing.radiusFull),
                     ),
                     child: Text(
-                      'Administration',
+                      'ADMINISTRATION RESTO+',
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.7,
                       ),
                     ),
                   ),
@@ -113,8 +95,9 @@ class AdminDrawer extends StatelessWidget {
                     child: Text(
                       'GESTION',
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant
-                            .withValues(alpha: 0.6),
+                        color: theme.colorScheme.onSurfaceVariant.withValues(
+                          alpha: 0.6,
+                        ),
                         letterSpacing: 1.0,
                       ),
                     ),
@@ -217,8 +200,7 @@ class _DrawerItem extends StatelessWidget {
                     color: isSelected
                         ? theme.colorScheme.onPrimaryContainer
                         : theme.colorScheme.onSurface,
-                    fontWeight:
-                        isSelected ? FontWeight.w700 : FontWeight.w400,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
                   ),
                 ),
               ),

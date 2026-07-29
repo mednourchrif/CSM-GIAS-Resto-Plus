@@ -11,7 +11,12 @@ class MealCard extends StatelessWidget {
   final ThemeData theme;
   final VoidCallback? onTap;
 
-  const MealCard({required this.meal, required this.theme, this.onTap});
+  const MealCard({
+    super.key,
+    required this.meal,
+    required this.theme,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -22,13 +27,13 @@ class MealCard extends StatelessWidget {
         side: BorderSide(color: theme.colorScheme.outlineVariant),
       ),
       child: InkWell(
-        onTap: onTap ?? () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => MealDetailScreen(meal: meal),
-            ),
-          );
-        },
+        onTap:
+            onTap ??
+            () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => MealDetailScreen(meal: meal)),
+              );
+            },
         borderRadius: BorderRadius.circular(Spacing.radiusMd),
         child: Padding(
           padding: const EdgeInsets.all(Spacing.md),
@@ -49,7 +54,9 @@ class MealCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      meal.displayName.isNotEmpty ? meal.displayName : meal.utilisateurUuid,
+                      meal.displayName.isNotEmpty
+                          ? meal.displayName
+                          : meal.utilisateurUuid,
                       style: theme.textTheme.bodyLarge?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -75,10 +82,15 @@ class MealCard extends StatelessWidget {
                         ),
                         if (meal.categorieNom != null)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: Spacing.sm, vertical: Spacing.xs),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: Spacing.sm,
+                              vertical: Spacing.xs,
+                            ),
                             decoration: BoxDecoration(
                               color: theme.colorScheme.secondaryContainer,
-                              borderRadius: BorderRadius.circular(Spacing.radiusSm),
+                              borderRadius: BorderRadius.circular(
+                                Spacing.radiusSm,
+                              ),
                             ),
                             child: Text(
                               meal.categorieNom!,
@@ -94,7 +106,10 @@ class MealCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: Spacing.sm),
-              Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant),
+              Icon(
+                Icons.chevron_right,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ],
           ),
         ),

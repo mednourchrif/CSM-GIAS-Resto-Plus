@@ -16,11 +16,11 @@ class CreateInternRequestDto {
   });
 
   Map<String, dynamic> toJson() => {
-        'nom': nom,
-        'prenom': prenom,
-        'matricule': matricule,
-        'date_debut_stage': dateDebutStage,
-        'date_fin_stage': dateFinStage,
-        if (statut != null) 'statut': statut,
-      };
+    'nom': nom,
+    'prenom': prenom,
+    'matricule': matricule,
+    'date_debut_stage': dateDebutStage,
+    'date_fin_stage': dateFinStage,
+    if (statut != null) 'statut': statut,
+  };
 }

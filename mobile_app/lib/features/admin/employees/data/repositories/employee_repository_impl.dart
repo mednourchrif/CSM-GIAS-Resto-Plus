@@ -13,8 +13,7 @@ import '../dto/update_employee_request_dto.dart';
 class EmployeeRepositoryImpl implements EmployeeRepository {
   final EmployeeRemoteDataSource _dataSource;
 
-  EmployeeRepositoryImpl({required EmployeeRemoteDataSource dataSource})
-      : _dataSource = dataSource;
+  EmployeeRepositoryImpl({required this._dataSource});
 
   @override
   Future<Result<PaginatedEmployees>> getEmployees({
@@ -32,17 +31,21 @@ class EmployeeRepositoryImpl implements EmployeeRepository {
         sort: sort,
         order: order,
       );
-      return Success(PaginatedEmployees(
-        items: response.items.map((e) => e.toDomain()).toList(),
-        total: response.total,
-        page: response.page,
-        pageSize: response.pageSize,
-        totalPages: response.totalPages,
-      ));
+      return Success(
+        PaginatedEmployees(
+          items: response.items.map((e) => e.toDomain()).toList(),
+          total: response.total,
+          page: response.page,
+          pageSize: response.pageSize,
+          totalPages: response.totalPages,
+        ),
+      );
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'employé'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors du chargement des employés.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors du chargement des employés.'),
+      );
     }
   }
 
@@ -54,7 +57,9 @@ class EmployeeRepositoryImpl implements EmployeeRepository {
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'employé'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors du chargement de l\'employé.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors du chargement de l\'employé.'),
+      );
     }
   }
 
@@ -66,7 +71,9 @@ class EmployeeRepositoryImpl implements EmployeeRepository {
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'employé'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors du chargement des détails.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors du chargement des détails.'),
+      );
     }
   }
 
@@ -89,7 +96,9 @@ class EmployeeRepositoryImpl implements EmployeeRepository {
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'employé'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors de la création de l\'employé.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors de la création de l\'employé.'),
+      );
     }
   }
 
@@ -113,7 +122,9 @@ class EmployeeRepositoryImpl implements EmployeeRepository {
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'employé'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors de la modification de l\'employé.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors de la modification de l\'employé.'),
+      );
     }
   }
 
@@ -125,7 +136,9 @@ class EmployeeRepositoryImpl implements EmployeeRepository {
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'employé'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors de la suppression de l\'employé.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors de la suppression de l\'employé.'),
+      );
     }
   }
 }

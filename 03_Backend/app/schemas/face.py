@@ -4,6 +4,7 @@ Defines the API contract for enrollment, verification, and identification
 endpoints.
 """
 
+from datetime import datetime
 from enum import StrEnum
 
 from pydantic import Field
@@ -23,6 +24,7 @@ class FaceStatut(StrEnum):
 
 # -- Requests -----------------------------------------------------------------
 
+
 class FaceEnrollRequest(BaseSchema):
     """Enroll a face embedding for a user."""
 
@@ -35,11 +37,6 @@ class FaceEnrollRequest(BaseSchema):
         ...,
         description="UUID de l'utilisateur à enrôler.",
         examples=["f47ac10b-58cc-4372-a567-0e02b2c3d479"],
-    )
-    categorie_uuid: str | None = Field(
-        None,
-        description="UUID optionnel de la catégorie de repas (enrôlement + repas automatique).",
-        examples=None,
     )
 
 
@@ -56,11 +53,6 @@ class FaceVerifyRequest(BaseSchema):
         description="UUID de l'utilisateur présumé.",
         examples=["f47ac10b-58cc-4372-a567-0e02b2c3d479"],
     )
-    categorie_uuid: str | None = Field(
-        None,
-        description="UUID optionnel de la catégorie de repas (vérification + repas automatique).",
-        examples=None,
-    )
 
 
 class FaceIdentifyRequest(BaseSchema):
@@ -71,14 +63,10 @@ class FaceIdentifyRequest(BaseSchema):
         description="Image JPEG/PNG encodée en Base64.",
         examples=["/9j/4AAQSkZJRg...<base64-encoded-image>..."],
     )
-    categorie_uuid: str | None = Field(
-        None,
-        description="UUID optionnel de la catégorie de repas (identification + repas automatique).",
-        examples=None,
-    )
 
 
 # -- Responses ----------------------------------------------------------------
+
 
 class FaceEmbeddingResponse(BaseResponse):
     """Face embedding metadata (embedding vector is never exposed)."""
@@ -120,3 +108,5 @@ class FaceIdentifyResponse(FaceMatchData):
     """Result of a face identification (includes user type)."""
 
     type: str | None = None
+    identification_token: str | None = None
+    identification_expires_at: datetime | None = None

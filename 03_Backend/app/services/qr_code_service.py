@@ -11,25 +11,25 @@ The service provides five core operations:
 5. **Get / Download** — Retrieve QR metadata or the PNG image.
 """
 
-from datetime import UTC, datetime
+import base64
+from typing import overload
 
 from loguru import logger
 from sqlalchemy.orm import Session
-
-from sqlalchemy import select
 
 from app.core.exceptions import BusinessException, NotFoundException
 from app.models.admin import Admin
 from app.models.intern import Intern
 from app.models.qr_code import QrCode
-from app.models.user import StatutUtilisateur, User
+from app.models.user import StatutUtilisateur
 from app.models.visitor import Visitor
 from app.repositories.qr_code import QrCodeRepository
 from app.repositories.user import UserRepository
 from app.schemas.pagination import PaginatedResult
 from app.schemas.qr_code import QrValidationResponse, ValidationStatut
+from app.security.qr_payload import QrPayloadCipher
 from app.utils.date_utils import end_of_day, is_expired, now_utc
-from app.utils.qr_code import generate_qr_base64, generate_qr_image, generate_token, hash_token
+from app.utils.qr_code import generate_qr_base64, generate_token, hash_token
 
 
 class QrCodeService:
@@ -39,9 +39,11 @@ class QrCodeService:
         self,
         qr_repo: QrCodeRepository | None = None,
         user_repo: UserRepository | None = None,
+        payload_cipher: QrPayloadCipher | None = None,
     ) -> None:
         self._qr_repo = qr_repo or QrCodeRepository()
         self._user_repo = user_repo or UserRepository()
+        self._payload_cipher = payload_cipher or QrPayloadCipher()
 
     # ==================================================================
     # Generate
@@ -71,14 +73,11 @@ class QrCodeService:
             statut="ACTIF",
             date_expiration=expires_at,
             cree_par_uuid=admin.uuid,
-            metadata_json=qr_base64,
+            metadata_json=self._payload_cipher.encrypt(qr_base64),
         )
 
-        logger.info(
-            "QR generated for intern",
-            extra={"qr_uuid": qr.uuid, "intern_uuid": intern_uuid, "admin": admin.uuid},
-        )
-        qr._raw_token = token
+        logger.info("QR generated for intern")
+        qr.raw_token = token
         return qr
 
     def generate_for_visitor(self, db: Session, visitor_uuid: str, admin: Admin) -> QrCode:
@@ -105,14 +104,11 @@ class QrCodeService:
             statut="ACTIF",
             date_expiration=expires_at,
             cree_par_uuid=admin.uuid,
-            metadata_json=qr_base64,
+            metadata_json=self._payload_cipher.encrypt(qr_base64),
         )
 
-        logger.info(
-            "QR generated for visitor",
-            extra={"qr_uuid": qr.uuid, "visitor_uuid": visitor_uuid, "admin": admin.uuid},
-        )
-        qr._raw_token = token
+        logger.info("QR generated for visitor")
+        qr.raw_token = token
         return qr
 
     # ==================================================================
@@ -136,7 +132,9 @@ class QrCodeService:
         qr = self._qr_repo.get_by_hash(db, qr_hash)
 
         if qr is None:
-            return QrValidationResponse(statut=ValidationStatut.NOT_FOUND, message="QR code introuvable.")
+            return QrValidationResponse(
+                statut=ValidationStatut.NOT_FOUND, message="QR code introuvable."
+            )
 
         if qr.statut == "REVOQUE":
             return QrValidationResponse(
@@ -160,7 +158,11 @@ class QrCodeService:
             )
 
         owner = self._user_repo.get_by_uuid(db, qr.proprietaire_uuid)
-        if owner is None or owner.statut != StatutUtilisateur.ACTIF or owner.date_suppression is not None:
+        if (
+            owner is None
+            or owner.statut != StatutUtilisateur.ACTIF
+            or owner.date_suppression is not None
+        ):
             return QrValidationResponse(
                 statut=ValidationStatut.OWNER_DISABLED,
                 message="Compte propriétaire désactivé ou supprimé.",
@@ -173,10 +175,7 @@ class QrCodeService:
         qr.nombre_validations = (qr.nombre_validations or 0) + 1
         db.flush()
 
-        logger.info(
-            "QR validated",
-            extra={"qr_uuid": qr.uuid, "proprietaire_uuid": qr.proprietaire_uuid},
-        )
+        logger.info("QR validated")
 
         return QrValidationResponse(
             statut=ValidationStatut.VALID,
@@ -194,7 +193,9 @@ class QrCodeService:
     # Revoke
     # ==================================================================
 
-    def revoke(self, db: Session, qr_uuid: str, admin: Admin, reason: str = "Révoqué manuellement") -> QrCode:
+    def revoke(
+        self, db: Session, qr_uuid: str, admin: Admin, reason: str = "Révoqué manuellement"
+    ) -> QrCode:
         """Revoke a QR code manually.
 
         :param reason: One of ``Perdu``, ``Regénération``, ``Stage terminé``,
@@ -213,10 +214,7 @@ class QrCodeService:
         qr.motif_revocation = reason
         db.flush()
 
-        logger.info(
-            "QR revoked",
-            extra={"qr_uuid": qr_uuid, "reason": reason, "admin": admin.uuid},
-        )
+        logger.info("QR revoked")
         return qr
 
     # ==================================================================
@@ -240,18 +238,9 @@ class QrCodeService:
     # Get & Download
     # ==================================================================
 
-    def get(self, db: Session, qr_uuid: str, include_token: bool = False) -> QrCode:
-        """Retrieve a QR code by its UUID.
-
-        :param include_token: If ``True``, attaches ``_raw_token`` to the
-            instance for generating the QR image.  This is only possible
-            if the QR was just created in the same transaction (the raw
-            token is never persisted).
-        """
-        qr = self._get_qr(db, qr_uuid)
-
-        qr._include_token = include_token
-        return qr
+    def get(self, db: Session, qr_uuid: str) -> QrCode:
+        """Retrieve a QR code by its UUID."""
+        return self._get_qr(db, qr_uuid)
 
     def download(self, db: Session, qr_uuid: str) -> tuple[bytes, str]:
         """Return the QR PNG image bytes and the owner type.
@@ -266,14 +255,25 @@ class QrCodeService:
 
     def _get_png_from_metadata(self, qr: QrCode) -> bytes:
         """Decode a base64 data URI stored in metadata_json back to PNG bytes."""
-        import base64
-
-        if not qr.metadata_json or not qr.metadata_json.startswith("data:image/png;base64,"):
+        if not qr.metadata_json:
             raise BusinessException(
                 message="Aucune image QR stockée. Régénérez le QR code.",
             )
-        b64_data = qr.metadata_json.split(",", 1)[1]
+        qr_base64 = self._payload_cipher.decrypt(qr.metadata_json)
+        if not qr_base64.startswith("data:image/png;base64,"):
+            raise BusinessException(
+                message="Image QR stockée invalide. Régénérez le QR code.",
+            )
+        b64_data = qr_base64.split(",", 1)[1]
         return base64.b64decode(b64_data)
+
+    def get_image_base64(self, qr: QrCode) -> str:
+        """Return the decrypted QR image for an authorized admin response."""
+        if not qr.metadata_json:
+            raise BusinessException(
+                message="Aucune image QR stockée. Régénérez le QR code.",
+            )
+        return self._payload_cipher.decrypt(qr.metadata_json)
 
     def get_history(self, db: Session, owner_uuid: str) -> list[QrCode]:
         """Return all QR codes ever issued to an owner."""
@@ -318,12 +318,27 @@ class QrCodeService:
     # Internal helpers
     # ==================================================================
 
-    def _load_owner(self, db: Session, uuid: str, model_cls: type, label: str):
-        """Load a polymorphic owner by UUID and verify it is active."""
-        stmt = select(model_cls).where(model_cls.uuid == uuid)
-        owner = db.execute(stmt).scalar_one_or_none()
+    @overload
+    def _load_owner(
+        self, db: Session, uuid: str, model_cls: type[Intern], label: str
+    ) -> Intern: ...
 
-        if owner is None or owner.date_suppression is not None:
+    @overload
+    def _load_owner(
+        self, db: Session, uuid: str, model_cls: type[Visitor], label: str
+    ) -> Visitor: ...
+
+    def _load_owner(
+        self,
+        db: Session,
+        uuid: str,
+        model_cls: type[Intern] | type[Visitor],
+        label: str,
+    ) -> Intern | Visitor:
+        """Load a polymorphic owner by UUID and verify it is active."""
+        owner = self._user_repo.get_by_uuid(db, uuid)
+
+        if owner is None or not isinstance(owner, model_cls) or owner.date_suppression is not None:
             raise NotFoundException(message=f"{label} {uuid} introuvable.")
         if owner.statut != StatutUtilisateur.ACTIF:
             raise BusinessException(
@@ -341,10 +356,7 @@ class QrCodeService:
             active.revoque_par_uuid = admin.uuid
             active.motif_revocation = reason
             db.flush()
-            logger.info(
-                "Previous QR revoked during regeneration",
-                extra={"qr_uuid": active.uuid, "owner_uuid": owner_uuid, "admin": admin.uuid},
-            )
+            logger.info("Previous QR revoked during regeneration")
 
     def _get_qr(self, db: Session, qr_uuid: str) -> QrCode:
         """Load a QR code by UUID or raise."""

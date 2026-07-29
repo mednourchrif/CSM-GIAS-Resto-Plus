@@ -16,6 +16,7 @@ import os
 
 os.environ.setdefault("APP_ENVIRONMENT", "testing")
 
+import pytest  # noqa: E402 — must come after os.environ
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session
 
@@ -25,8 +26,6 @@ from app.models.role import Role
 from app.models.user import User
 from app.utils.password import hash_password, verify_password
 from scripts.seed import seed
-
-import pytest  # noqa: E402 — must come after os.environ
 
 # =========================================================================
 # Test engine (in-memory SQLite, shared cache)
@@ -131,8 +130,12 @@ class TestSeedIdempotent:
     def test_double_seed_does_not_duplicate_admin(self, db_session: Session) -> None:
         seed(db_session)
         seed(db_session)
-        stmt = select(func.count()).select_from(User).where(  # type: ignore[arg-type]
-            User.email == "admin@csm-gias.tn",
+        stmt = (
+            select(func.count())
+            .select_from(User)
+            .where(  # type: ignore[arg-type]
+                User.email == "admin@csm-gias.tn",
+            )
         )
         count = db_session.execute(stmt).scalar()
         assert count == 1
@@ -140,8 +143,12 @@ class TestSeedIdempotent:
     def test_double_seed_does_not_duplicate_receptionist(self, db_session: Session) -> None:
         seed(db_session)
         seed(db_session)
-        stmt = select(func.count()).select_from(User).where(  # type: ignore[arg-type]
-            User.email == "reception@csm-gias.tn",
+        stmt = (
+            select(func.count())
+            .select_from(User)
+            .where(  # type: ignore[arg-type]
+                User.email == "reception@csm-gias.tn",
+            )
         )
         count = db_session.execute(stmt).scalar()
         assert count == 1
@@ -273,10 +280,11 @@ class TestPersistenceAcrossSessions:
         self,
         db_session: Session,
     ) -> None:
-        from app.models.visitor import Visitor
-        from app.models.user import StatutUtilisateur
-        from app.repositories.visitor import VisitorRepository
         from datetime import date
+
+        from app.models.user import StatutUtilisateur
+        from app.models.visitor import Visitor
+        from app.repositories.visitor import VisitorRepository
 
         repo = VisitorRepository()
         visitor = repo.create(

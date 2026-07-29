@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.dependencies import get_db
 from app.models.admin import Admin
+from app.models.user import StatutUtilisateur
 from app.schemas.pagination import PaginationParams
 from app.schemas.response import PaginatedResponse, SuccessResponse
 from app.schemas.user import (
@@ -34,8 +35,12 @@ _audit = AuditLogService()
 )
 async def list_users(
     params: PaginationParams = Depends(),
-    type_filter: str | None = Query(None, alias="type", description="Filter by type (ADMINISTRATEUR or RECEPTION)"),
-    statut_filter: str | None = Query(None, alias="statut", description="Filter by status (ACTIF or INACTIF)"),
+    type_filter: str | None = Query(
+        None, alias="type", description="Filter by type (ADMINISTRATEUR or RECEPTION)"
+    ),
+    statut_filter: str | None = Query(
+        None, alias="statut", description="Filter by status (ACTIF or INACTIF)"
+    ),
     db: Session = Depends(get_db),
     admin: Admin = Depends(require_admin),
 ) -> PaginatedResponse[UserAdminResponse]:
@@ -78,7 +83,8 @@ async def create_user(
 ) -> SuccessResponse[UserAdminResponse]:
     user = _service.create(db, body, admin)
     _audit.log_user_created(
-        db, admin=admin,
+        db,
+        admin=admin,
         user_uuid=user.uuid,
         user_name=f"{user.prenom} {user.nom}",
     )
@@ -98,7 +104,8 @@ async def update_user(
 ) -> SuccessResponse[UserAdminResponse]:
     user = _service.update(db, uuid, body, admin)
     _audit.log_user_updated(
-        db, admin=admin,
+        db,
+        admin=admin,
         user_uuid=uuid,
         user_name=f"{user.prenom} {user.nom}",
     )
@@ -109,18 +116,19 @@ async def update_user(
     "/{uuid}/password",
     summary="Réinitialiser le mot de passe",
     description="Réinitialise le mot de passe d'un utilisateur.",
-    response_model=SuccessResponse,
+    response_model=SuccessResponse[None],
 )
 async def reset_password(
     uuid: str,
     body: UserAdminPasswordReset,
     db: Session = Depends(get_db),
     admin: Admin = Depends(require_admin),
-) -> SuccessResponse:
+) -> SuccessResponse[None]:
     user = _service.get(db, uuid)
     _service.reset_password(db, uuid, body, admin)
     _audit.log_password_changed(
-        db, admin=admin,
+        db,
+        admin=admin,
         user_uuid=uuid,
         user_name=f"{user.prenom} {user.nom}",
     )
@@ -138,21 +146,27 @@ async def set_user_status(
     db: Session = Depends(get_db),
     admin: Admin = Depends(require_admin),
 ) -> SuccessResponse[UserAdminResponse]:
-    from app.models.user import StatutUtilisateur
-
     user = _service.set_status(db, uuid, StatutUtilisateur(statut), admin)
     if statut == "ACTIF":
         _audit.log(
-            db, action="USER_ACTIVATED", user_name=f"{admin.prenom} {admin.nom}",
-            user_role="ADMIN", user_uuid=admin.uuid,
-            entity_type="USER", entity_uuid=uuid,
+            db,
+            action="USER_ACTIVATED",
+            user_name=f"{admin.prenom} {admin.nom}",
+            user_role="ADMIN",
+            user_uuid=admin.uuid,
+            entity_type="USER",
+            entity_uuid=uuid,
             entity_name=f"{user.prenom} {user.nom}",
         )
     else:
         _audit.log(
-            db, action="USER_DEACTIVATED", user_name=f"{admin.prenom} {admin.nom}",
-            user_role="ADMIN", user_uuid=admin.uuid,
-            entity_type="USER", entity_uuid=uuid,
+            db,
+            action="USER_DEACTIVATED",
+            user_name=f"{admin.prenom} {admin.nom}",
+            user_role="ADMIN",
+            user_uuid=admin.uuid,
+            entity_type="USER",
+            entity_uuid=uuid,
             entity_name=f"{user.prenom} {user.nom}",
         )
     return SuccessResponse(data=user)
@@ -173,7 +187,8 @@ async def delete_user(
     user_name = f"{user.prenom} {user.nom}"
     _service.delete(db, uuid, admin)
     _audit.log_user_deleted(
-        db, admin=admin,
+        db,
+        admin=admin,
         user_uuid=uuid,
         user_name=user_name,
     )

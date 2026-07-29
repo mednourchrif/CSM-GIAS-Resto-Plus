@@ -6,6 +6,7 @@ from app.api.v1 import (
     employees,
     face,
     health,
+    identification,
     interns,
     meals,
     qr_codes,
@@ -21,6 +22,7 @@ router = APIRouter()
 router.include_router(audit.router)
 router.include_router(health.router, tags=["health"])
 router.include_router(auth.router)
+router.include_router(identification.router)
 router.include_router(employees.router)
 router.include_router(interns.router)
 router.include_router(visitors.router)

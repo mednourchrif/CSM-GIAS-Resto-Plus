@@ -6,20 +6,27 @@ import '../../domain/entities/dashboard_stats.dart';
 
 class RecentActivityWidget extends StatelessWidget {
   final List<RecentRegistrationItem> items;
-  const RecentActivityWidget({required this.items});
+  const RecentActivityWidget({super.key, required this.items});
 
   @override
   Widget build(BuildContext context) {
     if (items.isEmpty) {
       return Center(
-        child: Text('Aucune activité récente',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+        child: Text(
+          'Aucune activité récente',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
       );
     }
 
     return ListView.separated(
       itemCount: items.length,
-      separatorBuilder: (_, __) => Divider(height: 1, color: Theme.of(context).dividerColor.withValues(alpha: 0.3)),
+      separatorBuilder: (_, _) => Divider(
+        height: 1,
+        color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
+      ),
       itemBuilder: (context, index) {
         final item = items[index];
         final theme = Theme.of(context);
@@ -45,7 +52,9 @@ class RecentActivityWidget extends StatelessWidget {
             ),
           ),
           title: Text(
-            item.displayName.isNotEmpty ? item.displayName : item.utilisateurUuid,
+            item.displayName.isNotEmpty
+                ? item.displayName
+                : item.utilisateurUuid,
             style: theme.textTheme.bodySmall?.copyWith(
               fontWeight: FontWeight.w600,
               color: theme.colorScheme.onSurface,

@@ -3,6 +3,7 @@ import '../entities/setting.dart';
 
 abstract class SettingsRepository {
   Future<Result<AppSettings>> getSettings();
+  Future<Result<AppSettings>> getKioskSettings();
   Future<Result<AppSettings>> updateSettings(Map<String, String> settings);
   Future<Result<AppSettings>> resetToDefaults();
   Future<Result<VersionInfo>> getVersion();

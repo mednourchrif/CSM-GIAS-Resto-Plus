@@ -13,11 +13,11 @@ class MealHistoryNotifier extends StateNotifier<MealHistoryState> {
   final GetMealStatsUseCase _getMealStats;
 
   MealHistoryNotifier(this._getMealHistory, this._getMealStats)
-      : super(const MealHistoryState());
+    : super(const MealHistoryState());
 
   Future<void> loadMeals({bool refresh = false}) async {
     if (state.isLoading) return;
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true);
     try {
       final page = refresh ? 1 : state.currentPage;
       final result = await _getMealHistory(
@@ -39,10 +39,7 @@ class MealHistoryNotifier extends StateNotifier<MealHistoryState> {
         isLoading: false,
       );
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
@@ -77,20 +74,13 @@ class MealHistoryNotifier extends StateNotifier<MealHistoryState> {
   }
 
   void setDateFilter({String? dateFrom, String? dateTo}) {
-    state = state.copyWith(
-      dateFrom: dateFrom,
-      dateTo: dateTo,
-      currentPage: 1,
-    );
+    state = state.copyWith(dateFrom: dateFrom, dateTo: dateTo, currentPage: 1);
     loadMeals();
     loadStats();
   }
 
   void setCategorieFilter(String? categorieUuid) {
-    state = state.copyWith(
-      categorieUuid: categorieUuid,
-      currentPage: 1,
-    );
+    state = state.copyWith(categorieUuid: categorieUuid, currentPage: 1);
     loadMeals();
     loadStats();
   }
@@ -104,10 +94,7 @@ class MealHistoryNotifier extends StateNotifier<MealHistoryState> {
   }
 
   void setUserTypeFilter(String? userType) {
-    state = state.copyWith(
-      userType: userType,
-      currentPage: 1,
-    );
+    state = state.copyWith(userType: userType, currentPage: 1);
     loadMeals();
     loadStats();
   }
@@ -127,8 +114,8 @@ class MealHistoryNotifier extends StateNotifier<MealHistoryState> {
 
 final mealHistoryRemoteDataSourceProvider =
     Provider<MealHistoryRemoteDataSource>((ref) {
-  return MealHistoryRemoteDataSource(dio: ref.watch(apiClientProvider).dio);
-});
+      return MealHistoryRemoteDataSource(dio: ref.watch(apiClientProvider).dio);
+    });
 
 final mealHistoryRepositoryProvider = Provider<MealHistoryRepository>((ref) {
   return MealHistoryRepositoryImpl(
@@ -146,8 +133,8 @@ final getMealStatsUseCaseProvider = Provider<GetMealStatsUseCase>((ref) {
 
 final mealHistoryProvider =
     StateNotifierProvider<MealHistoryNotifier, MealHistoryState>((ref) {
-  return MealHistoryNotifier(
-    ref.watch(getMealHistoryUseCaseProvider),
-    ref.watch(getMealStatsUseCaseProvider),
-  );
-});
+      return MealHistoryNotifier(
+        ref.watch(getMealHistoryUseCaseProvider),
+        ref.watch(getMealStatsUseCaseProvider),
+      );
+    });

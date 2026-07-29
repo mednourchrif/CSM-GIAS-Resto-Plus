@@ -53,8 +53,12 @@ class ResponsiveLayout extends StatelessWidget {
   /// Horizontal page padding appropriate for screen size.
   static EdgeInsets screenPadding(BuildContext context) {
     final w = MediaQuery.sizeOf(context).width;
-    if (w >= desktopBreakpoint) return const EdgeInsets.symmetric(horizontal: Spacing.xxl);
-    if (w >= tabletBreakpoint) return const EdgeInsets.symmetric(horizontal: Spacing.xl);
+    if (w >= desktopBreakpoint) {
+      return const EdgeInsets.symmetric(horizontal: Spacing.xxl);
+    }
+    if (w >= tabletBreakpoint) {
+      return const EdgeInsets.symmetric(horizontal: Spacing.xl);
+    }
     return const EdgeInsets.symmetric(horizontal: Spacing.md);
   }
 

@@ -10,9 +10,7 @@ import '../datasources/face_enrollment_remote_datasource.dart';
 class FaceEnrollmentRepositoryImpl implements FaceEnrollmentRepository {
   final FaceEnrollmentRemoteDataSource _dataSource;
 
-  FaceEnrollmentRepositoryImpl({
-    required FaceEnrollmentRemoteDataSource dataSource,
-  }) : _dataSource = dataSource;
+  FaceEnrollmentRepositoryImpl({required this._dataSource});
 
   @override
   Future<Result<FaceEnrollmentResult>> enrollFace({
@@ -25,16 +23,31 @@ class FaceEnrollmentRepositoryImpl implements FaceEnrollmentRepository {
         imagePaths: imagePaths,
       );
       return Success(
-        FaceEnrollmentResult(
-          success: true,
-          imagesUploaded: imagePaths.length,
-        ),
+        FaceEnrollmentResult(success: true, imagesUploaded: imagePaths.length),
       );
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'enrôlement facial'));
     } catch (e) {
+      return const Fail(
+        ApiFailure(message: "Erreur lors de l'enrôlement facial."),
+      );
+    }
+  }
+
+  @override
+  Future<Result<bool>> deleteFace(String utilisateurUuid) async {
+    try {
+      await _dataSource.deleteFace(utilisateurUuid);
+      return const Success(true);
+    } on DioException catch (error) {
+      return Fail(mapDioError(error, resourceName: 'empreinte faciale'));
+    } catch (error, stackTrace) {
       return Fail(
-        const ApiFailure(message: "Erreur lors de l'enrôlement facial."),
+        ApiFailure(
+          message: "Impossible de supprimer l'empreinte faciale.",
+          originalError: error,
+          stackTrace: stackTrace,
+        ),
       );
     }
   }

@@ -20,7 +20,10 @@ class QrStatusBadge extends StatelessWidget {
     };
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: Spacing.sm, vertical: Spacing.xxs + 1),
+      padding: const EdgeInsets.symmetric(
+        horizontal: Spacing.sm,
+        vertical: Spacing.xxs + 1,
+      ),
       decoration: BoxDecoration(
         color: color.withAlpha(25),
         borderRadius: BorderRadius.circular(Spacing.radiusSm),
@@ -41,14 +44,18 @@ class QrTypeBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (Color color, IconData icon, String label) = switch (type.toUpperCase()) {
+    final (Color color, IconData icon, String label) = switch (type
+        .toUpperCase()) {
       'STAGIAIRE' => (AppColors.info, Icons.school_rounded, 'Stagiaire'),
       'VISITEUR' => (AppColors.tertiary, Icons.group_rounded, 'Visiteur'),
       _ => (AppColors.outline, Icons.help_outline_rounded, type),
     };
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: Spacing.sm, vertical: Spacing.xxs + 1),
+      padding: const EdgeInsets.symmetric(
+        horizontal: Spacing.sm,
+        vertical: Spacing.xxs + 1,
+      ),
       decoration: BoxDecoration(
         color: color.withAlpha(25),
         borderRadius: BorderRadius.circular(Spacing.radiusSm),
@@ -59,10 +66,7 @@ class QrTypeBadge extends StatelessWidget {
         children: [
           Icon(icon, size: 11, color: color),
           const SizedBox(width: 3),
-          Text(
-            label,
-            style: AppTypography.badgeLabel.copyWith(color: color),
-          ),
+          Text(label, style: AppTypography.badgeLabel.copyWith(color: color)),
         ],
       ),
     );
@@ -116,7 +120,10 @@ class QrCard extends StatelessWidget {
                   const SizedBox(width: Spacing.sm),
                   QrStatusBadge(status: qrCode.statut),
                   const SizedBox(width: Spacing.sm),
-                  Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant),
+                  Icon(
+                    Icons.chevron_right,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ],
               ),
               const SizedBox(height: Spacing.xs),

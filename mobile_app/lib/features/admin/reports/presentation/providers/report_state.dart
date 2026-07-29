@@ -35,7 +35,9 @@ class ReportState {
       isLoading: isLoading ?? this.isLoading,
       isExporting: isExporting ?? this.isExporting,
       error: clearError ? null : error ?? this.error,
-      exportSuccess: clearExportSuccess ? null : exportSuccess ?? this.exportSuccess,
+      exportSuccess: clearExportSuccess
+          ? null
+          : exportSuccess ?? this.exportSuccess,
     );
   }
 }

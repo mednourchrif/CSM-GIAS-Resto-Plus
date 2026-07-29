@@ -45,9 +45,13 @@ class SettingsState {
       settings: settings ?? this.settings,
       version: version ?? this.version,
       databaseStatus: databaseStatus ?? this.databaseStatus,
-      pendingChanges: clearPendingChanges ? {} : (pendingChanges ?? this.pendingChanges),
+      pendingChanges: clearPendingChanges
+          ? {}
+          : (pendingChanges ?? this.pendingChanges),
       error: clearError ? null : (error ?? this.error),
-      successMessage: clearSuccessMessage ? null : (successMessage ?? this.successMessage),
+      successMessage: clearSuccessMessage
+          ? null
+          : (successMessage ?? this.successMessage),
       isResetting: isResetting ?? this.isResetting,
     );
   }

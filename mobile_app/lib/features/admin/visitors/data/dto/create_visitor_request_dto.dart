@@ -16,11 +16,11 @@ class CreateVisitorRequestDto {
   });
 
   Map<String, dynamic> toJson() => {
-        'nom': nom,
-        'prenom': prenom,
-        if (email != null) 'email': email,
-        if (societe != null) 'societe': societe,
-        'date_visite': dateVisite,
-        if (statut != null) 'statut': statut,
-      };
+    'nom': nom,
+    'prenom': prenom,
+    if (email != null) 'email': email,
+    if (societe != null) 'societe': societe,
+    'date_visite': dateVisite,
+    if (statut != null) 'statut': statut,
+  };
 }

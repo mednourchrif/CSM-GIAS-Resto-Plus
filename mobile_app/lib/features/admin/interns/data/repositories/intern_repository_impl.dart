@@ -12,8 +12,7 @@ import '../dto/update_intern_request_dto.dart';
 class InternRepositoryImpl implements InternRepository {
   final InternRemoteDataSource _dataSource;
 
-  InternRepositoryImpl({required InternRemoteDataSource dataSource})
-      : _dataSource = dataSource;
+  InternRepositoryImpl({required this._dataSource});
 
   @override
   Future<Result<PaginatedInterns>> getInterns({
@@ -31,17 +30,21 @@ class InternRepositoryImpl implements InternRepository {
         sort: sort,
         order: order,
       );
-      return Success(PaginatedInterns(
-        items: response.items.map((e) => e.toDomain()).toList(),
-        total: response.total,
-        page: response.page,
-        pageSize: response.pageSize,
-        totalPages: response.totalPages,
-      ));
+      return Success(
+        PaginatedInterns(
+          items: response.items.map((e) => e.toDomain()).toList(),
+          total: response.total,
+          page: response.page,
+          pageSize: response.pageSize,
+          totalPages: response.totalPages,
+        ),
+      );
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'stagiaire'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors du chargement des stagiaires.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors du chargement des stagiaires.'),
+      );
     }
   }
 
@@ -53,7 +56,9 @@ class InternRepositoryImpl implements InternRepository {
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'stagiaire'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors du chargement du stagiaire.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors du chargement du stagiaire.'),
+      );
     }
   }
 
@@ -80,7 +85,9 @@ class InternRepositoryImpl implements InternRepository {
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'stagiaire'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors de la création du stagiaire.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors de la création du stagiaire.'),
+      );
     }
   }
 
@@ -99,7 +106,9 @@ class InternRepositoryImpl implements InternRepository {
         nom: nom,
         prenom: prenom,
         matricule: matricule,
-        dateDebutStage: dateDebutStage != null ? _formatDate(dateDebutStage) : null,
+        dateDebutStage: dateDebutStage != null
+            ? _formatDate(dateDebutStage)
+            : null,
         dateFinStage: dateFinStage != null ? _formatDate(dateFinStage) : null,
         statut: statut,
       );
@@ -108,7 +117,9 @@ class InternRepositoryImpl implements InternRepository {
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'stagiaire'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors de la modification du stagiaire.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors de la modification du stagiaire.'),
+      );
     }
   }
 
@@ -120,7 +131,9 @@ class InternRepositoryImpl implements InternRepository {
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'stagiaire'));
     } catch (e) {
-      return Fail(ApiFailure(message: 'Erreur lors de la suppression du stagiaire.'));
+      return const Fail(
+        ApiFailure(message: 'Erreur lors de la suppression du stagiaire.'),
+      );
     }
   }
 

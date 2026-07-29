@@ -38,8 +38,9 @@ class VisitorState {
     return VisitorState(
       isLoading: isLoading ?? this.isLoading,
       visitors: visitors ?? this.visitors,
-      selectedVisitor:
-          clearSelected ? null : (selectedVisitor ?? this.selectedVisitor),
+      selectedVisitor: clearSelected
+          ? null
+          : (selectedVisitor ?? this.selectedVisitor),
       error: clearError ? null : (error ?? this.error),
       page: page ?? this.page,
       totalPages: totalPages ?? this.totalPages,

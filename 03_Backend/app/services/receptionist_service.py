@@ -1,5 +1,7 @@
 """Receptionist service — business logic for receptionist management."""
 
+from datetime import UTC, datetime
+
 from loguru import logger
 from sqlalchemy.orm import Session
 
@@ -35,7 +37,7 @@ class ReceptionistService:
         attrs["updated_by_id"] = admin.uuid
 
         receptionist = self._receptionist_repo.create(db, **attrs)
-        logger.info("Receptionist created", extra={"uuid": receptionist.uuid, "admin": admin.uuid})
+        logger.info("Receptionist created")
         return receptionist
 
     def get(self, db: Session, uuid: str) -> Receptionist:
@@ -44,14 +46,20 @@ class ReceptionistService:
             raise NotFoundException(message=f"Réceptionniste {uuid} introuvable.")
         return receptionist
 
-    def update(self, db: Session, uuid: str, data: ReceptionistUpdate, admin: Admin) -> Receptionist:
+    def update(
+        self, db: Session, uuid: str, data: ReceptionistUpdate, admin: Admin
+    ) -> Receptionist:
         receptionist = self.get(db, uuid)
 
         update_data = data.model_dump(exclude_unset=True, exclude={"mot_de_passe"})
         if data.mot_de_passe:
             update_data["mot_de_passe"] = hash_password(data.mot_de_passe)
 
-        if "email" in update_data and update_data["email"] and update_data["email"] != receptionist.email:
+        if (
+            "email" in update_data
+            and update_data["email"]
+            and update_data["email"] != receptionist.email
+        ):
             self._validate_unique_email(db, update_data["email"])
 
         update_data["updated_by_id"] = admin.uuid
@@ -59,16 +67,15 @@ class ReceptionistService:
         updated = self._receptionist_repo.update(db, receptionist.id, **update_data)
         if updated is None:
             raise NotFoundException(message=f"Réceptionniste {uuid} introuvable.")
-        logger.info("Receptionist updated", extra={"uuid": uuid, "admin": admin.uuid})
+        logger.info("Receptionist updated")
         return updated
 
     def delete(self, db: Session, uuid: str, admin: Admin) -> None:
-        from datetime import UTC, datetime
-
         receptionist = self.get(db, uuid)
         receptionist.date_suppression = datetime.now(UTC)
+        receptionist.updated_by_id = admin.uuid
         db.flush()
-        logger.info("Receptionist soft-deleted", extra={"uuid": uuid, "admin": admin.uuid})
+        logger.info("Receptionist soft-deleted")
 
     def get_list(self, db: Session, params: PaginationParams) -> PaginatedResult[Receptionist]:
         items, total = self._receptionist_repo.search_paginated(

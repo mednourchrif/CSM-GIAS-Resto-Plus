@@ -4,23 +4,23 @@ import '../../../core/theme/spacing.dart';
 
 /// Standardized status badge with icon prefix and design system colors.
 ///
-/// Pass [customLabels] to override the defaults.
 class StatusBadge extends StatelessWidget {
   final String status;
-  final Map<String, _StatusConfig>? customLabels;
 
-  const StatusBadge({super.key, required this.status, this.customLabels});
+  const StatusBadge({super.key, required this.status});
 
   @override
   Widget build(BuildContext context) {
-    final labels = customLabels ?? _defaultLabels;
-    final config = labels.entries.firstWhere(
+    final config = _defaultLabels.entries.firstWhere(
       (e) => e.key == status.toUpperCase(),
-      orElse: () => const MapEntry('_default', _StatusConfig(
-        label: 'Inconnu',
-        color: Colors.grey,
-        icon: Icons.help_outline_rounded,
-      )),
+      orElse: () => const MapEntry(
+        '_default',
+        _StatusConfig(
+          label: 'Inconnu',
+          color: Colors.grey,
+          icon: Icons.help_outline_rounded,
+        ),
+      ),
     );
 
     final color = config.value.color;
@@ -44,10 +44,7 @@ class StatusBadge extends StatelessWidget {
             Icon(icon, size: 11, color: color),
             const SizedBox(width: 3),
           ],
-          Text(
-            label,
-            style: AppTypography.badgeLabel.copyWith(color: color),
-          ),
+          Text(label, style: AppTypography.badgeLabel.copyWith(color: color)),
         ],
       ),
     );
@@ -59,11 +56,7 @@ class _StatusConfig {
   final Color color;
   final IconData? icon;
 
-  const _StatusConfig({
-    required this.label,
-    required this.color,
-    this.icon,
-  });
+  const _StatusConfig({required this.label, required this.color, this.icon});
 }
 
 const Map<String, _StatusConfig> _defaultLabels = {
@@ -92,9 +85,9 @@ const Map<String, _StatusConfig> _defaultLabels = {
 // Convenience import — expose AppTypography from colors file location
 class AppTypography {
   static TextStyle get badgeLabel => const TextStyle(
-        fontSize: 11,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 0.4,
-        height: 1.2,
-      );
+    fontSize: 11,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.4,
+    height: 1.2,
+  );
 }

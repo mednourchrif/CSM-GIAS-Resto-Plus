@@ -1,33 +1,135 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/theme/colors.dart';
 import '../../../../core/theme/spacing.dart';
 import '../../../../shared/widgets/animated_fade_in.dart';
 import '../../../../shared/widgets/error_state.dart';
 import '../../../../shared/widgets/responsive_layout.dart';
 import '../../../meal_registration/domain/entities/meal_category.dart';
 import '../../../meal_registration/presentation/providers/meal_registration_provider.dart';
+import '../../../identification/domain/entities/identification_grant.dart';
+import '../../../identification/presentation/providers/identification_provider.dart';
+import '../../../identification/presentation/providers/kiosk_flow_provider.dart';
 import '../../domain/enums/meal_type.dart';
 import '../providers/selection_providers.dart';
 import '../widgets/administration_button.dart';
 import '../widgets/home_header.dart';
 import '../widgets/meal_card.dart';
 
-class HomeScreen extends ConsumerWidget {
-  const HomeScreen({super.key});
+class HomeScreen extends ConsumerStatefulWidget {
+  final IdentificationGrant? initialIdentificationGrant;
+
+  const HomeScreen({super.key, this.initialIdentificationGrant});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen>
+    with WidgetsBindingObserver {
+  Timer? _grantExpiryTimer;
+  String? _scheduledGrantToken;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    final grant = widget.initialIdentificationGrant;
+    if (grant != null && !grant.isExpired) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ref.read(pendingIdentificationProvider.notifier).state = grant;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _grantExpiryTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.detached) {
+      ref.read(resetKioskFlowProvider)();
+    }
+  }
+
+  void _scheduleGrantExpiry(IdentificationGrant? grant) {
+    if (grant?.token == _scheduledGrantToken) return;
+    _grantExpiryTimer?.cancel();
+    _scheduledGrantToken = grant?.token;
+    if (grant == null) return;
+
+    final remaining = grant.expiresAt.difference(DateTime.now());
+    if (remaining <= Duration.zero) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) ref.read(resetKioskFlowProvider)();
+      });
+      return;
+    }
+    _grantExpiryTimer = Timer(remaining, () {
+      if (mounted) ref.read(resetKioskFlowProvider)();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final selectedMeal = ref.watch(selectedMealProvider);
     final categoriesAsync = ref.watch(mealCategoriesProvider);
-    final isDesktop = ResponsiveLayout.isDesktop(context);
+    final pendingIdentification = ref.watch(pendingIdentificationProvider);
+    final initialGrant = widget.initialIdentificationGrant;
+    final activeIdentification =
+        pendingIdentification != null && !pendingIdentification.isExpired
+        ? pendingIdentification
+        : initialGrant != null && !initialGrant.isExpired
+        ? initialGrant
+        : null;
+    if (pendingIdentification != null && activeIdentification == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(pendingIdentificationProvider.notifier).state = null;
+      });
+    }
+    _scheduleGrantExpiry(activeIdentification);
+    final registrationState = ref.watch(mealRegistrationProvider);
+    final viewport = MediaQuery.sizeOf(context);
+    final useWideLayout =
+        ResponsiveLayout.isDesktop(context) ||
+        (viewport.width >= 700 && viewport.width > viewport.height);
 
     return Scaffold(
-      body: SafeArea(
-        child: isDesktop
-            ? _buildDesktopLayout(context, ref, selectedMeal, categoriesAsync)
-            : _buildPortraitLayout(context, ref, selectedMeal, categoriesAsync),
+      body: Stack(
+        children: [
+          SafeArea(
+            child: useWideLayout
+                ? _buildDesktopLayout(
+                    context,
+                    ref,
+                    selectedMeal,
+                    categoriesAsync,
+                    activeIdentification,
+                  )
+                : _buildPortraitLayout(
+                    context,
+                    ref,
+                    selectedMeal,
+                    categoriesAsync,
+                    activeIdentification,
+                  ),
+          ),
+          if (registrationState.isLoading) ...[
+            const ModalBarrier(dismissible: false, color: Colors.black38),
+            const Center(child: CircularProgressIndicator()),
+          ],
+        ],
       ),
     );
   }
@@ -38,6 +140,7 @@ class HomeScreen extends ConsumerWidget {
     WidgetRef ref,
     MealType? selectedMeal,
     AsyncValue<List<MealCategory>> categoriesAsync,
+    IdentificationGrant? pendingIdentification,
   ) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -55,17 +158,28 @@ class HomeScreen extends ConsumerWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const AnimatedFadeIn(
-                          delay: Duration(milliseconds: 0),
-                          child: HomeHeader(),
+                        AnimatedFadeIn(
+                          child: HomeHeader(
+                            compact: constraints.maxHeight < 720,
+                            subtitle: pendingIdentification == null
+                                ? 'Présentez votre visage ou votre QR code'
+                                : 'Identification confirmée · choisissez votre repas',
+                          ),
                         ),
-                        const SizedBox(height: Spacing.xxl),
+                        SizedBox(
+                          height: constraints.maxHeight < 720
+                              ? Spacing.lg
+                              : Spacing.xxl,
+                        ),
                         AnimatedFadeIn(
                           delay: const Duration(milliseconds: 200),
-                          child: _MealGrid(
-                            categoriesAsync: categoriesAsync,
-                            selectedMeal: selectedMeal,
-                          ),
+                          child: pendingIdentification == null
+                              ? const _KioskStartPanel()
+                              : _MealGrid(
+                                  categoriesAsync: categoriesAsync,
+                                  selectedMeal: selectedMeal,
+                                  identificationGrant: pendingIdentification,
+                                ),
                         ),
                       ],
                     ),
@@ -94,6 +208,7 @@ class HomeScreen extends ConsumerWidget {
     WidgetRef ref,
     MealType? selectedMeal,
     AsyncValue<List<MealCategory>> categoriesAsync,
+    IdentificationGrant? pendingIdentification,
   ) {
     return Row(
       children: [
@@ -104,21 +219,28 @@ class HomeScreen extends ConsumerWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                  Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer.withValues(alpha: 0.55),
                   Theme.of(context).colorScheme.surface,
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
             ),
-            child: const Center(
+            child: Center(
               child: SingleChildScrollView(
-                padding: EdgeInsets.all(Spacing.xxl),
+                padding: const EdgeInsets.all(Spacing.xl),
                 child: Column(
                   children: [
-                    HomeHeader(),
-                    SizedBox(height: Spacing.xl),
-                    AdministrationButton(),
+                    HomeHeader(
+                      compact: MediaQuery.sizeOf(context).height < 680,
+                      subtitle: pendingIdentification == null
+                          ? 'Présentez votre visage ou votre QR code'
+                          : 'Identification confirmée · choisissez votre repas',
+                    ),
+                    const SizedBox(height: Spacing.lg),
+                    const AdministrationButton(),
                   ],
                 ),
               ),
@@ -142,10 +264,13 @@ class HomeScreen extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     AnimatedFadeIn(
-                      child: _MealGrid(
-                        categoriesAsync: categoriesAsync,
-                        selectedMeal: selectedMeal,
-                      ),
+                      child: pendingIdentification == null
+                          ? const _KioskStartPanel()
+                          : _MealGrid(
+                              categoriesAsync: categoriesAsync,
+                              selectedMeal: selectedMeal,
+                              identificationGrant: pendingIdentification,
+                            ),
                     ),
                   ],
                 ),
@@ -163,10 +288,12 @@ class HomeScreen extends ConsumerWidget {
 class _MealGrid extends ConsumerWidget {
   final AsyncValue<List<MealCategory>> categoriesAsync;
   final MealType? selectedMeal;
+  final IdentificationGrant identificationGrant;
 
   const _MealGrid({
     required this.categoriesAsync,
     required this.selectedMeal,
+    required this.identificationGrant,
   });
 
   @override
@@ -195,9 +322,10 @@ class _MealGrid extends ConsumerWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = constraints.maxWidth >= 520 ? 3 : 1;
-        final spacing = Spacing.md;
+        const spacing = Spacing.md;
         final cardWidth = crossAxisCount > 1
-            ? (constraints.maxWidth - spacing * (crossAxisCount - 1)) / crossAxisCount
+            ? (constraints.maxWidth - spacing * (crossAxisCount - 1)) /
+                  crossAxisCount
             : double.infinity;
 
         if (crossAxisCount == 1) {
@@ -210,6 +338,7 @@ class _MealGrid extends ConsumerWidget {
                     meal: meal,
                     categories: categories,
                     selectedMeal: selectedMeal,
+                    identificationGrant: identificationGrant,
                   ),
                 ),
             ],
@@ -228,6 +357,7 @@ class _MealGrid extends ConsumerWidget {
                   meal: meal,
                   categories: categories,
                   selectedMeal: selectedMeal,
+                  identificationGrant: identificationGrant,
                 ),
               ),
           ],
@@ -237,34 +367,39 @@ class _MealGrid extends ConsumerWidget {
   }
 
   Widget _buildSkeleton(BuildContext context) {
-    return LayoutBuilder(builder: (context, constraints) {
-      final crossAxisCount = constraints.maxWidth >= 520 ? 3 : 1;
-      final spacing = Spacing.md;
-      final cardWidth = crossAxisCount > 1
-          ? (constraints.maxWidth - spacing * (crossAxisCount - 1)) / crossAxisCount
-          : double.infinity;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final crossAxisCount = constraints.maxWidth >= 520 ? 3 : 1;
+        const spacing = Spacing.md;
+        final cardWidth = crossAxisCount > 1
+            ? (constraints.maxWidth - spacing * (crossAxisCount - 1)) /
+                  crossAxisCount
+            : double.infinity;
 
-      return Wrap(
-        spacing: spacing,
-        runSpacing: spacing,
-        alignment: WrapAlignment.center,
-        children: List.generate(
-          3,
-          (i) => SizedBox(
-            width: cardWidth,
-            height: 160,
-            child: Card(
-              child: Center(
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          alignment: WrapAlignment.center,
+          children: List.generate(
+            3,
+            (i) => SizedBox(
+              width: cardWidth,
+              height: 160,
+              child: Card(
+                child: Center(
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.3),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
   }
 }
 
@@ -274,11 +409,13 @@ class _MealCardItem extends ConsumerWidget {
   final (MealType, IconData, String) meal;
   final List<MealCategory> categories;
   final MealType? selectedMeal;
+  final IdentificationGrant identificationGrant;
 
   const _MealCardItem({
     required this.meal,
     required this.categories,
     required this.selectedMeal,
+    required this.identificationGrant,
   });
 
   @override
@@ -291,21 +428,203 @@ class _MealCardItem extends ConsumerWidget {
         icon: meal.$2,
         subtitle: meal.$3,
         isSelected: selectedMeal == type,
-        onTap: () {
-          ref.read(selectedMealProvider.notifier).state = type;
-          final category = categories
-              .where(
-                  (c) => c.nom.toLowerCase() == type.name.toLowerCase())
-              .firstOrNull;
-          if (category != null) {
-            ref.read(selectedCategoryUuidProvider.notifier).state =
-                category.uuid;
-          }
-          context.push('/kiosk-camera');
-        },
+        onTap: () => _confirmAndRegister(context, ref, type),
+      ),
+    );
+  }
+
+  Future<void> _confirmAndRegister(
+    BuildContext context,
+    WidgetRef ref,
+    MealType type,
+  ) async {
+    if (ref.read(kioskSubmissionLockedProvider)) return;
+    ref.read(kioskSubmissionLockedProvider.notifier).state = true;
+
+    try {
+      final category = categories
+          .where((c) => c.nom.toLowerCase() == type.name.toLowerCase())
+          .firstOrNull;
+      if (category == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cette catégorie est indisponible.')),
+        );
+        return;
+      }
+
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          icon: Icon(meal.$2),
+          title: Text('Confirmer ${type.label.toLowerCase()} ?'),
+          content: const Text(
+            'Vérifiez votre choix. Un seul repas peut être enregistré '
+            'aujourd’hui.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Annuler'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Confirmer'),
+            ),
+          ],
+        ),
+      );
+      if (!context.mounted) return;
+      if (confirmed != true) {
+        ref.read(resetKioskFlowProvider)();
+        return;
+      }
+      if (identificationGrant.isExpired) {
+        ref.read(resetKioskFlowProvider)();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Identification expirée. Veuillez vous identifier à nouveau.',
+            ),
+          ),
+        );
+        return;
+      }
+
+      ref.read(selectedMealProvider.notifier).state = type;
+      ref.read(selectedCategoryUuidProvider.notifier).state = category.uuid;
+      await ref
+          .read(mealRegistrationProvider.notifier)
+          .registerMeal(
+            identificationToken: identificationGrant.token,
+            categorieUuid: category.uuid,
+          );
+      if (!context.mounted) return;
+      final state = ref.read(mealRegistrationProvider);
+      if (state.result != null) {
+        context.go('/success');
+        return;
+      }
+
+      final message =
+          state.error ?? 'Une erreur est survenue. Veuillez réessayer.';
+      ref.read(resetKioskFlowProvider)();
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          icon: const Icon(Icons.error_outline_rounded),
+          title: const Text('Repas non enregistré'),
+          content: Text(message),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Compris'),
+            ),
+          ],
+        ),
+      );
+    } finally {
+      if (context.mounted) {
+        ref.read(kioskSubmissionLockedProvider.notifier).state = false;
+      }
+    }
+  }
+}
+
+class _KioskStartPanel extends StatelessWidget {
+  const _KioskStartPanel();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 520),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(Spacing.radiusXl),
+          border: Border.all(color: theme.colorScheme.outlineVariant),
+          boxShadow: [
+            BoxShadow(
+              color: theme.colorScheme.primary.withValues(alpha: 0.10),
+              blurRadius: 28,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(Spacing.xl),
+          child: Column(
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                  borderRadius: BorderRadius.circular(Spacing.radiusLg),
+                ),
+                child: const Icon(
+                  Icons.face_retouching_natural_rounded,
+                  size: 38,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: Spacing.md),
+              Text(
+                'Identifiez-vous',
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: Spacing.sm),
+              Text(
+                'Présentez votre visage ou votre QR code. '
+                'Vous choisirez ensuite votre repas.',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: Spacing.lg),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () => context.push('/kiosk-camera'),
+                  icon: const Icon(Icons.qr_code_scanner_rounded),
+                  label: const Text('Démarrer l’identification'),
+                ),
+              ),
+              const SizedBox(height: Spacing.md),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.face_rounded,
+                    size: Spacing.iconXs,
+                    color: theme.colorScheme.tertiary,
+                  ),
+                  const SizedBox(width: Spacing.xs),
+                  Text('Visage', style: theme.textTheme.labelMedium),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: Spacing.sm),
+                    child: Text(
+                      '•',
+                      style: TextStyle(color: theme.colorScheme.outline),
+                    ),
+                  ),
+                  Icon(
+                    Icons.qr_code_2_rounded,
+                    size: Spacing.iconXs,
+                    color: theme.colorScheme.secondary,
+                  ),
+                  const SizedBox(width: Spacing.xs),
+                  Text('QR code', style: theme.textTheme.labelMedium),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
-
-

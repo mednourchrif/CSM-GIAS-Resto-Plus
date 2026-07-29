@@ -8,13 +8,11 @@ class RegisterMealUseCase {
   RegisterMealUseCase(this._repository);
 
   Future<Result<MealRegistration>> call({
-    String? qrToken,
-    String? userUuid,
+    required String identificationToken,
     required String categorieUuid,
   }) {
     return _repository.registerMeal(
-      qrToken: qrToken,
-      userUuid: userUuid,
+      identificationToken: identificationToken,
       categorieUuid: categorieUuid,
     );
   }

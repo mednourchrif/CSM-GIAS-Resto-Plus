@@ -7,13 +7,7 @@ class IdentifyFaceUseCase {
 
   IdentifyFaceUseCase(this._repository);
 
-  Future<Result<FaceRecognitionResult>> call({
-    required String imageBase64,
-    String? categorieUuid,
-  }) {
-    return _repository.identify(
-      imageBase64: imageBase64,
-      categorieUuid: categorieUuid,
-    );
+  Future<Result<FaceRecognitionResult>> call({required String imageBase64}) {
+    return _repository.identify(imageBase64: imageBase64);
   }
 }

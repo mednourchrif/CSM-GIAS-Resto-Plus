@@ -58,14 +58,12 @@ class AuthService:
         if user is None:
             raise UnauthorizedException(
                 message="Email ou mot de passe incorrect.",
-                details={"reason": "unknown_email"},
             )
 
         # 2. Must be an Admin
         if not isinstance(user, Admin):
             raise UnauthorizedException(
                 message="Email ou mot de passe incorrect.",
-                details={"reason": "not_admin"},
             )
 
         admin: Admin = user
@@ -88,13 +86,11 @@ class AuthService:
         if not admin.mot_de_passe:
             raise UnauthorizedException(
                 message="Email ou mot de passe incorrect.",
-                details={"reason": "no_password"},
             )
 
         if not self._password.verify(password, admin.mot_de_passe):
             raise UnauthorizedException(
                 message="Email ou mot de passe incorrect.",
-                details={"reason": "wrong_password"},
             )
 
         # 6. Generate JWT

@@ -22,7 +22,9 @@ _service = ReceptionistService()
 @router.get(
     "",
     summary="Lister les réceptionnistes",
-    description="Retourne la liste paginée des réceptionnistes avec possibilité de tri et recherche.",
+    description=(
+        "Retourne la liste paginée des réceptionnistes avec possibilité de tri et recherche."
+    ),
     response_model=PaginatedResponse[ReceptionistResponse],
 )
 async def list_receptionists(
@@ -95,7 +97,9 @@ async def update_receptionist(
 @router.patch(
     "/{uuid}",
     summary="Modifier partiellement un réceptionniste",
-    description="Met à jour partiellement les données d'un réceptionniste (champs fournis uniquement).",
+    description=(
+        "Met à jour partiellement les données d'un réceptionniste " "(champs fournis uniquement)."
+    ),
     response_model=SuccessResponse[ReceptionistResponse],
 )
 async def patch_receptionist(

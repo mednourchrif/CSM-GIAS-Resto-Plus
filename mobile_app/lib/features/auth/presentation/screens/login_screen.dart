@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/colors.dart';
 import '../../../../core/theme/spacing.dart';
+import '../../../../shared/widgets/brand_logo.dart';
 import '../../../../shared/widgets/responsive_layout.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/login_form.dart';
@@ -40,66 +41,54 @@ class LoginScreen extends ConsumerWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: isDark
-                    ? [
-                        AppColors.primaryContainerDark,
-                        AppColors.surfaceDark,
-                      ]
-                    : [
-                        AppColors.primary,
-                        AppColors.primaryContainer,
-                      ],
+                    ? [AppColors.primaryContainerDark, AppColors.surfaceDark]
+                    : [AppColors.primary, AppColors.brandBlue],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+            child: Stack(
               children: [
-                Container(
-                  width: 96,
-                  height: 96,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(Spacing.radiusXl),
-                  ),
-                  child: const Icon(
-                    Icons.restaurant_menu_rounded,
-                    size: 52,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: Spacing.xl),
-                Text(
-                  'CSM-GIAS',
-                  style: theme.textTheme.headlineLarge?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.5,
+                Positioned(
+                  left: -80,
+                  bottom: -100,
+                  child: Container(
+                    width: 280,
+                    height: 280,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: AppColors.brandYellow.withValues(alpha: 0.35),
+                        width: 22,
+                      ),
+                    ),
                   ),
                 ),
-                const SizedBox(height: Spacing.xs),
-                Text(
-                  'Resto+',
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.85),
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-                const SizedBox(height: Spacing.md),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: Spacing.lg,
-                    vertical: Spacing.xs,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    borderRadius:
-                        BorderRadius.circular(Spacing.radiusFull),
-                  ),
-                  child: Text(
-                    'Système de gestion du restaurant',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: Colors.white.withValues(alpha: 0.9),
+                Center(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(Spacing.xxl),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const BrandLogo(width: 260, showRestoBadge: true),
+                        const SizedBox(height: Spacing.xl),
+                        Text(
+                          'Administration du restaurant',
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: Spacing.sm),
+                        Text(
+                          'Pilotez les repas, les accès et les rapports depuis un espace unifié.',
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: Colors.white.withValues(alpha: 0.85),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -109,9 +98,7 @@ class LoginScreen extends ConsumerWidget {
         ),
 
         // Right panel — form
-        Expanded(
-          child: _buildFormPanel(context, ref, authState),
-        ),
+        Expanded(child: _buildFormPanel(context, ref, authState)),
       ],
     );
   }
@@ -143,38 +130,10 @@ class LoginScreen extends ConsumerWidget {
             children: [
               // Icon header (mobile only — desktop has panel)
               if (!ResponsiveLayout.isDesktop(context)) ...[
-                Center(
-                  child: Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          theme.colorScheme.primary,
-                          theme.colorScheme.primary.withValues(alpha: 0.7),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(Spacing.radiusXl),
-                    ),
-                    child: const Icon(
-                      Icons.restaurant_menu_rounded,
-                      size: 36,
-                      color: Colors.white,
-                    ),
-                  ),
+                const Center(
+                  child: BrandLogo(width: 190, showRestoBadge: true),
                 ),
-                const SizedBox(height: Spacing.md),
-                Text(
-                  'CSM-GIAS Resto+',
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(height: Spacing.xxl),
+                const SizedBox(height: Spacing.xl),
               ],
 
               // Title

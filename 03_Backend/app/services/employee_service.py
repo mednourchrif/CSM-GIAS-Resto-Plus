@@ -1,8 +1,7 @@
 """Employee service — business logic for employee management."""
 
-from datetime import date
-
 from dataclasses import dataclass
+from datetime import UTC, datetime
 
 from loguru import logger
 from sqlalchemy.orm import Session
@@ -11,6 +10,7 @@ from app.core.exceptions import ConflictException, NotFoundException
 from app.models.admin import Admin
 from app.models.employee import Employee
 from app.models.meal import Meal
+from app.models.user import StatutUtilisateur
 from app.repositories.employee import EmployeeRepository
 from app.repositories.face_repository import FaceEmbeddingRepository
 from app.repositories.meal import MealRepository
@@ -18,12 +18,14 @@ from app.repositories.qr_code import QrCodeRepository
 from app.repositories.user import UserRepository
 from app.schemas.employee import EmployeeCreate, EmployeeUpdate
 from app.schemas.pagination import PaginatedResult, PaginationParams
+from app.utils.date_utils import today_local
 from app.utils.password import hash_password
 
 
 @dataclass
 class EmployeeDetail:
     """Rich employee detail returned by :meth:`get_detail`."""
+
     employee: Employee
     today_meal: Meal | None
     last_meals: list[Meal]
@@ -61,7 +63,7 @@ class EmployeeService:
         attrs["updated_by_id"] = admin.uuid
 
         employee = self._employee_repo.create(db, **attrs)
-        logger.info("Employee created", extra={"uuid": employee.uuid, "admin": admin.uuid})
+        logger.info("Employee created")
         return employee
 
     def get(self, db: Session, uuid: str) -> Employee:
@@ -74,7 +76,7 @@ class EmployeeService:
         """Return the employee with today's meal, last meals, and ID status."""
         employee = self.get(db, uuid)
 
-        today = date.today()
+        today = today_local()
         last_meals = self._meal_repo.get_history_by_user(db, uuid, limit=6)
         today_meal: Meal | None = None
         history: list[Meal] = []
@@ -106,7 +108,11 @@ class EmployeeService:
 
         if "matricule" in update_data and update_data["matricule"] != employee.matricule:
             self._validate_unique_matricule(db, update_data["matricule"])
-        if "email" in update_data and update_data["email"] and update_data["email"] != employee.email:
+        if (
+            "email" in update_data
+            and update_data["email"]
+            and update_data["email"] != employee.email
+        ):
             self._validate_unique_email(db, update_data["email"])
 
         update_data["updated_by_id"] = admin.uuid
@@ -114,16 +120,19 @@ class EmployeeService:
         updated = self._employee_repo.update(db, employee.id, **update_data)
         if updated is None:
             raise NotFoundException(message=f"Employé {uuid} introuvable.")
-        logger.info("Employee updated", extra={"uuid": uuid, "admin": admin.uuid})
+        logger.info("Employee updated")
         return updated
 
     def delete(self, db: Session, uuid: str, admin: Admin) -> None:
-        from datetime import UTC, datetime
-
         employee = self.get(db, uuid)
+        self._face_repo.delete_all_for_user(db, uuid)
         employee.date_suppression = datetime.now(UTC)
+        employee.statut = StatutUtilisateur.SUPPRIME
+        employee.updated_by_id = admin.uuid
         db.flush()
-        logger.info("Employee soft-deleted", extra={"uuid": uuid, "admin": admin.uuid})
+        logger.info(
+            "Employee soft-deleted and biometrics erased",
+        )
 
     def get_list(self, db: Session, params: PaginationParams) -> PaginatedResult[Employee]:
         items, total = self._employee_repo.search_paginated(

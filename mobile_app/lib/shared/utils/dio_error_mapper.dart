@@ -6,7 +6,11 @@ import 'package:mobile_app/core/errors/failures.dart';
 Failure mapDioError(DioException e, {String resourceName = 'Ressource'}) {
   final statusCode = e.response?.statusCode;
   final data = e.response?.data;
-  final message = data is Map ? (data['message'] as String?) : null;
+  final message = data is Map
+      ? (data['message'] as String?)
+      : data is String && data.trim().isNotEmpty
+      ? data.trim()
+      : null;
 
   if (UniversalPlatform.isWeb) {
     final uri = e.requestOptions.uri;
@@ -41,15 +45,11 @@ Failure mapDioError(DioException e, {String resourceName = 'Ressource'}) {
     case DioExceptionType.cancel:
       return const NetworkFailure(message: 'Requête annulée.');
     case DioExceptionType.badCertificate:
-      return const NetworkFailure(
-        message: 'Certificat de sécurité invalide.',
-      );
+      return const NetworkFailure(message: 'Certificat de sécurité invalide.');
     case DioExceptionType.badResponse:
       break;
     case DioExceptionType.transformTimeout:
-      return const NetworkFailure(
-        message: 'Délai de transformation dépassé.',
-      );
+      return const NetworkFailure(message: 'Délai de transformation dépassé.');
     case DioExceptionType.unknown:
       return const NetworkFailure(
         message: 'Erreur réseau. Veuillez réessayer.',
@@ -79,13 +79,33 @@ Failure mapDioError(DioException e, {String resourceName = 'Ressource'}) {
   }
 
   if (statusCode == 422) {
-    final errors = data is Map ? data['errors'] as Map<String, dynamic>? : null;
+    final details = data is Map ? data['details'] : null;
+    final rawErrors = details is Map ? details['errors'] : null;
+    final fieldErrors = <String, String>{};
+
+    if (rawErrors is List) {
+      for (final rawError in rawErrors) {
+        if (rawError is! Map) continue;
+        final location = rawError['loc'];
+        final field = location is List && location.isNotEmpty
+            ? location.last.toString()
+            : 'request';
+        final fieldMessage = rawError['message'] ?? rawError['msg'];
+        if (fieldMessage != null) {
+          fieldErrors[field] = fieldMessage.toString();
+        }
+      }
+    } else if (rawErrors is Map) {
+      for (final entry in rawErrors.entries) {
+        fieldErrors[entry.key.toString()] = entry.value is List
+            ? (entry.value as List).join(', ')
+            : entry.value.toString();
+      }
+    }
+
     return ValidationFailure(
       message: message ?? 'Données invalides.',
-      fieldErrors: errors?.map(
-            (k, v) => MapEntry(k, v is List ? v.join(', ') : v.toString()),
-          ) ??
-          {},
+      fieldErrors: fieldErrors,
     );
   }
 

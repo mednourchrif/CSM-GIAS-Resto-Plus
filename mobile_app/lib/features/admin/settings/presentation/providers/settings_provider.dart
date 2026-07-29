@@ -6,18 +6,24 @@ import '../../data/repositories/settings_repository_impl.dart';
 import '../../domain/repositories/settings_repository.dart';
 import 'settings_state.dart';
 
-final settingsRemoteDataSourceProvider = Provider<SettingsRemoteDataSource>((ref) {
+final settingsRemoteDataSourceProvider = Provider<SettingsRemoteDataSource>((
+  ref,
+) {
   final apiClient = ref.watch(apiClientProvider);
   return SettingsRemoteDataSource(dio: apiClient.dio);
 });
 
 final settingsRepositoryProvider = Provider<SettingsRepository>((ref) {
-  return SettingsRepositoryImpl(dataSource: ref.watch(settingsRemoteDataSourceProvider));
+  return SettingsRepositoryImpl(
+    dataSource: ref.watch(settingsRemoteDataSourceProvider),
+  );
 });
 
-final settingsProvider = StateNotifierProvider<SettingsNotifier, SettingsState>((ref) {
-  return SettingsNotifier(ref.watch(settingsRepositoryProvider));
-});
+final settingsProvider = StateNotifierProvider<SettingsNotifier, SettingsState>(
+  (ref) {
+    return SettingsNotifier(ref.watch(settingsRepositoryProvider));
+  },
+);
 
 class SettingsNotifier extends StateNotifier<SettingsState> {
   final SettingsRepository _repository;
@@ -33,6 +39,18 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       },
       failure: (failure) {
         state = state.copyWith(isLoading: false, error: failure.message);
+      },
+    );
+  }
+
+  Future<void> loadKioskSettings() async {
+    final result = await _repository.getKioskSettings();
+    result.when(
+      success: (settings) {
+        state = state.copyWith(settings: settings);
+      },
+      failure: (_) {
+        // Local defaults keep the public kiosk usable during a brief outage.
       },
     );
   }

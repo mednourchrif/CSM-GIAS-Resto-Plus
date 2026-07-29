@@ -12,19 +12,19 @@ async def application_exception_handler(
     request: Request, exc: ApplicationException
 ) -> JSONResponse:
     """Handle custom ApplicationException subclasses."""
+    public_details = {} if exc.status_code == 401 else exc.details
     logger.warning(
-        "Application exception — code={} status={} path={} details={}",
+        "Application exception — code={} status={} path={}",
         exc.error_code,
         exc.status_code,
         request.url.path,
-        exc.details,
     )
     return JSONResponse(
         status_code=exc.status_code,
         content=ErrorResponse(
             error_code=exc.error_code,
             message=exc.message,
-            details=exc.details,
+            details=public_details,
         ).model_dump(mode="json"),
     )
 
@@ -33,7 +33,14 @@ async def validation_exception_handler(
     request: Request, exc: RequestValidationError
 ) -> JSONResponse:
     """Handle Pydantic/FastAPI validation errors and return a structured response."""
-    errors = exc.errors()
+    errors = [
+        {
+            "loc": [str(part) for part in error.get("loc", ())],
+            "message": str(error.get("msg", "Valeur invalide")),
+            "type": str(error.get("type", "validation_error")),
+        }
+        for error in exc.errors()
+    ]
     logger.warning(
         "Validation error — path={} errors={}",
         request.url.path,

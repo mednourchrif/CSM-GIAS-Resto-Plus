@@ -19,9 +19,6 @@ class MealCategoryDto {
     );
   }
 
-  MealCategory toDomain() => MealCategory(
-        uuid: uuid,
-        nom: nom,
-        description: description,
-      );
+  MealCategory toDomain() =>
+      MealCategory(uuid: uuid, nom: nom, description: description);
 }

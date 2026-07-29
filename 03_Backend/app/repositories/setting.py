@@ -23,7 +23,7 @@ class SettingRepository(BaseRepository[Setting]):
 
     def get_all_as_dict(self, db: Session) -> dict[str, str]:
         stmt = select(Setting.key, Setting.value).order_by(Setting.key)
-        return dict(db.execute(stmt).all())
+        return dict(db.execute(stmt).tuples().all())
 
     def upsert(self, db: Session, key: str, value: str) -> Setting:
         instance = self.get_by_key(db, key)

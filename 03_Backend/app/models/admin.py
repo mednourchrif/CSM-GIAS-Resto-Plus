@@ -31,11 +31,15 @@ See also
 """
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey, SmallInteger
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.user import User
+
+if TYPE_CHECKING:
+    from app.models.role import Role
 
 
 class Admin(User):
@@ -76,7 +80,7 @@ class Admin(User):
 
     # -- Relationships ----------------------------------------------------
 
-    role: Mapped["Role | None"] = relationship(  # noqa: F821
+    role: Mapped["Role | None"] = relationship(
         back_populates="administrateurs",
     )
 

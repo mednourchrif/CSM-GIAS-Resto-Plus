@@ -9,14 +9,7 @@ import 'core/storage/storage_service.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
 
 final loggerProvider = Provider<Logger>((ref) {
-  return Logger(
-    printer: PrettyPrinter(
-      methodCount: 0,
-      errorMethodCount: 5,
-      lineLength: 120,
-      colors: true,
-    ),
-  );
+  return Logger(printer: PrettyPrinter(methodCount: 0, errorMethodCount: 5));
 });
 
 final storageServiceProvider = Provider<StorageService>((ref) {
@@ -41,12 +34,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       final authState = ref.read(authStateProvider);
       final location = state.matchedLocation;
 
-      debugPrint(
-        "Router -> $location "
-        "auth=${authState.isAuthenticated} "
-        "loading=${authState.isLoading}",
-      );
-
       // Always wait for splash initialisation
       if (authState.isLoading) {
         if (location != '/splash') return '/splash';
@@ -70,4 +57,3 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     },
   );
 });
-

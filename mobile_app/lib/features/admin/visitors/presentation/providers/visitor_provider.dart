@@ -7,7 +7,9 @@ import '../../domain/entities/visitor.dart';
 import '../../domain/repositories/visitor_repository.dart';
 import 'visitor_state.dart';
 
-final visitorRemoteDataSourceProvider = Provider<VisitorRemoteDataSource>((ref) {
+final visitorRemoteDataSourceProvider = Provider<VisitorRemoteDataSource>((
+  ref,
+) {
   return VisitorRemoteDataSource(dio: ref.watch(apiClientProvider).dio);
 });
 
@@ -17,8 +19,9 @@ final visitorRepositoryProvider = Provider<VisitorRepository>((ref) {
   );
 });
 
-final visitorProvider =
-    StateNotifierProvider<VisitorNotifier, VisitorState>((ref) {
+final visitorProvider = StateNotifierProvider<VisitorNotifier, VisitorState>((
+  ref,
+) {
   return VisitorNotifier(ref);
 });
 
@@ -169,7 +172,6 @@ class VisitorNotifier extends StateNotifier<VisitorState> {
     return result.when(
       success: (_) {
         state = state.copyWith(
-          selectedVisitor: null,
           visitors: state.visitors.where((v) => v.uuid != uuid).toList(),
           total: state.total - 1,
         );

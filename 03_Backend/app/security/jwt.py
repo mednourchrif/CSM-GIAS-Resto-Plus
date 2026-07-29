@@ -15,6 +15,7 @@ Design decisions
 """
 
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import jwt
 
@@ -77,7 +78,7 @@ class JWTService:
 
         return jwt.encode(payload, self._secret, algorithm=self._algorithm)
 
-    def decode_access_token(self, token: str) -> dict:
+    def decode_access_token(self, token: str) -> dict[str, Any]:
         """Verify and decode a JWT access token.
 
         :param token: The raw JWT string (without ``Bearer `` prefix).
@@ -86,7 +87,7 @@ class JWTService:
             or tampered with.
         """
         try:
-            payload: dict = jwt.decode(
+            payload: dict[str, Any] = jwt.decode(
                 token,
                 self._secret,
                 algorithms=[self._algorithm],

@@ -39,9 +39,7 @@ class QrCodeRepository(BaseRepository[QrCode]):
     ) -> list[QrCode]:
         """Return all QR codes ever issued to an owner (newest first)."""
         stmt = (
-            select(QrCode)
-            .where(QrCode.proprietaire_uuid == owner_uuid)
-            .order_by(QrCode.id.desc())
+            select(QrCode).where(QrCode.proprietaire_uuid == owner_uuid).order_by(QrCode.id.desc())
         )
         return list(db.execute(stmt).scalars().all())
 

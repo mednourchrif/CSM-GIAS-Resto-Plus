@@ -12,9 +12,9 @@ class UpdateEmployeeRequestDto {
   });
 
   Map<String, dynamic> toJson() => {
-        if (nom != null) 'nom': nom,
-        if (prenom != null) 'prenom': prenom,
-        if (matricule != null) 'matricule': matricule,
-        if (statut != null) 'statut': statut,
-      };
+    if (nom != null) 'nom': nom,
+    if (prenom != null) 'prenom': prenom,
+    if (matricule != null) 'matricule': matricule,
+    if (statut != null) 'statut': statut,
+  };
 }

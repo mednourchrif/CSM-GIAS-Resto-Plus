@@ -5,7 +5,10 @@ These helpers abstract away the ``datetime`` module details so that the
 rest of the codebase works with a consistent time model.
 """
 
-from datetime import UTC, date, datetime, time, timezone
+from datetime import UTC, date, datetime, time
+from zoneinfo import ZoneInfo
+
+from app.core.config import settings
 
 
 def now_utc() -> datetime:
@@ -16,6 +19,28 @@ def now_utc() -> datetime:
 def today_utc() -> date:
     """Return today's date in the UTC timezone."""
     return now_utc().date()
+
+
+def to_business_timezone(
+    value: datetime | None = None,
+    timezone_name: str | None = None,
+) -> datetime:
+    """Convert a timestamp to the configured restaurant timezone.
+
+    Naive timestamps are interpreted as UTC because database and test
+    fixtures may lose timezone metadata.
+    """
+    reference = value or now_utc()
+    reference = _ensure_aware(reference)
+    return reference.astimezone(ZoneInfo(timezone_name or settings.TZ))
+
+
+def today_local(
+    value: datetime | None = None,
+    timezone_name: str | None = None,
+) -> date:
+    """Return the restaurant-local calendar date."""
+    return to_business_timezone(value, timezone_name).date()
 
 
 def parse_date(value: str) -> date:
@@ -36,16 +61,22 @@ def format_datetime(dt: datetime | None) -> str | None:
     return dt.strftime("%Y-%m-%d %H:%M:%S")
 
 
-def _ensure_aware(dt: datetime) -> datetime:
-    """If *dt* is offset-naive, assume UTC and attach timezone info.
+def ensure_utc(dt: datetime) -> datetime:
+    """Return *dt* as an aware UTC timestamp.
 
-    SQLite does not preserve timezone information, so datetimes stored
-    with ``DateTime(timezone=True)`` are read back as naive.  This helper
-    makes them aware so that comparisons with aware timestamps work.
+    SQLite and some database drivers may discard timezone metadata even for
+    ``DateTime(timezone=True)`` columns.  The application stores timestamps
+    in UTC, so a naive value must be interpreted as UTC rather than as the
+    server or mobile device's local timezone.
     """
     if dt.tzinfo is None:
         return dt.replace(tzinfo=UTC)
-    return dt
+    return dt.astimezone(UTC)
+
+
+def _ensure_aware(dt: datetime) -> datetime:
+    """Backward-compatible internal alias for UTC normalization."""
+    return ensure_utc(dt)
 
 
 def is_expired(dt: datetime | None, reference: datetime | None = None) -> bool:

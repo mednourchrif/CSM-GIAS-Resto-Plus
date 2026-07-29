@@ -3,6 +3,8 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 
 import '../../../../../core/theme/colors.dart';
 import '../../../../../core/theme/spacing.dart';
@@ -64,18 +66,13 @@ class _QrListScreenState extends ConsumerState<QrListScreen> {
   }
 
   void _showDetail(String uuid) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => _QrDetailScreen(uuid: uuid),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => _QrDetailScreen(uuid: uuid)));
   }
 
   void _showGenerateDialog() {
-    showDialog(
-      context: context,
-      builder: (_) => const QrGenerateScreen(),
-    );
+    showDialog(context: context, builder: (_) => const QrGenerateScreen());
   }
 
   @override
@@ -99,7 +96,12 @@ class _QrListScreenState extends ConsumerState<QrListScreen> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(Spacing.md, Spacing.sm, Spacing.md, 0),
+            padding: const EdgeInsets.fromLTRB(
+              Spacing.md,
+              Spacing.sm,
+              Spacing.md,
+              0,
+            ),
             child: TextField(
               controller: _searchController,
               onChanged: _onSearchChanged,
@@ -195,9 +197,7 @@ class _QrListScreenState extends ConsumerState<QrListScreen> {
             ),
           ),
           const SizedBox(height: Spacing.sm),
-          Expanded(
-            child: _buildBody(state, theme, isDesktop),
-          ),
+          Expanded(child: _buildBody(state, theme, isDesktop)),
         ],
       ),
       floatingActionButton: isDesktop
@@ -221,12 +221,24 @@ class _QrListScreenState extends ConsumerState<QrListScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline_rounded, size: 64, color: theme.colorScheme.error),
+              Icon(
+                Icons.error_outline_rounded,
+                size: 64,
+                color: theme.colorScheme.error,
+              ),
               const SizedBox(height: Spacing.md),
-              Text(state.error!, textAlign: TextAlign.center,
-                  style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.error)),
+              Text(
+                state.error!,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
               const SizedBox(height: Spacing.lg),
-              FilledButton(onPressed: _onRefresh, child: const Text('Réessayer')),
+              FilledButton(
+                onPressed: _onRefresh,
+                child: const Text('Réessayer'),
+              ),
             ],
           ),
         ),
@@ -240,8 +252,11 @@ class _QrListScreenState extends ConsumerState<QrListScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.qr_code_2_rounded, size: 64,
-                  color: theme.colorScheme.onSurfaceVariant),
+              Icon(
+                Icons.qr_code_2_rounded,
+                size: 64,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
               const SizedBox(height: Spacing.md),
               Text(
                 state.searchQuery.isNotEmpty
@@ -249,7 +264,8 @@ class _QrListScreenState extends ConsumerState<QrListScreen> {
                     : 'Aucun QR code',
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyLarge?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant),
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -282,7 +298,7 @@ class _QrListScreenState extends ConsumerState<QrListScreen> {
           final qr = state.qrCodes[index];
           return Padding(
             padding: const EdgeInsets.only(bottom: Spacing.sm),
-            child:             QrCard(qrCode: qr, onTap: () => _showDetail(qr.uuid)),
+            child: QrCard(qrCode: qr, onTap: () => _showDetail(qr.uuid)),
           );
         },
       ),
@@ -314,19 +330,21 @@ class _QrListScreenState extends ConsumerState<QrListScreen> {
                   DataCell(Text(qr.proprietaireFullName)),
                   DataCell(Text(qr.typeLabel)),
                   DataCell(QrStatusBadge(status: qr.statut)),
-                  DataCell(Text(
-                    '${qr.dateExpiration.day.toString().padLeft(2, '0')}/'
-                    '${qr.dateExpiration.month.toString().padLeft(2, '0')}/'
-                    '${qr.dateExpiration.year}',
-                  )),
+                  DataCell(
+                    Text(
+                      '${qr.dateExpiration.day.toString().padLeft(2, '0')}/'
+                      '${qr.dateExpiration.month.toString().padLeft(2, '0')}/'
+                      '${qr.dateExpiration.year}',
+                    ),
+                  ),
                   DataCell(Text('${qr.nombreValidations}')),
                 ],
               );
             }).toList(),
           ),
           if (state.hasMore)
-            Padding(
-              padding: const EdgeInsets.all(Spacing.md),
+            const Padding(
+              padding: EdgeInsets.all(Spacing.md),
               child: Center(child: CircularProgressIndicator()),
             ),
         ],
@@ -416,8 +434,11 @@ class _QrDetailScreenState extends ConsumerState<_QrDetailScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline_rounded, size: 64,
-                  color: theme.colorScheme.error),
+              Icon(
+                Icons.error_outline_rounded,
+                size: 64,
+                color: theme.colorScheme.error,
+              ),
               const SizedBox(height: 16),
               const Text('Impossible de charger le QR code.'),
               const SizedBox(height: 16),
@@ -436,13 +457,22 @@ class _QrDetailScreenState extends ConsumerState<_QrDetailScreen> {
             PopupMenuButton<String>(
               onSelected: (v) => _handleAction(context, ref, qr, v),
               itemBuilder: (_) => [
-                const PopupMenuItem(value: 'download', child: Text('Télécharger')),
+                const PopupMenuItem(
+                  value: 'download',
+                  child: Text('Télécharger'),
+                ),
                 const PopupMenuItem(value: 'print', child: Text('Imprimer')),
                 const PopupMenuItem(value: 'share', child: Text('Partager')),
-                const PopupMenuItem(value: 'regenerate', child: Text('Régénérer')),
+                const PopupMenuItem(
+                  value: 'regenerate',
+                  child: Text('Régénérer'),
+                ),
                 const PopupMenuItem(
                   value: 'revoke',
-                  child: Text('Révoquer', style: TextStyle(color: AppColors.error)),
+                  child: Text(
+                    'Révoquer',
+                    style: TextStyle(color: AppColors.error),
+                  ),
                 ),
               ],
             ),
@@ -453,13 +483,14 @@ class _QrDetailScreenState extends ConsumerState<_QrDetailScreen> {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               _buildQrImage(qr, theme),
               const SizedBox(height: Spacing.lg),
               Text(
                 qr.proprietaireFullName,
-                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: Spacing.xs),
               Text(
@@ -473,12 +504,21 @@ class _QrDetailScreenState extends ConsumerState<_QrDetailScreen> {
               const SizedBox(height: Spacing.xxl),
               DetailRow(label: 'UUID', value: qr.uuid),
               DetailRow(label: 'Type', value: qr.typeLabel),
-              DetailRow(label: 'Expiration', value: _formatDate(qr.dateExpiration)),
+              DetailRow(
+                label: 'Expiration',
+                value: _formatDate(qr.dateExpiration),
+              ),
               DetailRow(label: 'Validations', value: '${qr.nombreValidations}'),
               if (qr.createdAt != null)
-                DetailRow(label: 'Créé le', value: _formatDateTime(qr.createdAt!)),
+                DetailRow(
+                  label: 'Créé le',
+                  value: _formatDateTime(qr.createdAt!),
+                ),
               if (qr.dateRevocation != null)
-                DetailRow(label: 'Révoqué le', value: _formatDateTime(qr.dateRevocation!)),
+                DetailRow(
+                  label: 'Révoqué le',
+                  value: _formatDateTime(qr.dateRevocation!),
+                ),
               if (qr.motifRevocation != null)
                 DetailRow(label: 'Motif', value: qr.motifRevocation!),
               if (qr.derniereValidation != null)
@@ -492,7 +532,8 @@ class _QrDetailScreenState extends ConsumerState<_QrDetailScreen> {
                   children: [
                     Expanded(
                       child: FilledButton.icon(
-                        onPressed: () => _handleAction(context, ref, qr, 'download'),
+                        onPressed: () =>
+                            _handleAction(context, ref, qr, 'download'),
                         icon: const Icon(Icons.download_rounded),
                         label: const Text('Télécharger'),
                       ),
@@ -500,7 +541,8 @@ class _QrDetailScreenState extends ConsumerState<_QrDetailScreen> {
                     const SizedBox(width: Spacing.sm),
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () => _handleAction(context, ref, qr, 'print'),
+                        onPressed: () =>
+                            _handleAction(context, ref, qr, 'print'),
                         icon: const Icon(Icons.print_rounded),
                         label: const Text('Imprimer'),
                       ),
@@ -508,7 +550,8 @@ class _QrDetailScreenState extends ConsumerState<_QrDetailScreen> {
                     const SizedBox(width: Spacing.sm),
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () => _handleAction(context, ref, qr, 'share'),
+                        onPressed: () =>
+                            _handleAction(context, ref, qr, 'share'),
                         icon: const Icon(Icons.share_rounded),
                         label: const Text('Partager'),
                       ),
@@ -520,7 +563,8 @@ class _QrDetailScreenState extends ConsumerState<_QrDetailScreen> {
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () => _handleAction(context, ref, qr, 'regenerate'),
+                        onPressed: () =>
+                            _handleAction(context, ref, qr, 'regenerate'),
                         icon: const Icon(Icons.refresh_rounded),
                         label: const Text('Régénérer'),
                       ),
@@ -528,7 +572,8 @@ class _QrDetailScreenState extends ConsumerState<_QrDetailScreen> {
                     const SizedBox(width: Spacing.md),
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () => _handleAction(context, ref, qr, 'revoke'),
+                        onPressed: () =>
+                            _handleAction(context, ref, qr, 'revoke'),
                         icon: const Icon(Icons.block_rounded),
                         label: const Text('Révoquer'),
                         style: OutlinedButton.styleFrom(
@@ -566,7 +611,7 @@ class _QrDetailScreenState extends ConsumerState<_QrDetailScreen> {
               width: 240,
               height: 240,
               fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => _qrPlaceholder(theme),
+              errorBuilder: (_, _, _) => _qrPlaceholder(theme),
             ),
           ),
         );
@@ -593,7 +638,12 @@ class _QrDetailScreenState extends ConsumerState<_QrDetailScreen> {
     );
   }
 
-  void _handleAction(BuildContext context, WidgetRef ref, QrCode qr, String action) {
+  void _handleAction(
+    BuildContext context,
+    WidgetRef ref,
+    QrCode qr,
+    String action,
+  ) {
     switch (action) {
       case 'download':
         _download(context, qr);
@@ -627,12 +677,9 @@ class _QrDetailScreenState extends ConsumerState<_QrDetailScreen> {
     if (!context.mounted) return;
 
     if (path != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('QR sauvegardé: $path'),
-          duration: const Duration(seconds: 4),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('QR sauvegardé: $path')));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Erreur lors de la sauvegarde du QR.')),
@@ -672,11 +719,9 @@ class _QrDetailScreenState extends ConsumerState<_QrDetailScreen> {
   }
 
   void _showPrintPreview(BuildContext context, String uuid) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => _PrintPreviewScreen(uuid: uuid),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => _PrintPreviewScreen(uuid: uuid)));
   }
 
   void _confirmRegenerate(BuildContext context, WidgetRef ref, QrCode qr) {
@@ -696,21 +741,26 @@ class _QrDetailScreenState extends ConsumerState<_QrDetailScreen> {
           FilledButton(
             onPressed: () async {
               Navigator.of(ctx).pop();
-              final newQr = await ref.read(qrProvider.notifier).regenerateQr(
+              final newQr = await ref
+                  .read(qrProvider.notifier)
+                  .regenerateQr(
                     qr.proprietaireUuid,
                     ownerType: qr.typeProprietaire,
                   );
               if (context.mounted) {
                 if (newQr != null) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('QR code régénéré avec succès.')),
+                    const SnackBar(
+                      content: Text('QR code régénéré avec succès.'),
+                    ),
                   );
                   Navigator.of(context).pop();
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                        ref.read(qrProvider).error ?? 'Erreur lors de la régénération.',
+                        ref.read(qrProvider).error ??
+                            'Erreur lors de la régénération.',
                       ),
                     ),
                   );
@@ -740,7 +790,9 @@ class _QrDetailScreenState extends ConsumerState<_QrDetailScreen> {
           FilledButton(
             onPressed: () async {
               Navigator.of(ctx).pop();
-              final success = await ref.read(qrProvider.notifier).revokeQr(qr.uuid);
+              final success = await ref
+                  .read(qrProvider.notifier)
+                  .revokeQr(qr.uuid);
               if (context.mounted) {
                 if (success) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -751,7 +803,8 @@ class _QrDetailScreenState extends ConsumerState<_QrDetailScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                        ref.read(qrProvider).error ?? 'Erreur lors de la révocation.',
+                        ref.read(qrProvider).error ??
+                            'Erreur lors de la révocation.',
                       ),
                     ),
                   );
@@ -790,7 +843,8 @@ class _PrintPreviewScreen extends ConsumerStatefulWidget {
   const _PrintPreviewScreen({required this.uuid});
 
   @override
-  ConsumerState<_PrintPreviewScreen> createState() => _PrintPreviewScreenState();
+  ConsumerState<_PrintPreviewScreen> createState() =>
+      _PrintPreviewScreenState();
 }
 
 class _PrintPreviewScreenState extends ConsumerState<_PrintPreviewScreen> {
@@ -828,7 +882,7 @@ class _PrintPreviewScreenState extends ConsumerState<_PrintPreviewScreen> {
     if (qr == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Aperçu impression')),
-        body: Center(child: const Text('Impossible de charger le QR code.')),
+        body: const Center(child: Text('Impossible de charger le QR code.')),
       );
     }
 
@@ -839,11 +893,7 @@ class _PrintPreviewScreenState extends ConsumerState<_PrintPreviewScreen> {
           IconButton(
             icon: const Icon(Icons.print_rounded),
             tooltip: 'Imprimer',
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Impression à venir.')),
-              );
-            },
+            onPressed: () => _print(qr),
           ),
         ],
       ),
@@ -871,7 +921,7 @@ class _PrintPreviewScreenState extends ConsumerState<_PrintPreviewScreen> {
                     width: 200,
                     height: 200,
                     fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => Icon(
+                    errorBuilder: (_, _, _) => Icon(
                       Icons.qr_code_2_rounded,
                       size: 100,
                       color: theme.colorScheme.onSurfaceVariant,
@@ -925,5 +975,74 @@ class _PrintPreviewScreenState extends ConsumerState<_PrintPreviewScreen> {
     return 'Expire le ${dt.day.toString().padLeft(2, '0')}/'
         '${dt.month.toString().padLeft(2, '0')}/'
         '${dt.year}';
+  }
+
+  Future<void> _print(QrCode qr) async {
+    final encodedImage = qr.qrBase64;
+    if (encodedImage == null || encodedImage.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Aucune image QR disponible.')),
+      );
+      return;
+    }
+
+    try {
+      final imageBytes = base64Decode(
+        encodedImage.contains(',')
+            ? encodedImage.split(',').last
+            : encodedImage,
+      );
+      await Printing.layoutPdf(
+        name: 'QR_${qr.proprietaireFullName}',
+        onLayout: (format) async {
+          final document = pw.Document();
+          document.addPage(
+            pw.Page(
+              pageFormat: format,
+              build: (_) => pw.Center(
+                child: pw.Column(
+                  mainAxisSize: pw.MainAxisSize.min,
+                  children: [
+                    pw.Text(
+                      'CSM-GIAS Resto+',
+                      style: pw.TextStyle(
+                        fontSize: 18,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                    pw.SizedBox(height: 20),
+                    pw.Image(
+                      pw.MemoryImage(imageBytes),
+                      width: 220,
+                      height: 220,
+                    ),
+                    pw.SizedBox(height: 16),
+                    pw.Text(
+                      qr.proprietaireFullName,
+                      style: pw.TextStyle(
+                        fontSize: 16,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                    pw.SizedBox(height: 6),
+                    pw.Text(qr.typeLabel),
+                    pw.SizedBox(height: 10),
+                    pw.Text(_formatDate(qr.dateExpiration)),
+                  ],
+                ),
+              ),
+            ),
+          );
+          return document.save();
+        },
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Impossible de préparer le document à imprimer.'),
+        ),
+      );
+    }
   }
 }

@@ -1,23 +1,28 @@
-import 'package:flutter/foundation.dart';
-
 class Environment {
   Environment._();
 
   static String get apiBaseUrl {
-    const fallback = 'http://localhost:8000/api/v1';
-    const key = String.fromEnvironment('API_BASE_URL');
-    if (key.isEmpty) {
-      debugPrint(
-        'Environment: API_BASE_URL not set via --dart-define, '
-        'using fallback: $fallback',
-      );
-      return fallback;
+    const fallback = 'http://10.0.2.2:8000/api/v1';
+    const configured = String.fromEnvironment('API_BASE_URL');
+    final value = configured.isEmpty ? fallback : configured;
+    if (isProduction && configured.isEmpty) {
+      throw StateError('API_BASE_URL is required in production.');
     }
-    debugPrint('Environment: API_BASE_URL = $key');
-    return key;
+    if (isProduction && Uri.tryParse(value)?.scheme != 'https') {
+      throw StateError('API_BASE_URL must use HTTPS in production.');
+    }
+    return value;
   }
 
   static bool get isProduction => const bool.fromEnvironment('PRODUCTION');
+
+  static String? get tabletApiKey {
+    const key = String.fromEnvironment('TABLET_API_KEY');
+    if (isProduction && key.isEmpty) {
+      throw StateError('TABLET_API_KEY is required in production.');
+    }
+    return key.isEmpty ? null : key;
+  }
 
   static bool get isDevelopment => !isProduction;
 

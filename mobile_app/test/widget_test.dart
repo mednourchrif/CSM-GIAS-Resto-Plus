@@ -5,11 +5,7 @@ import 'package:mobile_app/main.dart';
 
 void main() {
   testWidgets('App builds successfully', (WidgetTester tester) async {
-    await tester.pumpWidget(
-      const ProviderScope(
-        child: RestoApp(),
-      ),
-    );
+    await tester.pumpWidget(const ProviderScope(child: RestoApp()));
 
     expect(find.byType(RestoApp), findsOneWidget);
   });

@@ -8,16 +8,14 @@ import '../dto/register_meal_response_dto.dart';
 class MealRemoteDataSource {
   final Dio _dio;
 
-  MealRemoteDataSource({required Dio dio}) : _dio = dio;
+  MealRemoteDataSource({required this._dio});
 
   Future<RegisterMealResponseDto> registerMeal({
-    String? qrToken,
-    String? userUuid,
+    required String identificationToken,
     required String categorieUuid,
   }) async {
     final request = RegisterMealRequestDto(
-      token: qrToken,
-      userUuid: userUuid,
+      identificationToken: identificationToken,
       categorieUuid: categorieUuid,
     );
 
@@ -26,18 +24,16 @@ class MealRemoteDataSource {
       data: request.toJson(),
     );
 
-    final apiResponse =
-        ApiResponse<Map<String, dynamic>>.fromResponse(response);
+    final apiResponse = ApiResponse<Map<String, dynamic>>.fromResponse(
+      response,
+    );
     return RegisterMealResponseDto.fromJson(apiResponse.data ?? {});
   }
 
   Future<List<MealCategoryDto>> getCategories() async {
-    final response = await _dio.get<Map<String, dynamic>>(
-      '/meals/categories',
-    );
+    final response = await _dio.get<Map<String, dynamic>>('/meals/categories');
 
-    final apiResponse =
-        ApiResponse<List<dynamic>>.fromResponse(response);
+    final apiResponse = ApiResponse<List<dynamic>>.fromResponse(response);
     final data = apiResponse.data ?? [];
     return data
         .map((e) => MealCategoryDto.fromJson(e as Map<String, dynamic>))

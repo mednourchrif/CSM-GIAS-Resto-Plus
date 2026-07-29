@@ -7,7 +7,7 @@ import '../dto/visitor_dto.dart';
 class VisitorRemoteDataSource {
   final Dio _dio;
 
-  VisitorRemoteDataSource({required Dio dio}) : _dio = dio;
+  VisitorRemoteDataSource({required this._dio});
 
   Future<VisitorsListResponse> getVisitors({
     required int page,
@@ -20,8 +20,8 @@ class VisitorRemoteDataSource {
       'page': page,
       'page_size': pageSize,
       if (search != null && search.isNotEmpty) 'search': search,
-      if (sort != null) 'sort': sort,
-      if (order != null) 'order': order,
+      'sort': ?sort,
+      'order': ?order,
     };
 
     final response = await _dio.get<Map<String, dynamic>>(

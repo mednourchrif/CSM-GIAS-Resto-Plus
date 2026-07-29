@@ -3,25 +3,27 @@
 Endpoints
 ---------
 * ``POST /api/v1/face/enroll``   — Enroll a face for a user (admin only).
-* ``POST /api/v1/face/verify``   — Verify a user by face (public — kiosk).
-* ``POST /api/v1/face/identify`` — Identify a user by face (public — kiosk).
-* ``GET  /api/v1/face/{uuid}``   — Get face embedding metadata (public — kiosk).
-* ``DELETE /api/v1/face/{uuid}`` — Soft-delete a face embedding (admin only).
+* ``POST /api/v1/face/verify``   — Verify by face (managed kiosk).
+* ``POST /api/v1/face/identify`` — Identify by face (managed kiosk).
+* ``GET  /api/v1/face/{uuid}``   — Get embedding metadata (admin only).
+* ``DELETE /api/v1/face/{uuid}`` — Permanently erase a template (admin only).
 
 
 Design
 ------
-The verify and identify endpoints accept an optional ``categorie_uuid``.
-When provided, a meal is registered automatically after a successful
-match — this integrates with the existing meal registration system
-without leaking face-recognition knowledge into :class:`MealService`.
+Meal selection and confirmation are intentionally separate operations.
+Identification never registers a meal automatically.
 """
+
+import base64
 
 from fastapi import APIRouter, Depends, File, Form, Response, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.core.dependencies import get_db
+from app.core.exceptions import BusinessException, ValidationException
 from app.models.admin import Admin
+from app.models.face_embedding import FaceEmbedding
 from app.schemas.face import (
     FaceEmbeddingResponse,
     FaceEnrollRequest,
@@ -32,24 +34,27 @@ from app.schemas.face import (
     FaceVerifyResponse,
 )
 from app.schemas.response import SuccessResponse
-from app.security.dependencies import require_admin
+from app.security.dependencies import require_admin, require_kiosk_access
 from app.services.audit_service import AuditLogService
 from app.services.face_service import FaceService
+from app.services.identification_service import IdentificationService
+from app.services.meal_service import MealService
+from app.services.setting_service import SettingService
+from app.utils.date_utils import ensure_utc
 
 router = APIRouter(prefix="/face", tags=["face"])
 
 _service = FaceService()
+_identification_service = IdentificationService()
+_meal_service = MealService()
+_setting_service = SettingService()
 _audit = AuditLogService()
 
 
 @router.post(
     "/enroll",
     summary="Enrôler une empreinte faciale",
-    description=(
-        "Enrôle une empreinte faciale pour un utilisateur.  Si "
-        "``categorie_uuid`` est fourni, un repas est automatiquement "
-        "enregistré après l'enrôlement."
-    ),
+    description="Enrôle une empreinte faciale pour un employé actif.",
     response_model=SuccessResponse[FaceEnrollResponse],
     status_code=status.HTTP_201_CREATED,
 )
@@ -63,12 +68,12 @@ async def enroll(
         db=db,
         image_base64=body.image_base64,
         user_uuid=body.utilisateur_uuid,
-        categorie_uuid=body.categorie_uuid,
     )
     employee = _service._user_repo.get_by_uuid(db, body.utilisateur_uuid)
     employee_name = f"{employee.prenom} {employee.nom}" if employee else body.utilisateur_uuid
     _audit.log_face_enrolled(
-        db, admin=admin,
+        db,
+        admin=admin,
         employee_uuid=body.utilisateur_uuid,
         employee_name=employee_name,
     )
@@ -101,8 +106,11 @@ async def enroll(
 async def verify(
     body: FaceVerifyRequest,
     db: Session = Depends(get_db),
+    _kiosk_identity: Admin | None = Depends(require_kiosk_access),
 ) -> SuccessResponse[FaceVerifyResponse]:
     """Verify a user by comparing against their stored embedding."""
+    if _setting_service.get_runtime_value(db, "face_recognition_enabled", "true").lower() != "true":
+        raise BusinessException(message="La reconnaissance faciale est désactivée.")
     result = _service.verify(
         db=db,
         image_base64=body.image_base64,
@@ -133,22 +141,37 @@ async def verify(
 async def identify(
     body: FaceIdentifyRequest,
     db: Session = Depends(get_db),
+    _kiosk_identity: Admin | None = Depends(require_kiosk_access),
 ) -> SuccessResponse[FaceIdentifyResponse]:
     """Identify a user by face against all stored embeddings."""
+    if _setting_service.get_runtime_value(db, "face_recognition_enabled", "true").lower() != "true":
+        raise BusinessException(message="La reconnaissance faciale est désactivée.")
     result = _service.identify(
         db=db,
         image_base64=body.image_base64,
     )
     statut, confidence, user_uuid, nom, prenom, user_type, message = result
+    identification_token = None
+    identification_expires_at = None
+    if statut.value == "MATCH" and user_uuid:
+        _meal_service.ensure_no_meal_today(db, user_uuid)
+        grant, identification_token = _identification_service.issue(
+            db,
+            user_uuid=user_uuid,
+            identification_type="FACE",
+        )
+        identification_expires_at = ensure_utc(grant.expires_at)
     return SuccessResponse(
         data=FaceIdentifyResponse(
             statut=statut,
             confidence=confidence,
-            utilisateur_uuid=user_uuid,
-            nom=nom,
-            prenom=prenom,
+            utilisateur_uuid=None,
+            nom=None,
+            prenom=None,
             type=user_type,
             message=message,
+            identification_token=identification_token,
+            identification_expires_at=identification_expires_at,
         ),
     )
 
@@ -161,6 +184,7 @@ async def identify(
 async def get_embedding(
     uuid: str,
     db: Session = Depends(get_db),
+    _admin: Admin = Depends(require_admin),
 ) -> SuccessResponse[FaceEmbeddingResponse]:
     """Get face embedding metadata by UUID."""
     embedding = _service.get_by_uuid(db, uuid)
@@ -180,9 +204,33 @@ async def get_embedding(
 
 
 @router.delete(
+    "/user/{user_uuid}",
+    summary="Supprimer les empreintes faciales d'un employé",
+    description="Efface définitivement toutes les empreintes de l'employé.",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_user_embeddings(
+    user_uuid: str,
+    db: Session = Depends(get_db),
+    admin: Admin = Depends(require_admin),
+) -> Response:
+    """Permanently erase every biometric template owned by an employee."""
+    employee = _service._user_repo.get_by_uuid(db, user_uuid)
+    employee_name = f"{employee.prenom} {employee.nom}" if employee else user_uuid
+    _service.delete_for_user(db, user_uuid)
+    _audit.log_face_removed(
+        db,
+        admin=admin,
+        employee_uuid=user_uuid,
+        employee_name=employee_name,
+    )
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.delete(
     "/{uuid}",
     summary="Supprimer une empreinte faciale",
-    description="Désactive une empreinte faciale (soft-delete).",
+    description="Supprime définitivement une empreinte faciale.",
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_embedding(
@@ -190,13 +238,14 @@ async def delete_embedding(
     db: Session = Depends(get_db),
     admin: Admin = Depends(require_admin),
 ) -> Response:
-    """Soft-delete a face embedding by UUID."""
+    """Permanently delete a face embedding by UUID."""
     embedding = _service.get_by_uuid(db, uuid)
     employee = _service._user_repo.get_by_uuid(db, embedding.utilisateur_uuid)
     employee_name = f"{employee.prenom} {employee.nom}" if employee else embedding.utilisateur_uuid
     _service.delete_embedding(db, uuid)
     _audit.log_face_removed(
-        db, admin=admin,
+        db,
+        admin=admin,
         employee_uuid=embedding.utilisateur_uuid,
         employee_name=employee_name,
     )
@@ -215,27 +264,39 @@ async def delete_embedding(
 )
 async def enroll_multiple(
     utilisateur_uuid: str = Form(...),
-    images: list[UploadFile] = File(..., min_length=5, max_length=10),
+    images: list[UploadFile] = File(..., min_length=3, max_length=5),
     db: Session = Depends(get_db),
     admin: Admin = Depends(require_admin),
-):
+) -> SuccessResponse[dict[str, object]]:
     """Enroll a face using multiple uploaded images."""
-    embeddings = []
+    embeddings: list[FaceEmbedding] = []
+    total_size = 0
     for image in images:
+        if image.content_type not in {"image/jpeg", "image/png", "image/webp"}:
+            raise ValidationException(
+                message="Seules les images JPEG, PNG et WebP sont acceptées.",
+            )
         content = await image.read()
-        import base64
-        mime_type = image.content_type or "image/png"
+        total_size += len(content)
+        if len(content) > 5 * 1024 * 1024 or total_size > 20 * 1024 * 1024:
+            raise ValidationException(
+                message="Les images dépassent la taille autorisée.",
+            )
 
-        b64 = (
-            f"data:{image.content_type};base64,"
-            + base64.b64encode(content).decode("utf-8")
-        )
+        b64 = f"data:{image.content_type};base64," + base64.b64encode(content).decode("utf-8")
         embedding, _ = _service.enroll(
             db=db,
             image_base64=b64,
             user_uuid=utilisateur_uuid,
         )
         embeddings.append(embedding)
+    employee = _service._user_repo.get_by_uuid(db, utilisateur_uuid)
+    _audit.log_face_enrolled(
+        db,
+        admin=admin,
+        employee_uuid=utilisateur_uuid,
+        employee_name=(f"{employee.prenom} {employee.nom}" if employee else utilisateur_uuid),
+    )
     return SuccessResponse(
         data={
             "utilisateur_uuid": utilisateur_uuid,

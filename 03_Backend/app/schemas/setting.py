@@ -1,5 +1,3 @@
-from typing import Any
-
 from pydantic import Field
 
 from app.schemas.base import BaseSchema
@@ -10,9 +8,7 @@ class SettingUpdate(BaseSchema):
 
 
 class SettingsBatchUpdate(BaseSchema):
-    settings: dict[str, str] = Field(
-        ..., description="Key-value map of settings to update"
-    )
+    settings: dict[str, str] = Field(..., description="Key-value map of settings to update")
 
 
 class SettingResponse(BaseSchema):

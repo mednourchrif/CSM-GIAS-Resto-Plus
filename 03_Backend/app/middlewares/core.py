@@ -28,7 +28,7 @@ class CoreMiddleware(BaseHTTPMiddleware):
         start_time = time.perf_counter()
 
         with logger.contextualize(request_id=request_id):
-            logger.info("→ {} {}", request.method, request.url.path)
+            logger.info("REQUEST {} {}", request.method, request.url.path)
 
             response = await call_next(request)
 
@@ -38,7 +38,7 @@ class CoreMiddleware(BaseHTTPMiddleware):
             response.headers[HEADER_PROCESS_TIME] = f"{duration_ms:.2f}"
 
             logger.info(
-                "← {} {} — {} ({:.2f}ms)",
+                "RESPONSE {} {} - {} ({:.2f}ms)",
                 request.method,
                 request.url.path,
                 response.status_code,

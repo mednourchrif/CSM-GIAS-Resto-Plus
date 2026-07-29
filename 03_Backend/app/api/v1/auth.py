@@ -9,21 +9,28 @@ Endpoints
 * ``GET  /api/v1/auth/me``    — Return the currently authenticated admin.
 """
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.dependencies import get_db
+from app.core.exceptions import UnauthorizedException
 from app.models.admin import Admin
 from app.schemas.auth import AdminSummary, LoginRequest, LoginResponse, TokenResponse
 from app.schemas.response import SuccessResponse
 from app.security.dependencies import get_current_admin
-from app.services.auth_service import AuthService
+from app.security.rate_limit import LoginRateLimiter
 from app.services.audit_service import AuditLogService
+from app.services.auth_service import AuthService
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
 _service = AuthService()
 _audit = AuditLogService()
+_login_limiter = LoginRateLimiter(
+    max_attempts=settings.LOGIN_RATE_LIMIT_ATTEMPTS,
+    window_seconds=settings.LOGIN_RATE_LIMIT_WINDOW_SECONDS,
+)
 
 
 @router.post(
@@ -48,12 +55,25 @@ async def login(
     """
     ip_address = request.client.host if request.client else None
     user_agent = request.headers.get("user-agent")
+    limiter_key = f"{ip_address or 'unknown'}:{body.email.casefold()}"
+    retry_after = _login_limiter.retry_after(limiter_key)
+    if retry_after is not None:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Trop de tentatives. Réessayez plus tard.",
+            headers={"Retry-After": str(retry_after)},
+        )
 
-    token, expires_in, admin = _service.authenticate(
-        db=db,
-        email=body.email,
-        password=body.mot_de_passe,
-    )
+    try:
+        token, expires_in, admin = _service.authenticate(
+            db=db,
+            email=body.email,
+            password=body.mot_de_passe,
+        )
+    except UnauthorizedException:
+        _login_limiter.record_failure(limiter_key)
+        raise
+    _login_limiter.reset(limiter_key)
 
     role_name = admin.role.nom if admin.role else None
 

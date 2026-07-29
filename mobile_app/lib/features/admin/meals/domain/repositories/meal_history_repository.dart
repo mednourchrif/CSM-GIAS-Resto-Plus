@@ -30,8 +30,5 @@ abstract class MealHistoryRepository {
     String order = 'desc',
   });
 
-  Future<MealStats> getMealStats({
-    String? dateFrom,
-    String? dateTo,
-  });
+  Future<MealStats> getMealStats({String? dateFrom, String? dateTo});
 }

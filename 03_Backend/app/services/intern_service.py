@@ -1,5 +1,7 @@
 """Intern service — business logic for intern management."""
 
+from datetime import UTC, date, datetime
+
 from loguru import logger
 from sqlalchemy.orm import Session
 
@@ -10,7 +12,6 @@ from app.repositories.intern import InternRepository
 from app.repositories.user import UserRepository
 from app.schemas.intern import InternCreate, InternUpdate
 from app.schemas.pagination import PaginatedResult, PaginationParams
-from app.utils.date_utils import today_utc
 from app.utils.password import hash_password
 from app.utils.validators import validate_date_range
 
@@ -40,7 +41,7 @@ class InternService:
         attrs["updated_by_id"] = admin.uuid
 
         intern = self._intern_repo.create(db, **attrs)
-        logger.info("Intern created", extra={"uuid": intern.uuid, "admin": admin.uuid})
+        logger.info("Intern created")
         return intern
 
     def get(self, db: Session, uuid: str) -> Intern:
@@ -70,16 +71,15 @@ class InternService:
         updated = self._intern_repo.update(db, intern.id, **update_data)
         if updated is None:
             raise NotFoundException(message=f"Stagiaire {uuid} introuvable.")
-        logger.info("Intern updated", extra={"uuid": uuid, "admin": admin.uuid})
+        logger.info("Intern updated")
         return updated
 
     def delete(self, db: Session, uuid: str, admin: Admin) -> None:
-        from datetime import UTC, datetime
-
         intern = self.get(db, uuid)
         intern.date_suppression = datetime.now(UTC)
+        intern.updated_by_id = admin.uuid
         db.flush()
-        logger.info("Intern soft-deleted", extra={"uuid": uuid, "admin": admin.uuid})
+        logger.info("Intern soft-deleted")
 
     def get_list(self, db: Session, params: PaginationParams) -> PaginatedResult[Intern]:
         items, total = self._intern_repo.search_paginated(
@@ -99,7 +99,7 @@ class InternService:
             total_pages=total_pages,
         )
 
-    def _validate_dates(self, start, end) -> None:
+    def _validate_dates(self, start: date | None, end: date | None) -> None:
         if not validate_date_range(start, end):
             raise ValidationException(
                 message="La date de fin de stage doit être postérieure à la date de début.",

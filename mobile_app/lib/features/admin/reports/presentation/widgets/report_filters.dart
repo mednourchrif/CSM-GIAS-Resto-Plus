@@ -58,7 +58,12 @@ class _ReportFiltersState extends ConsumerState<ReportFilters> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Filtres', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+            Text(
+              'Filtres',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 16),
             Wrap(
               spacing: 12,
@@ -81,29 +86,52 @@ class _ReportFiltersState extends ConsumerState<ReportFilters> {
                   decoration: const InputDecoration(
                     labelText: 'Période',
                     isDense: true,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
                     border: OutlineInputBorder(),
                   ),
                   items: const [
-                    DropdownMenuItem(value: ReportGranularity.daily, child: Text('Par jour')),
-                    DropdownMenuItem(value: ReportGranularity.weekly, child: Text('Par semaine')),
-                    DropdownMenuItem(value: ReportGranularity.monthly, child: Text('Par mois')),
+                    DropdownMenuItem(
+                      value: ReportGranularity.daily,
+                      child: Text('Par jour'),
+                    ),
+                    DropdownMenuItem(
+                      value: ReportGranularity.weekly,
+                      child: Text('Par semaine'),
+                    ),
+                    DropdownMenuItem(
+                      value: ReportGranularity.monthly,
+                      child: Text('Par mois'),
+                    ),
                   ],
-                  onChanged: (v) => setState(() => _granularity = v ?? ReportGranularity.daily),
+                  onChanged: (v) => setState(
+                    () => _granularity = v ?? ReportGranularity.daily,
+                  ),
                 ),
                 DropdownButtonFormField<String>(
                   initialValue: _userType,
                   decoration: const InputDecoration(
                     labelText: 'Type de personne',
                     isDense: true,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
                     border: OutlineInputBorder(),
                   ),
                   items: const [
-                    DropdownMenuItem(value: null, child: Text('Tous')),
+                    DropdownMenuItem(child: Text('Tous')),
                     DropdownMenuItem(value: 'EMPLOYE', child: Text('Employés')),
-                    DropdownMenuItem(value: 'STAGIAIRE', child: Text('Stagiaires')),
-                    DropdownMenuItem(value: 'VISITEUR', child: Text('Visiteurs')),
+                    DropdownMenuItem(
+                      value: 'STAGIAIRE',
+                      child: Text('Stagiaires'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'VISITEUR',
+                      child: Text('Visiteurs'),
+                    ),
                   ],
                   onChanged: (v) => setState(() => _userType = v),
                 ),
@@ -112,13 +140,19 @@ class _ReportFiltersState extends ConsumerState<ReportFilters> {
                   decoration: const InputDecoration(
                     labelText: 'Méthode',
                     isDense: true,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
                     border: OutlineInputBorder(),
                   ),
                   items: const [
-                    DropdownMenuItem(value: null, child: Text('Toutes')),
+                    DropdownMenuItem(child: Text('Toutes')),
                     DropdownMenuItem(value: 'QR', child: Text('QR Code')),
-                    DropdownMenuItem(value: 'FACE', child: Text('Reconnaissance faciale')),
+                    DropdownMenuItem(
+                      value: 'FACE',
+                      child: Text('Reconnaissance faciale'),
+                    ),
                   ],
                   onChanged: (v) => setState(() => _typeIdentification = v),
                 ),
@@ -156,7 +190,10 @@ class _DateChip extends StatelessWidget {
       decoration: InputDecoration(
         labelText: label,
         isDense: true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
         border: const OutlineInputBorder(),
         suffixIcon: value != null
             ? IconButton(

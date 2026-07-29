@@ -1,4 +1,4 @@
-package com.example.mobile_app
+package com.csmgias.restoplus
 
 import android.content.ContentValues
 import android.content.Context
@@ -16,7 +16,7 @@ import java.io.File
 import java.io.FileOutputStream
 
 class MainActivity : FlutterActivity() {
-    private val CHANNEL = "com.example.mobile_app/download"
+    private val CHANNEL = "com.csmgias.restoplus/download"
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -82,8 +82,7 @@ class MainActivity : FlutterActivity() {
                 }
                 true
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (_: Exception) {
             false
         }
     }

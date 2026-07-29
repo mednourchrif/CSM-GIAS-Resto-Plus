@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../../../core/theme/spacing.dart';
 
@@ -28,33 +30,31 @@ class _AnimatedFadeInState extends State<AnimatedFadeIn>
   late final AnimationController _controller;
   late final Animation<double> _opacity;
   late final Animation<Offset> _slide;
+  Timer? _delayTimer;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.duration,
-    );
+    _controller = AnimationController(vsync: this, duration: widget.duration);
 
-    _opacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: AppCurves.enter),
-    );
+    _opacity = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: AppCurves.enter));
 
     _slide = Tween<Offset>(
       begin: widget.slideOffset,
       end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _controller, curve: AppCurves.enter),
-    );
+    ).animate(CurvedAnimation(parent: _controller, curve: AppCurves.enter));
 
-    Future.delayed(widget.delay, () {
+    _delayTimer = Timer(widget.delay, () {
       if (mounted) _controller.forward();
     });
   }
 
   @override
   void dispose() {
+    _delayTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -66,10 +66,7 @@ class _AnimatedFadeInState extends State<AnimatedFadeIn>
       builder: (context, child) {
         return FadeTransition(
           opacity: _opacity,
-          child: Transform.translate(
-            offset: _slide.value,
-            child: child,
-          ),
+          child: Transform.translate(offset: _slide.value, child: child),
         );
       },
       child: widget.child,

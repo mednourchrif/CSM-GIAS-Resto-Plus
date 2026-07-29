@@ -4,15 +4,20 @@ Covers: opening hours, duplicate prevention, valid QR registration,
 intern workflow, visitor workflow, pagination, history, auth.
 """
 
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, datetime
+from unittest import mock
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import select as _select
 from sqlalchemy.orm import Session
 
+from app.core.exceptions import BusinessException, ConflictException
+from app.models.employee import Employee
 from app.models.meal_category import MealCategory
+from app.models.user import StatutUtilisateur
 from app.services.meal_service import MealService, is_restaurant_open
+from app.repositories.setting import SettingRepository
 from tests.test_auth import _auth_header, _login_payload, _seed_admin
 from tests.test_qr_codes import _seed_intern, _seed_visitor
 
@@ -39,18 +44,36 @@ def _seed_categories(db: Session) -> dict[str, str]:
     return cats
 
 
-def _generate_qr_for_intern(client, token, intern_uuid):
-    resp = client.post(
-        f"/api/v1/qr/generate/intern/{intern.uuid}",
-        headers=_auth_header(token),
+def _seed_employee(db: Session, matricule: str = "EMP-MEAL-001") -> Employee:
+    employee = Employee(
+        nom="Repas",
+        prenom="Employé",
+        email=f"{matricule.lower()}@test.com",
+        type="EMPLOYE",
+        statut=StatutUtilisateur.ACTIF,
+        matricule=matricule,
+        langue="FR",
     )
-    return resp.json()["data"]["qr_token"]
+    db.add(employee)
+    db.flush()
+    return employee
 
 
 def _register_meal(client, token, qr_token, categorie_uuid):
+    identification = client.post(
+        "/api/v1/identification/qr",
+        json={"token": qr_token},
+        headers=_auth_header(token),
+    )
+    if identification.status_code != 200:
+        return identification
+    identification_token = identification.json()["data"]["identification_token"]
     return client.post(
         "/api/v1/meals/register",
-        json={"token": qr_token, "categorie_uuid": categorie_uuid},
+        json={
+            "identification_token": identification_token,
+            "categorie_uuid": categorie_uuid,
+        },
         headers=_auth_header(token),
     )
 
@@ -84,6 +107,16 @@ class TestRestaurantHours:
     def test_closed_edge_end(self):
         assert is_restaurant_open(datetime(2026, 7, 4, 13, 0, 0, tzinfo=UTC)) is False
 
+    def test_service_reads_saved_restaurant_hours(self, db_session):
+        repository = SettingRepository()
+        repository.upsert(db_session, "opening_hour", "08:00")
+        repository.upsert(db_session, "closing_hour", "10:00")
+
+        opening, closing = MealService()._restaurant_hours(db_session)
+
+        assert opening.isoformat(timespec="minutes") == "08:00"
+        assert closing.isoformat(timespec="minutes") == "10:00"
+
 
 # ---------------------------------------------------------------------------
 # Tests
@@ -110,7 +143,6 @@ class TestMealRegistration:
         assert body["success"] is True
         assert body["data"]["type_identification"] == "QR"
         assert body["data"]["categorie_uuid"] == cats["Plat"]
-        assert body["data"]["utilisateur_uuid"] == intern.uuid
         assert body["data"]["date_repas"] == str(datetime.now(UTC).date())
 
     def test_register_visitor_meal(self, client: TestClient, db_session: Session) -> None:
@@ -128,19 +160,15 @@ class TestMealRegistration:
         assert resp.status_code == 201
         assert resp.json()["data"]["categorie_uuid"] == cats["Pizza"]
 
-    def test_register_meal_different_categories(self, client: TestClient, db_session: Session) -> None:
+    def test_register_meal_different_categories(
+        self, client: TestClient, db_session: Session
+    ) -> None:
         token = _login(client, db_session)
         cats = _seed_categories(db_session)
-        intern = _seed_intern(db_session)
-
-        gen_resp = client.post(
-            f"/api/v1/qr/generate/intern/{intern.uuid}",
-            headers=_auth_header(token),
-        )
-        qr_token = gen_resp.json()["data"]["qr_token"]
-
         for cat_name in ("Plat", "Pizza", "Sandwich"):
-            intern2 = _seed_intern(db_session, email=f"{cat_name}@test.com", matricule=f"INT{cat_name}")
+            intern2 = _seed_intern(
+                db_session, email=f"{cat_name}@test.com", matricule=f"INT{cat_name}"
+            )
             gen2 = client.post(
                 f"/api/v1/qr/generate/intern/{intern2.uuid}",
                 headers=_auth_header(token),
@@ -335,7 +363,13 @@ class TestMealAuth:
     """Authentication for meal endpoints."""
 
     def test_without_token_returns_401(self, client: TestClient, db_session: Session) -> None:
-        resp = client.post("/api/v1/meals/register", json={"token": "x", "categorie_uuid": "x"})
+        resp = client.post(
+            "/api/v1/meals/register",
+            json={
+                "identification_token": "x" * 32,
+                "categorie_uuid": "x",
+            },
+        )
         assert resp.status_code == 401
 
     def test_with_invalid_token_returns_401(self, client: TestClient, db_session: Session) -> None:
@@ -352,52 +386,65 @@ class TestMealServiceDirect:
     def test_register_by_user_uuid(self, db_session: Session) -> None:
         MealService.seed_categories(db_session)
 
-        cat = db_session.execute(_select(MealCategory).where(MealCategory.nom == "Plat")).scalar_one()
+        cat = db_session.execute(
+            _select(MealCategory).where(MealCategory.nom == "Plat")
+        ).scalar_one()
 
-        intern = _seed_intern(db_session)
+        employee = _seed_employee(db_session)
 
         service = MealService()
         meal = service.register_by_user_uuid(
             db_session,
-            user_uuid=intern.uuid,
+            user_uuid=employee.uuid,
             categorie_uuid=cat.uuid,
             type_identification="FACE",
             _now=_WITHIN_HOURS,
         )
         assert meal.type_identification == "FACE"
-        assert meal.utilisateur_uuid == intern.uuid
+        assert meal.utilisateur_uuid == employee.uuid
 
     def test_register_by_user_uuid_duplicate(self, db_session: Session) -> None:
         MealService.seed_categories(db_session)
 
-        cat = db_session.execute(_select(MealCategory).where(MealCategory.nom == "Plat")).scalar_one()
-        intern = _seed_intern(db_session)
+        cat = db_session.execute(
+            _select(MealCategory).where(MealCategory.nom == "Plat")
+        ).scalar_one()
+        employee = _seed_employee(db_session)
 
         service = MealService()
-        service.register_by_user_uuid(db_session, intern.uuid, cat.uuid, _now=_WITHIN_HOURS)
-
-        from app.core.exceptions import ConflictException
+        service.register_by_user_uuid(
+            db_session,
+            employee.uuid,
+            cat.uuid,
+            _now=_WITHIN_HOURS,
+        )
 
         with pytest.raises(ConflictException):
-            service.register_by_user_uuid(db_session, intern.uuid, cat.uuid, _now=_WITHIN_HOURS)
+            service.register_by_user_uuid(
+                db_session,
+                employee.uuid,
+                cat.uuid,
+                _now=_WITHIN_HOURS,
+            )
 
     @staticmethod
     def test_register_outside_hours(db_session: Session) -> None:
         MealService.seed_categories(db_session)
 
-        cat = db_session.execute(_select(MealCategory).where(MealCategory.nom == "Plat")).scalar_one()
-        intern = _seed_intern(db_session)
-
-        from unittest import mock
-
-        from app.core.exceptions import BusinessException
+        cat = db_session.execute(
+            _select(MealCategory).where(MealCategory.nom == "Plat")
+        ).scalar_one()
+        employee = _seed_employee(db_session)
 
         with mock.patch("app.services.meal_service.is_restaurant_open") as mock_open:
-            mock_open.side_effect = lambda now=None: False
+            mock_open.side_effect = lambda *_args: False
             service = MealService()
             closed_time = datetime(2026, 7, 4, 6, 0, tzinfo=UTC)  # 07:00 Casablanca
 
             with pytest.raises(BusinessException, match="fermé"):
                 service.register_by_user_uuid(
-                    db_session, intern.uuid, cat.uuid, _now=closed_time,
+                    db_session,
+                    employee.uuid,
+                    cat.uuid,
+                    _now=closed_time,
                 )

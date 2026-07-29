@@ -1,49 +1,46 @@
-# CSM-GIAS Resto+
+# CSM-GIAS Resto+ Mobile
 
-Restaurant Management System - Flutter Application
+Flutter tablet application for private meal identification/registration and
+restaurant administration.
+
+## Setup
+
+```powershell
+flutter pub get
+Copy-Item env.example.json env.local.json
+flutter run --dart-define-from-file=env.local.json
+```
+
+Use `10.0.2.2` for a host backend from the Android emulator. On a physical
+tablet, use a reachable LAN/HTTPS address. The mobile `TABLET_API_KEY` must
+match the backend.
+
+Production:
+
+```powershell
+flutter build apk --release `
+  --dart-define=PRODUCTION=true `
+  --dart-define=API_BASE_URL=https://api.example.org/api/v1 `
+  --dart-define=TABLET_API_KEY=<real-secret>
+```
+
+The release keystore remains private and is not stored in this repository.
 
 ## Architecture
 
-This project follows **Clean Architecture** with a **Feature-First** approach.
+Feature-first modules separate presentation/Riverpod state, domain contracts,
+and data/DTO integrations. Shared configuration, network, secure storage,
+routing, theming, result types, and state widgets live under `lib/core` and
+`lib/shared`.
 
-### Folder Structure
+## Quality
 
-```
-lib/
-├── core/
-│   ├── config/          # Environment & app configuration
-│   ├── constants/       # App-wide constants
-│   ├── errors/          # Failure & exception classes
-│   ├── network/         # Dio client & interceptors
-│   ├── router/          # GoRouter configuration
-│   ├── storage/         # Secure storage service
-│   ├── theme/           # Material 3 light/dark themes
-│   └── utils/           # Validators, extensions, helpers
-├── shared/
-│   ├── models/          # Shared domain models
-│   └── widgets/         # Shared reusable widgets
-├── features/            # Feature modules (to be added)
-├── providers.dart       # Global Riverpod providers
-└── main.dart            # App entry point
+```powershell
+flutter analyze
+flutter test
+flutter build apk --debug
+flutter build apk --release
 ```
 
-### Tech Stack
-
-- **State Management**: flutter_riverpod
-- **Routing**: go_router
-- **Networking**: dio
-- **Storage**: flutter_secure_storage
-- **Serialization**: freezed + json_serializable
-- **Logging**: logger
-- **UI**: Material 3
-
-### Running
-
-```bash
-# Development
-flutter run --dart-define=API_BASE_URL=http://localhost:8000/api/v1
-
-# Build
-flutter build apk
-flutter build web
-```
+See the repository [README](../README.md) and
+[architecture](../docs/ARCHITECTURE.md).

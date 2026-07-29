@@ -4,8 +4,7 @@ import '../entities/meal_registration.dart';
 
 abstract class MealRepository {
   Future<Result<MealRegistration>> registerMeal({
-    String? qrToken,
-    String? userUuid,
+    required String identificationToken,
     required String categorieUuid,
   });
 

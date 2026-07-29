@@ -1,6 +1,4 @@
-from datetime import date, datetime
-
-from sqlalchemy import select, func, or_
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.models.audit_log import AuditLog
@@ -60,5 +58,12 @@ class AuditLogRepository(BaseRepository[AuditLog]):
         return list(db.execute(stmt).scalars().all())
 
     def get_entity_types(self, db: Session) -> list[str]:
-        stmt = select(AuditLog.entity_type).distinct().order_by(AuditLog.entity_type)
-        return list(db.execute(stmt).scalars().all())
+        stmt = (
+            select(AuditLog.entity_type)
+            .where(AuditLog.entity_type.is_not(None))
+            .distinct()
+            .order_by(AuditLog.entity_type)
+        )
+        return [
+            entity_type for entity_type in db.execute(stmt).scalars() if entity_type is not None
+        ]

@@ -64,7 +64,6 @@ class QrCodeResponse(BaseResponse):
     motif_revocation: str | None = None
     derniere_validation: datetime | None = None
     nombre_validations: int = 0
-    metadata_json: str | None = None
     qr_base64: str | None = None
     proprietaire_nom: str | None = None
     proprietaire_prenom: str | None = None

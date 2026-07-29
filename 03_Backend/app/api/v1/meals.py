@@ -1,11 +1,8 @@
-"""Meal registration endpoints — the central business workflow.
+"""Meal endpoints and the protected identify-then-confirm kiosk workflow.
 
-The ``register`` endpoint is a **public** kiosk endpoint: it does not
-require any JWT authentication.  Identification is performed entirely
-through the QR token supplied in the request body.
-
-All other endpoints (list, today, history, detail) remain protected by
-admin authentication.
+Category and registration routes require a managed-tablet credential (or an
+administrator bearer token). Registration accepts only a short-lived,
+one-use identification grant. Administrative query routes require an admin.
 """
 
 from datetime import date
@@ -16,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.core.dependencies import get_db
 from app.models.admin import Admin
+from app.models.meal import Meal
 from app.models.meal_category import MealCategory
 from app.models.user import User
 from app.schemas.meal import (
@@ -24,9 +22,9 @@ from app.schemas.meal import (
     MealRegisterResponse,
     MealResponse,
 )
-from app.schemas.pagination import MealFilterParams, PaginationParams
+from app.schemas.pagination import MealFilterParams
 from app.schemas.response import PaginatedResponse, SuccessResponse
-from app.security.dependencies import require_admin
+from app.security.dependencies import require_admin, require_kiosk_access
 from app.services.meal_service import MealService
 
 router = APIRouter(prefix="/meals", tags=["meals"])
@@ -34,7 +32,7 @@ router = APIRouter(prefix="/meals", tags=["meals"])
 _service = MealService()
 
 
-def _enrich_meal_response(meal, db: Session) -> MealResponse:
+def _enrich_meal_response(meal: Meal, db: Session) -> MealResponse:
     """Enrich a MealResponse with category name and user name."""
     cat_stmt = select(MealCategory).where(MealCategory.uuid == meal.categorie_uuid)
     category = db.execute(cat_stmt).scalar_one_or_none()
@@ -60,14 +58,61 @@ def _enrich_meal_response(meal, db: Session) -> MealResponse:
     )
 
 
+def _enrich_meal_responses(
+    meals: list[Meal],
+    db: Session,
+) -> list[MealResponse]:
+    """Enrich a collection with two batch queries instead of per-row lookups."""
+    if not meals:
+        return []
+    category_uuids = {meal.categorie_uuid for meal in meals}
+    user_uuids = {meal.utilisateur_uuid for meal in meals}
+    categories = {
+        category.uuid: category
+        for category in db.execute(
+            select(MealCategory).where(MealCategory.uuid.in_(category_uuids))
+        )
+        .scalars()
+        .all()
+    }
+    users = {
+        user.uuid: user
+        for user in db.execute(select(User).where(User.uuid.in_(user_uuids))).scalars().all()
+    }
+    return [
+        MealResponse(
+            id=meal.id,
+            uuid=meal.uuid,
+            created_at=meal.created_at,
+            updated_at=meal.updated_at,
+            utilisateur_uuid=meal.utilisateur_uuid,
+            qr_uuid=meal.qr_uuid,
+            categorie_uuid=meal.categorie_uuid,
+            type_identification=meal.type_identification,
+            date_repas=meal.date_repas,
+            heure_repas=meal.heure_repas,
+            enregistre_par_uuid=meal.enregistre_par_uuid,
+            categorie_nom=(
+                categories[meal.categorie_uuid].nom if meal.categorie_uuid in categories else None
+            ),
+            nom=(users[meal.utilisateur_uuid].nom if meal.utilisateur_uuid in users else None),
+            prenom=(
+                users[meal.utilisateur_uuid].prenom if meal.utilisateur_uuid in users else None
+            ),
+        )
+        for meal in meals
+    ]
+
+
 @router.get(
     "/categories",
     response_model=SuccessResponse[list[MealCategoryResponse]],
 )
 async def list_categories(
     db: Session = Depends(get_db),
+    _kiosk_identity: Admin | None = Depends(require_kiosk_access),
 ) -> SuccessResponse[list[MealCategoryResponse]]:
-    """List all meal categories (public — no auth required).
+    """List all meal categories for an authorized kiosk.
 
     The kiosk uses this to populate the meal selection screen with
     the correct category UUIDs.
@@ -97,32 +142,14 @@ async def list_categories(
 async def register_meal(
     body: MealRegisterRequest,
     db: Session = Depends(get_db),
+    _kiosk_identity: Admin | None = Depends(require_kiosk_access),
 ) -> SuccessResponse[MealRegisterResponse]:
-    """Register a meal via QR token OR direct user UUID.
-
-    This is a **public** kiosk endpoint — no JWT required.
-    Authentication is performed via the QR token or the user UUID.
-
-    When ``utilisateur_uuid`` is provided (Face Recognition flow),
-    the meal is registered directly without QR validation.
-
-    Validates:
-    * Restaurant is open (12:30–00:00)
-    * Category exists
-    * User has not already eaten today
-    """
-    if body.token:
-        meal = _service.register_by_qr(db, body.token, body.categorie_uuid, admin=None)
-    elif body.utilisateur_uuid:
-        meal = _service.register_by_user_uuid(
-            db, body.utilisateur_uuid, body.categorie_uuid, type_identification="FACE",
-        )
-    else:
-        from fastapi import HTTPException
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Fournir 'token' (QR) ou 'utilisateur_uuid' (reconnaissance faciale).",
-        )
+    """Confirm a meal after successful face or QR identification."""
+    meal = _service.register_by_identification(
+        db,
+        body.identification_token,
+        body.categorie_uuid,
+    )
 
     cat_stmt = select(MealCategory).where(MealCategory.uuid == meal.categorie_uuid)
     category = db.execute(cat_stmt).scalar_one_or_none()
@@ -133,13 +160,10 @@ async def register_meal(
             uuid=meal.uuid,
             created_at=meal.created_at,
             updated_at=meal.updated_at,
-            utilisateur_uuid=meal.utilisateur_uuid,
             categorie_uuid=meal.categorie_uuid,
             type_identification=meal.type_identification,
             date_repas=meal.date_repas,
             heure_repas=meal.heure_repas,
-            qr_uuid=meal.qr_uuid,
-            enregistre_par_uuid=meal.enregistre_par_uuid,
             categorie_nom=category.nom if category else None,
         ),
     )
@@ -158,7 +182,7 @@ async def register_meal(
 async def list_meals(
     params: MealFilterParams = Depends(),
     db: Session = Depends(get_db),
-    admin: Admin = Depends(require_admin),
+    _admin: Admin = Depends(require_admin),
 ) -> PaginatedResponse[MealResponse]:
     """List meals with pagination, filters, and search."""
     result = _service.get_list(
@@ -172,7 +196,7 @@ async def list_meals(
     )
     return PaginatedResponse(
         success=True,
-        data=[_enrich_meal_response(m, db) for m in result.items],
+        data=_enrich_meal_responses(result.items, db),
         total=result.total,
         page=result.page,
         page_size=result.page_size,
@@ -189,18 +213,20 @@ async def get_meal_stats(
     date_from: date | None = None,
     date_to: date | None = None,
     db: Session = Depends(get_db),
-    admin: Admin = Depends(require_admin),
-) -> SuccessResponse:
+    _admin: Admin = Depends(require_admin),
+) -> SuccessResponse[dict[str, int]]:
     """Get meal statistics for a date range."""
     stats = _service.get_stats(db, date_from=date_from, date_to=date_to)
-    return SuccessResponse(data={
-        "total_meals": stats.total_meals,
-        "total_employees": stats.total_employees,
-        "total_interns": stats.total_interns,
-        "total_visitors": stats.total_visitors,
-        "face_registrations": stats.face_registrations,
-        "qr_registrations": stats.qr_registrations,
-    })
+    return SuccessResponse(
+        data={
+            "total_meals": stats.total_meals,
+            "total_employees": stats.total_employees,
+            "total_interns": stats.total_interns,
+            "total_visitors": stats.total_visitors,
+            "face_registrations": stats.face_registrations,
+            "qr_registrations": stats.qr_registrations,
+        }
+    )
 
 
 @router.get(
@@ -211,12 +237,12 @@ async def get_meal_stats(
 )
 async def get_today_meals(
     db: Session = Depends(get_db),
-    admin: Admin = Depends(require_admin),
+    _admin: Admin = Depends(require_admin),
 ) -> SuccessResponse[list[MealResponse]]:
     """Get all meals registered today."""
     meals = _service.get_today(db)
     return SuccessResponse(
-        data=[_enrich_meal_response(m, db) for m in meals],
+        data=_enrich_meal_responses(meals, db),
     )
 
 
@@ -229,12 +255,12 @@ async def get_today_meals(
 async def get_meal_history(
     user_uuid: str,
     db: Session = Depends(get_db),
-    admin: Admin = Depends(require_admin),
+    _admin: Admin = Depends(require_admin),
 ) -> SuccessResponse[list[MealResponse]]:
     """Get all meals for a user (newest first)."""
     history = _service.get_history(db, user_uuid)
     return SuccessResponse(
-        data=[_enrich_meal_response(m, db) for m in history],
+        data=_enrich_meal_responses(history, db),
     )
 
 
@@ -247,7 +273,7 @@ async def get_meal_history(
 async def get_meal(
     uuid: str,
     db: Session = Depends(get_db),
-    admin: Admin = Depends(require_admin),
+    _admin: Admin = Depends(require_admin),
 ) -> SuccessResponse[MealResponse]:
     """Get a single meal by UUID."""
     meal = _service.get(db, uuid)

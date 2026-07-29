@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mobile_app/core/theme/spacing.dart';
 
-/// A label/value row used in detail screens.
-///
-/// Supports clipboard copy for UUID-like fields via [copyable].
+import '../../core/theme/spacing.dart';
+
+/// Responsive label/value row used in detail screens.
 class DetailRow extends StatelessWidget {
   final String label;
   final String value;
@@ -24,51 +23,68 @@ class DetailRow extends StatelessWidget {
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: Spacing.xs + 2),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 148,
-            child: Text(
-              label,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final stacked = constraints.maxWidth < 420;
+          final labelWidget = Text(
+            label,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
             ),
-          ),
-          const SizedBox(width: Spacing.sm),
-          Expanded(
-            child: Text(
-              value,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-          ),
-          if (copyable)
-            InkWell(
-              onTap: () {
-                Clipboard.setData(ClipboardData(text: value));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('$label copié'),
-                    duration: const Duration(seconds: 2),
+          );
+          final valueWidget = Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  value,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurface,
                   ),
-                );
-              },
-              borderRadius: BorderRadius.circular(Spacing.radiusXs),
-              child: Padding(
-                padding: const EdgeInsets.all(Spacing.xxs),
-                child: Icon(
-                  Icons.copy_rounded,
-                  size: Spacing.iconXs,
-                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
                 ),
               ),
-            ),
-          if (trailing != null) trailing!,
-        ],
+              if (copyable)
+                IconButton(
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: value));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('$label copié'),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.copy_rounded),
+                  iconSize: Spacing.iconXs,
+                  tooltip: 'Copier $label',
+                  visualDensity: VisualDensity.compact,
+                ),
+              ?trailing,
+            ],
+          );
+
+          if (stacked) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                labelWidget,
+                const SizedBox(height: Spacing.xxs),
+                valueWidget,
+              ],
+            );
+          }
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(width: 148, child: labelWidget),
+              const SizedBox(width: Spacing.sm),
+              Expanded(child: valueWidget),
+            ],
+          );
+        },
       ),
     );
   }

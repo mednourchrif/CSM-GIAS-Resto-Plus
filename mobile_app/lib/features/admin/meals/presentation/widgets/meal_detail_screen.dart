@@ -7,7 +7,7 @@ import 'meal_status_badge.dart';
 class MealDetailScreen extends StatelessWidget {
   final MealHistory meal;
 
-  const MealDetailScreen({required this.meal});
+  const MealDetailScreen({super.key, required this.meal});
 
   @override
   Widget build(BuildContext context) {
@@ -38,9 +38,17 @@ class MealDetailScreen extends StatelessWidget {
                     theme: theme,
                   ),
                   const Divider(),
-                  _DetailRow(label: 'Email', value: meal.email ?? 'N/A', theme: theme),
+                  _DetailRow(
+                    label: 'Email',
+                    value: meal.email ?? 'N/A',
+                    theme: theme,
+                  ),
                   const Divider(),
-                  _DetailRow(label: 'UUID Utilisateur', value: meal.utilisateurUuid, theme: theme),
+                  _DetailRow(
+                    label: 'UUID Utilisateur',
+                    value: meal.utilisateurUuid,
+                    theme: theme,
+                  ),
                   const Divider(),
                   _DetailRow(
                     label: 'Date',
@@ -51,9 +59,17 @@ class MealDetailScreen extends StatelessWidget {
                     theme: theme,
                   ),
                   const Divider(),
-                  _DetailRow(label: 'Heure', value: meal.heureRepas, theme: theme),
+                  _DetailRow(
+                    label: 'Heure',
+                    value: meal.heureRepas,
+                    theme: theme,
+                  ),
                   const Divider(),
-                  _DetailRow(label: 'Catégorie', value: meal.categorieNom ?? 'N/A', theme: theme),
+                  _DetailRow(
+                    label: 'Catégorie',
+                    value: meal.categorieNom ?? 'N/A',
+                    theme: theme,
+                  ),
                   const Divider(),
                   Wrap(
                     spacing: Spacing.sm,

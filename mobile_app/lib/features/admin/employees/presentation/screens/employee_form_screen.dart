@@ -50,7 +50,9 @@ class _EmployeeFormScreenState extends ConsumerState<EmployeeFormScreen> {
 
     bool success;
     if (_isEditing) {
-      success = await ref.read(employeeProvider.notifier).updateEmployee(
+      success = await ref
+          .read(employeeProvider.notifier)
+          .updateEmployee(
             widget.employee!.uuid,
             nom: _nomController.text.trim(),
             prenom: _prenomController.text.trim(),
@@ -58,7 +60,9 @@ class _EmployeeFormScreenState extends ConsumerState<EmployeeFormScreen> {
             statut: _statut,
           );
     } else {
-      success = await ref.read(employeeProvider.notifier).createEmployee(
+      success = await ref
+          .read(employeeProvider.notifier)
+          .createEmployee(
             nom: _nomController.text.trim(),
             prenom: _prenomController.text.trim(),
             matricule: _matriculeController.text.trim(),
@@ -123,8 +127,10 @@ class _EmployeeFormScreenState extends ConsumerState<EmployeeFormScreen> {
                             labelText: 'Nom *',
                             border: OutlineInputBorder(),
                           ),
-                          validator: (v) =>
-                              Validators.required(v, fieldName: 'Le nom')?.message,
+                          validator: (v) => Validators.required(
+                            v,
+                            fieldName: 'Le nom',
+                          )?.message,
                         ),
                         const SizedBox(height: Spacing.md),
                         TextFormField(
@@ -133,8 +139,10 @@ class _EmployeeFormScreenState extends ConsumerState<EmployeeFormScreen> {
                             labelText: 'Prénom *',
                             border: OutlineInputBorder(),
                           ),
-                          validator: (v) =>
-                              Validators.required(v, fieldName: 'Le prénom')?.message,
+                          validator: (v) => Validators.required(
+                            v,
+                            fieldName: 'Le prénom',
+                          )?.message,
                         ),
                         const SizedBox(height: Spacing.md),
                         TextFormField(
@@ -143,8 +151,10 @@ class _EmployeeFormScreenState extends ConsumerState<EmployeeFormScreen> {
                             labelText: 'Matricule *',
                             border: OutlineInputBorder(),
                           ),
-                          validator: (v) =>
-                              Validators.required(v, fieldName: 'Le matricule')?.message,
+                          validator: (v) => Validators.required(
+                            v,
+                            fieldName: 'Le matricule',
+                          )?.message,
                         ),
                         const SizedBox(height: Spacing.md),
                         DropdownButtonFormField<String>(

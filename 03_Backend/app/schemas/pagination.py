@@ -19,10 +19,12 @@ class MealFilterParams(PaginationParams):
     date_to: date | None = Field(None, description="Filter: end date (inclusive)")
     categorie_uuid: str | None = Field(None, description="Filter by meal category UUID")
     type_identification: str | None = Field(
-        None, description="Filter by id method (QR or FACE)",
+        None,
+        description="Filter by id method (QR or FACE)",
     )
     user_type: str | None = Field(
-        None, description="Filter by user type (EMPLOYE, STAGIAIRE, VISITEUR)",
+        None,
+        description="Filter by user type (EMPLOYE, STAGIAIRE, VISITEUR)",
     )
 
 

@@ -10,6 +10,7 @@ their ``__tablename__`` and columns are registered in
 produce empty (or incomplete) migrations.
 """
 
+import os
 import sys
 from logging.config import fileConfig
 from pathlib import Path
@@ -44,6 +45,7 @@ from app.models import (  # noqa: F401, F403
     BaseModel,
     Employee,
     FaceEmbedding,
+    IdentificationGrant,
     Intern,
     Meal,
     MealCategory,
@@ -63,7 +65,10 @@ config = context.config
 # the same configuration is used at runtime and during migrations.
 from app.core.config import settings  # noqa: E402
 
-config.set_main_option("sqlalchemy.url", settings.database_url)
+config.set_main_option(
+    "sqlalchemy.url",
+    os.environ.get("ALEMBIC_DATABASE_URL", settings.database_url),
+)
 
 # Set up Python logging from the alembic.ini [loggers] section
 if config.config_file_name is not None:
@@ -74,6 +79,7 @@ target_metadata = Base.metadata
 
 
 # -- Offline mode ----------------------------------------------------------
+
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
@@ -96,6 +102,7 @@ def run_migrations_offline() -> None:
 
 
 # -- Online mode -----------------------------------------------------------
+
 
 def run_migrations_online() -> None:
     """Run migrations against a live database.

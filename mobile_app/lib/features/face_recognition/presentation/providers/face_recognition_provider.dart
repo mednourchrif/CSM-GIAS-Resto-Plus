@@ -10,12 +10,13 @@ import 'face_recognition_state.dart';
 
 final faceRecognitionRemoteDataSourceProvider =
     Provider<FaceRecognitionRemoteDataSource>((ref) {
-  final apiClient = ref.watch(apiClientProvider);
-  return FaceRecognitionRemoteDataSource(dio: apiClient.dio);
-});
+      final apiClient = ref.watch(apiClientProvider);
+      return FaceRecognitionRemoteDataSource(dio: apiClient.dio);
+    });
 
-final faceRecognitionRepositoryProvider =
-    Provider<FaceRecognitionRepository>((ref) {
+final faceRecognitionRepositoryProvider = Provider<FaceRecognitionRepository>((
+  ref,
+) {
   return FaceRecognitionRepositoryImpl(
     remoteDataSource: ref.watch(faceRecognitionRemoteDataSourceProvider),
   );
@@ -27,25 +28,19 @@ final identifyFaceUseCaseProvider = Provider<IdentifyFaceUseCase>((ref) {
 
 final faceRecognitionProvider =
     StateNotifierProvider<FaceRecognitionNotifier, FaceRecognitionState>(
-  (ref) => FaceRecognitionNotifier(ref),
-);
+      (ref) => FaceRecognitionNotifier(ref),
+    );
 
 class FaceRecognitionNotifier extends StateNotifier<FaceRecognitionState> {
   final Ref _ref;
 
   FaceRecognitionNotifier(this._ref) : super(const FaceRecognitionState());
 
-  Future<FaceRecognitionResult?> identify({
-    required String imageBase64,
-    String? categorieUuid,
-  }) async {
+  Future<FaceRecognitionResult?> identify({required String imageBase64}) async {
     state = state.copyWith(isLoading: true, clearError: true);
 
     final useCase = _ref.read(identifyFaceUseCaseProvider);
-    final result = await useCase(
-      imageBase64: imageBase64,
-      categorieUuid: categorieUuid,
-    );
+    final result = await useCase(imageBase64: imageBase64);
 
     FaceRecognitionResult? faceResult;
     result.when(

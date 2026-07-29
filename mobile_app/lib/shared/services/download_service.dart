@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 
 class DownloadService {
-  static const _channel = MethodChannel('com.example.mobile_app/download');
+  static const _channel = MethodChannel('com.csmgias.restoplus/download');
 
   static Future<String?> saveQrToDownloads({
     required String fileName,

@@ -27,11 +27,17 @@ class MaintenanceSection extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.build_rounded, size: 20, color: theme.colorScheme.primary),
+                Icon(
+                  Icons.build_rounded,
+                  size: 20,
+                  color: theme.colorScheme.primary,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   group.label,
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -46,10 +52,21 @@ class MaintenanceSection extends StatelessWidget {
                   context: context,
                   builder: (ctx) => AlertDialog(
                     title: const Text('Réinitialiser'),
-                    content: const Text('Tous les paramètres seront rétablis à leurs valeurs par défaut.'),
+                    content: const Text(
+                      'Tous les paramètres seront rétablis à leurs valeurs par défaut.',
+                    ),
                     actions: [
-                      TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Annuler')),
-                      FilledButton(onPressed: () { Navigator.of(ctx).pop(); onReset(); }, child: const Text('Réinitialiser')),
+                      TextButton(
+                        onPressed: () => Navigator.of(ctx).pop(),
+                        child: const Text('Annuler'),
+                      ),
+                      FilledButton(
+                        onPressed: () {
+                          Navigator.of(ctx).pop();
+                          onReset();
+                        },
+                        child: const Text('Réinitialiser'),
+                      ),
                     ],
                   ),
                 );
@@ -62,7 +79,10 @@ class MaintenanceSection extends StatelessWidget {
               subtitle: 'Supprimer les fichiers temporaires',
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Cache vidé avec succès.'), behavior: SnackBarBehavior.floating),
+                  const SnackBar(
+                    content: Text('Cache vidé avec succès.'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
                 );
               },
             ),
@@ -103,16 +123,29 @@ class _ActionTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 14,
+                    ),
+                  ),
                   const SizedBox(height: 2),
-                  Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                  Text(
+                    subtitle,
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  ),
                 ],
               ),
             ),
             if (loading)
               const Padding(
                 padding: EdgeInsets.all(8),
-                child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
               )
             else
               const Icon(Icons.chevron_right_rounded),

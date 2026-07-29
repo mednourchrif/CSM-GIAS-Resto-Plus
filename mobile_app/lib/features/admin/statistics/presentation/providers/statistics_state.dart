@@ -5,11 +5,7 @@ class StatisticsState {
   final bool isLoading;
   final String? error;
 
-  const StatisticsState({
-    this.stats,
-    this.isLoading = false,
-    this.error,
-  });
+  const StatisticsState({this.stats, this.isLoading = false, this.error});
 
   StatisticsState copyWith({
     DashboardStats? stats,

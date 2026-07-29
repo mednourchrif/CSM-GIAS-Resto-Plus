@@ -6,14 +6,16 @@ AI processing occurs.
 """
 
 import base64
+import binascii
 import re
 from io import BytesIO
 
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 
 from app.core.exceptions import ValidationException
 
 _DATA_URI_PATTERN = re.compile(r"^data:image/(png|jpeg|webp);base64,(.+)$")
+_MAX_IMAGE_BYTES = 5 * 1024 * 1024
 
 
 def decode_base64_image(data_uri: str) -> Image.Image:
@@ -27,13 +29,29 @@ def decode_base64_image(data_uri: str) -> Image.Image:
     match = _DATA_URI_PATTERN.match(data_uri.strip())
     if not match:
         raise ValidationException(
-            message=(
-                "Format d'image invalide. "
-                "Utilisez data:image/png;base64,..."
-            ),
+            message=("Format d'image invalide. " "Utilisez data:image/png;base64,..."),
         )
-    raw = base64.b64decode(match.group(2))
-    return Image.open(BytesIO(raw)).convert("RGB")
+    encoded = match.group(2)
+    if len(encoded) > ((_MAX_IMAGE_BYTES * 4) // 3) + 4:
+        raise ValidationException(
+            message="L'image dépasse la taille maximale de 5 Mo.",
+        )
+    try:
+        raw = base64.b64decode(encoded, validate=True)
+        if len(raw) > _MAX_IMAGE_BYTES:
+            raise ValidationException(
+                message="L'image dépasse la taille maximale de 5 Mo.",
+            )
+        with Image.open(BytesIO(raw)) as source:
+            source.verify()
+        with Image.open(BytesIO(raw)) as source:
+            return source.convert("RGB")
+    except ValidationException:
+        raise
+    except (binascii.Error, ValueError, UnidentifiedImageError) as exc:
+        raise ValidationException(
+            message="Le contenu de l'image est invalide.",
+        ) from exc
 
 
 def validate_image_format(image: Image.Image) -> None:

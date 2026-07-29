@@ -16,11 +16,11 @@ class CreateAdminUserRequestDto {
   });
 
   Map<String, dynamic> toJson() => {
-        'nom': nom,
-        'prenom': prenom,
-        'email': email,
-        'mot_de_passe': motDePasse,
-        'type': type,
-        if (roleId != null) 'role_id': roleId,
-      };
+    'nom': nom,
+    'prenom': prenom,
+    'email': email,
+    'mot_de_passe': motDePasse,
+    'type': type,
+    if (roleId != null) 'role_id': roleId,
+  };
 }

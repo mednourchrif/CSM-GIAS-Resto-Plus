@@ -56,7 +56,9 @@ class AdminUserState {
       searchQuery: searchQuery ?? this.searchQuery,
       typeFilter: typeFilter ?? this.typeFilter,
       statutFilter: statutFilter ?? this.statutFilter,
-      notification: clearNotification ? null : (notification ?? this.notification),
+      notification: clearNotification
+          ? null
+          : (notification ?? this.notification),
     );
   }
 }

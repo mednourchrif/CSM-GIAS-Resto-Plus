@@ -22,7 +22,10 @@ class EmployeeStatusBadge extends StatelessWidget {
     };
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: Spacing.sm, vertical: Spacing.xxs + 1),
+      padding: const EdgeInsets.symmetric(
+        horizontal: Spacing.sm,
+        vertical: Spacing.xxs + 1,
+      ),
       decoration: BoxDecoration(
         color: color.withAlpha(25),
         borderRadius: BorderRadius.circular(Spacing.radiusSm),
