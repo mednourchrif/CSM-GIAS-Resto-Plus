@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/colors.dart';
 import '../../../../core/theme/spacing.dart';
 import '../../../../shared/widgets/brand_logo.dart';
@@ -10,53 +11,18 @@ class HomeHeader extends StatelessWidget {
 
   const HomeHeader({
     super.key,
-    this.subtitle = 'Présentez votre visage ou votre QR code',
+    this.subtitle = '',
     this.compact = false,
   });
-
-  String _greeting() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return 'Bonjour';
-    if (hour < 18) return 'Bon après-midi';
-    return 'Bonsoir';
-  }
-
-  String _formattedDate() {
-    const months = [
-      '',
-      'janvier',
-      'février',
-      'mars',
-      'avril',
-      'mai',
-      'juin',
-      'juillet',
-      'août',
-      'septembre',
-      'octobre',
-      'novembre',
-      'décembre',
-    ];
-    const days = [
-      '',
-      'lundi',
-      'mardi',
-      'mercredi',
-      'jeudi',
-      'vendredi',
-      'samedi',
-      'dimanche',
-    ];
-    final now = DateTime.now();
-    return '${days[now.weekday]} ${now.day} ${months[now.month]} ${now.year}';
-  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppStrings.of(context);
     final size = MediaQuery.sizeOf(context);
     final dense = compact || size.height < 620;
     final large = size.width >= Spacing.tabletBreakpoint;
+    final headerSubtitle = subtitle.isEmpty ? strings.faceOrQrPrompt : subtitle;
 
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 520),
@@ -82,7 +48,7 @@ class HomeHeader extends StatelessWidget {
           ),
           SizedBox(height: dense ? Spacing.md : Spacing.lg),
           Text(
-            _greeting(),
+            strings.greeting(DateTime.now()),
             textAlign: TextAlign.center,
             style:
                 (large
@@ -96,7 +62,7 @@ class HomeHeader extends StatelessWidget {
           ),
           const SizedBox(height: Spacing.xs),
           Text(
-            subtitle,
+            headerSubtitle,
             style: theme.textTheme.bodyLarge?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
               height: 1.4,
@@ -117,7 +83,7 @@ class HomeHeader extends StatelessWidget {
                 borderRadius: BorderRadius.circular(Spacing.radiusFull),
               ),
               child: Text(
-                _formattedDate(),
+                strings.formattedDate(DateTime.now()),
                 style: theme.textTheme.labelMedium?.copyWith(
                   color: theme.colorScheme.onPrimaryContainer,
                   fontWeight: FontWeight.w600,

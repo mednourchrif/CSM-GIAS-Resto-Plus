@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/spacing.dart';
 
 class AdministrationButton extends StatelessWidget {
@@ -9,6 +10,7 @@ class AdministrationButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppStrings.of(context);
     return TextButton.icon(
       onPressed: () => context.push('/login'),
       icon: Icon(
@@ -17,7 +19,7 @@ class AdministrationButton extends StatelessWidget {
         color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
       ),
       label: Text(
-        'Administration',
+        strings.administration,
         style: theme.textTheme.bodySmall?.copyWith(
           color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
         ),

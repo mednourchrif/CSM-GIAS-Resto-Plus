@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/colors.dart';
 import '../../../../core/theme/spacing.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../shared/widgets/brand_logo.dart';
 import '../../domain/enums/admin_section.dart';
 
@@ -22,14 +23,16 @@ class AdminDrawer extends StatelessWidget {
     final theme = Theme.of(context);
     const sections = AdminSection.values;
     final isDark = theme.brightness == Brightness.dark;
+    final strings = AppStrings.of(context);
 
     return Drawer(
       child: SafeArea(
         child: Column(
           children: [
-            DrawerHeader(
-              margin: EdgeInsets.zero,
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+            Container(
+              height: 184,
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: isDark
@@ -46,25 +49,28 @@ class AdminDrawer extends StatelessWidget {
                 ),
               ),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const BrandLogo(width: 150),
-                  const SizedBox(height: Spacing.xs),
+                  const BrandLogo(width: 118, framed: false),
+                  const SizedBox(height: Spacing.sm),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: Spacing.sm,
-                      vertical: 2,
+                      horizontal: 10,
+                      vertical: 4,
                     ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(Spacing.radiusFull),
                     ),
-                    child: Text(
-                      'ADMINISTRATION RESTO+',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.7,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        '${strings.administration.toUpperCase()} RESTO+',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.7,
+                        ),
                       ),
                     ),
                   ),
@@ -78,7 +84,7 @@ class AdminDrawer extends StatelessWidget {
                 children: [
                   _DrawerItem(
                     icon: Icons.dashboard_rounded,
-                    label: 'Tableau de bord',
+                    label: strings.dashboard,
                     isSelected: selectedIndex == -1,
                     onTap: () {
                       onDestinationSelected(-1);
@@ -93,7 +99,7 @@ class AdminDrawer extends StatelessWidget {
                       Spacing.xs,
                     ),
                     child: Text(
-                      'GESTION',
+                      strings.management,
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant.withValues(
                           alpha: 0.6,
@@ -105,7 +111,7 @@ class AdminDrawer extends StatelessWidget {
                   for (int i = 0; i < sections.length; i++)
                     _DrawerItem(
                       icon: sections[i].icon,
-                      label: sections[i].label,
+                      label: strings.adminSectionLabel(sections[i].name),
                       isSelected: selectedIndex == i,
                       onTap: () {
                         onDestinationSelected(i);
@@ -137,7 +143,7 @@ class AdminDrawer extends StatelessWidget {
                         ),
                         const SizedBox(width: Spacing.md),
                         Text(
-                          'Déconnexion',
+                          strings.logout,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.colorScheme.error,
                             fontWeight: FontWeight.w600,

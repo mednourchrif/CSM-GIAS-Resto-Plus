@@ -12,6 +12,7 @@ import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart
 
 import '../../../../core/theme/colors.dart';
 import '../../../../core/theme/spacing.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../admin/settings/presentation/providers/app_settings_provider.dart';
 import '../../../face_recognition/presentation/providers/face_recognition_provider.dart';
 import '../../../face_recognition/presentation/widgets/face_scan_overlay.dart';
@@ -46,7 +47,7 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
   // ─── Face tracking ───────────────────────────────────────────────────────
   bool _isFaceDetected = false;
   bool _isStable = false;
-  String _guidanceMessage = 'Placez votre visage dans le cadre';
+  String _guidanceMessage = '';
   Timer? _stabilityTimer;
   bool _canCapture = true;
   bool _faceCooldown = false;
@@ -75,6 +76,14 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
       _barcodeScanner = BarcodeScanner(formats: [BarcodeFormat.qrCode]);
     }
     _startTimeout();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_guidanceMessage.isEmpty) {
+      _guidanceMessage = AppStrings.of(context).placeFace;
+    }
   }
 
   @override
@@ -156,7 +165,7 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
     setState(() {
       _isCameraInitialized = true;
       _cameraError = null;
-      _guidanceMessage = 'Placez votre visage dans le cadre';
+      _guidanceMessage = AppStrings.of(context).placeFace;
     });
   }
 
@@ -167,9 +176,8 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
     if (mounted) {
       setState(() {
         _isCameraInitialized = false;
-        _cameraError =
-            'Impossible d’ouvrir la caméra. Vérifiez son autorisation.';
-        _guidanceMessage = "Erreur d'accès à la caméra";
+        _cameraError = AppStrings.of(context).cameraAccessError;
+        _guidanceMessage = AppStrings.of(context).cameraAccessErrorShort;
       });
     }
   }
@@ -198,7 +206,7 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
     if (mounted) {
       setState(() {
         _isCameraInitialized = false;
-        _guidanceMessage = 'Changement de caméra...';
+        _guidanceMessage = AppStrings.of(context).switchingCamera;
       });
     }
 
@@ -314,7 +322,7 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
       _isStable = false;
       _stabilityTimer?.cancel();
     }
-    setState(() => _guidanceMessage = 'Aucun visage détecté');
+    setState(() => _guidanceMessage = AppStrings.of(context).noFaceDetected);
 
     if (_qrEnabled) {
       _detectBarcode(inputImage);
@@ -325,7 +333,9 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
     _isFaceDetected = false;
     _isStable = false;
     _stabilityTimer?.cancel();
-    setState(() => _guidanceMessage = 'Plus d\'un visage détecté');
+    setState(
+      () => _guidanceMessage = AppStrings.of(context).multipleFacesDetected,
+    );
 
     if (_qrEnabled) {
       _detectBarcode(inputImage);
@@ -342,7 +352,7 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
 
     if (!_isFaceDetected) {
       _isFaceDetected = true;
-      setState(() => _guidanceMessage = 'Parfait, maintenez...');
+      setState(() => _guidanceMessage = AppStrings.of(context).holdPosition);
     }
 
     final box = face.boundingBox;
@@ -358,11 +368,11 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
     if (!isCentered) {
       _isStable = false;
       _stabilityTimer?.cancel();
-      setState(() => _guidanceMessage = 'Centre votre visage');
+      setState(() => _guidanceMessage = AppStrings.of(context).centerFace);
       return;
     }
 
-    setState(() => _guidanceMessage = 'Ne bougez plus...');
+    setState(() => _guidanceMessage = AppStrings.of(context).doNotMove);
 
     if (!_isStable) {
       _isStable = true;
@@ -393,7 +403,7 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
       final file = await _cameraController!.takePicture();
       if (_isDisposed || !mounted) return;
 
-      setState(() => _guidanceMessage = 'Identification en cours...');
+      setState(() => _guidanceMessage = AppStrings.of(context).identifying);
 
       final bytes = await file.readAsBytes();
       final base64Image = base64Encode(bytes);
@@ -409,7 +419,7 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
         final token = result.identificationToken;
         final expiresAt = result.identificationExpiresAt;
         if (token == null || token.isEmpty || expiresAt == null) {
-          _showError("La preuve d'identification est invalide.");
+          _showError(AppStrings.of(context).invalidIdentificationProof);
           return;
         }
         _completeIdentification(
@@ -421,15 +431,13 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
         );
       } else if (result == null) {
         final error = ref.read(faceRecognitionProvider).error;
-        _showError(
-          error ?? "Erreur lors de l'identification. Veuillez réessayer.",
-        );
+        _showError(error ?? AppStrings.of(context).identificationFailure);
       } else {
         _onFaceNotRecognized();
       }
     } catch (e) {
       if (_isDisposed || !mounted) return;
-      _showError("Erreur lors de l'identification. Veuillez réessayer.");
+      _showError(AppStrings.of(context).identificationFailure);
     }
   }
 
@@ -438,8 +446,7 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
     final maxAttempts = ref.read(appSettingsProvider).maxRecognitionAttempts;
     if (_recognitionAttempts >= maxAttempts) {
       _showError(
-        'Visage non reconnu après $maxAttempts tentatives. '
-        'Veuillez contacter l\'accueil.',
+        AppStrings.of(context).faceNotRecognized(maxAttempts),
         allowRetry: false,
       );
       return;
@@ -472,7 +479,7 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
           _isProcessing = true;
           _canCapture = false;
           _stopCameraStream();
-          setState(() => _guidanceMessage = 'QR Code détecté !');
+          setState(() => _guidanceMessage = AppStrings.of(context).qrDetected);
           await _identifyByQr(qrToken);
         }
       }
@@ -486,7 +493,7 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
   // ─── Meal registration ───────────────────────────────────────────────────
 
   Future<void> _identifyByQr(String qrToken) async {
-    setState(() => _guidanceMessage = 'Validation du QR code...');
+    setState(() => _guidanceMessage = AppStrings.of(context).validatingQr);
     final result = await ref
         .read(identificationRepositoryProvider)
         .identifyByQr(qrToken);
@@ -518,6 +525,7 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
   }
 
   void _showTimeout() {
+    final strings = AppStrings.of(context);
     _isProcessing = true;
     ref.read(resetKioskFlowProvider)();
     _stopCameraStream();
@@ -531,18 +539,15 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
           color: Colors.orange,
           size: 64,
         ),
-        title: const Text('Délai écoulé'),
-        content: const Text(
-          'Aucune personne ou QR Code détecté.',
-          textAlign: TextAlign.center,
-        ),
+        title: Text(strings.timeoutTitle),
+        content: Text(strings.timeoutMessage, textAlign: TextAlign.center),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.of(ctx).pop();
               context.go('/home');
             },
-            child: const Text('Retour'),
+            child: Text(strings.back),
           ),
         ],
       ),
@@ -552,6 +557,7 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
   // ─── Error dialogs ───────────────────────────────────────────────────────
 
   void _showError(String message, {bool allowRetry = true}) {
+    final strings = AppStrings.of(context);
     final normalizedMessage = message.toLowerCase();
     final mealAlreadyRegistered =
         normalizedMessage.contains('repas') &&
@@ -565,8 +571,16 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
         icon: mealAlreadyRegistered
             ? const Icon(Icons.block_rounded, color: Colors.red, size: 56)
             : null,
-        title: Text(mealAlreadyRegistered ? 'Repas déjà enregistré' : 'Erreur'),
-        content: Text(message),
+        title: Text(
+          mealAlreadyRegistered
+              ? strings.mealAlreadyRegisteredTitle
+              : strings.errorTitle,
+        ),
+        content: Text(
+          mealAlreadyRegistered
+              ? strings.mealAlreadyRegisteredMessage
+              : message,
+        ),
         actions: [
           if (canRetry)
             TextButton(
@@ -574,14 +588,14 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
                 Navigator.of(ctx).pop();
                 _restartScanning();
               },
-              child: const Text('Réessayer'),
+              child: Text(strings.retryIdentification),
             ),
           TextButton(
             onPressed: () {
               Navigator.of(ctx).pop();
               context.go('/home');
             },
-            child: const Text("Retour à l'accueil"),
+            child: Text(strings.backHome),
           ),
         ],
       ),
@@ -607,7 +621,7 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
       _cameraController!.startImageStream(_processImage);
     }
     if (mounted) {
-      setState(() => _guidanceMessage = 'Placez votre visage dans le cadre');
+      setState(() => _guidanceMessage = AppStrings.of(context).placeFace);
     }
   }
 
@@ -616,6 +630,7 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppStrings.of(context);
 
     if (_cameraError != null) {
       return Scaffold(
@@ -647,12 +662,12 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
                       _initializeCamera();
                     },
                     icon: const Icon(Icons.refresh_rounded),
-                    label: const Text('Réessayer'),
+                    label: Text(strings.retry),
                   ),
                   const SizedBox(height: Spacing.sm),
                   TextButton(
                     onPressed: () => context.go('/home'),
-                    child: const Text('Retour à l’accueil'),
+                    child: Text(strings.backHome),
                   ),
                 ],
               ),
@@ -676,7 +691,7 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
               ),
               const SizedBox(height: 16),
               Text(
-                'Aucune méthode d\'identification activée.',
+                strings.noIdentificationMethod,
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: Colors.white70,
                 ),
@@ -685,7 +700,7 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
               const SizedBox(height: 24),
               FilledButton(
                 onPressed: () => context.go('/home'),
-                child: const Text("Retour à l'accueil"),
+                child: Text(strings.backHome),
               ),
             ],
           ),
@@ -702,7 +717,7 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
                   width: double.infinity,
                   height: double.infinity,
                   child: Semantics(
-                    label: 'Aperçu de la caméra pour identification',
+                    label: strings.cameraPreviewSemantics,
                     image: true,
                     child: CameraPreview(_cameraController!),
                   ),
@@ -753,7 +768,7 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
                         _stopCameraStream();
                         context.go('/home');
                       },
-                      tooltip: 'Annuler',
+                      tooltip: strings.cancelAction,
                     ),
                   ),
                 ),
@@ -767,7 +782,7 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
                             ? null
                             : _switchCamera,
                         icon: const Icon(Icons.cameraswitch_rounded),
-                        tooltip: 'Basculer caméra avant/arrière',
+                        tooltip: strings.switchCamera,
                       ),
                     ),
                   ),
@@ -781,8 +796,8 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
                       const SizedBox(height: Spacing.md),
                       Text(
                         _faceEnabled
-                            ? 'Gardez votre visage bien éclairé'
-                            : 'Présentez votre QR Code',
+                            ? strings.keepFaceWellLit
+                            : strings.presentQrCode,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: Colors.white38,
                         ),

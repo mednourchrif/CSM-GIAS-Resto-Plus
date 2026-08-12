@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/colors.dart';
 import '../../../../core/theme/spacing.dart';
 import '../../../../core/theme/app_shadows.dart';
@@ -95,25 +96,16 @@ class _SuccessScreenState extends ConsumerState<SuccessScreen>
     super.dispose();
   }
 
-  String _identificationLabel(String method) {
-    switch (method.toLowerCase()) {
-      case 'qr':
-        return 'QR Code';
-      case 'face':
-      case 'reconnaissance faciale':
-        return 'Reconnaissance faciale';
-      default:
-        return method;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppStrings.of(context);
     final registration = ref.watch(mealRegistrationResultProvider);
     final userName = registration?.userName;
     final mealLabel = registration?.mealLabel;
     final method = registration?.identificationMethod;
+    final offlineQueued = method?.toLowerCase() == 'offline_queue';
+    final mealDisplayLabel = mealLabel ?? strings.registeredMealFallback;
 
     return Scaffold(
       body: Container(
@@ -216,7 +208,11 @@ class _SuccessScreenState extends ConsumerState<SuccessScreen>
                             children: [
                               if (userName != null) ...[
                                 Text(
-                                  ref.watch(appSettingsProvider).welcomeMessage,
+                                  strings.localizedWelcomeMessage(
+                                    ref
+                                        .watch(appSettingsProvider)
+                                        .welcomeMessage,
+                                  ),
                                   style: theme.textTheme.headlineSmall
                                       ?.copyWith(
                                         color: theme.colorScheme.onSurface,
@@ -261,9 +257,17 @@ class _SuccessScreenState extends ConsumerState<SuccessScreen>
                                     ),
                                     const SizedBox(height: Spacing.xs),
                                     Text(
-                                      mealLabel != null
-                                          ? 'Repas "$mealLabel" enregistré !'
-                                          : 'Repas enregistré avec succès !',
+                                      offlineQueued
+                                          ? mealLabel != null
+                                                ? strings.queuedMealMessage(
+                                                    mealDisplayLabel,
+                                                  )
+                                                : strings.offlineQueuedNotice
+                                          : mealLabel != null
+                                          ? strings.registeredMealMessage(
+                                              mealDisplayLabel,
+                                            )
+                                          : strings.registeredMealFallback,
                                       style: theme.textTheme.titleMedium
                                           ?.copyWith(
                                             color: AppColors.onSuccessContainer,
@@ -273,9 +277,13 @@ class _SuccessScreenState extends ConsumerState<SuccessScreen>
                                     ),
                                     const SizedBox(height: Spacing.xs),
                                     Text(
-                                      ref
-                                          .watch(appSettingsProvider)
-                                          .successMessage,
+                                      offlineQueued
+                                          ? strings.offlineQueuedSuccess
+                                          : strings.localizedSuccessMessage(
+                                              ref
+                                                  .watch(appSettingsProvider)
+                                                  .successMessage,
+                                            ),
                                       style: theme.textTheme.bodyLarge
                                           ?.copyWith(
                                             color: theme.colorScheme.primary,
@@ -292,7 +300,9 @@ class _SuccessScreenState extends ConsumerState<SuccessScreen>
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(
-                                      method.toLowerCase() == 'qr'
+                                      offlineQueued
+                                          ? Icons.cloud_off_rounded
+                                          : method.toLowerCase() == 'qr'
                                           ? Icons.qr_code_rounded
                                           : Icons.face_rounded,
                                       size: Spacing.iconXs + 2,
@@ -300,7 +310,7 @@ class _SuccessScreenState extends ConsumerState<SuccessScreen>
                                     ),
                                     const SizedBox(width: Spacing.xs),
                                     Text(
-                                      'Identifié via ${_identificationLabel(method)}',
+                                      '${strings.identifyVia} ${strings.identificationMethod(method)}',
                                       style: theme.textTheme.bodySmall
                                           ?.copyWith(
                                             color: theme
@@ -337,7 +347,7 @@ class _SuccessScreenState extends ConsumerState<SuccessScreen>
                               ),
                               const SizedBox(height: Spacing.xs),
                               Text(
-                                'Retour à l\'accueil...',
+                                '${strings.backToKiosk}...',
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),

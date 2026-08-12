@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/localization/app_strings.dart';
 
 import '../../domain/entities/setting.dart';
 
@@ -17,6 +18,7 @@ class MaintenanceSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppStrings.of(context);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -34,7 +36,7 @@ class MaintenanceSection extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  group.label,
+                  strings.settingsGroupLabel(group.category, group.label),
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -44,28 +46,26 @@ class MaintenanceSection extends StatelessWidget {
             const Divider(height: 24),
             _ActionTile(
               icon: Icons.restart_alt_rounded,
-              title: 'Réinitialiser les paramètres',
-              subtitle: 'Rétablir les valeurs par défaut',
+              title: strings.resetSettings,
+              subtitle: strings.restoreDefaults,
               loading: isResetting,
               onTap: () {
                 showDialog(
                   context: context,
                   builder: (ctx) => AlertDialog(
-                    title: const Text('Réinitialiser'),
-                    content: const Text(
-                      'Tous les paramètres seront rétablis à leurs valeurs par défaut.',
-                    ),
+                    title: Text(strings.reset),
+                    content: Text(strings.resetConfirmation),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.of(ctx).pop(),
-                        child: const Text('Annuler'),
+                        child: Text(strings.cancel),
                       ),
                       FilledButton(
                         onPressed: () {
                           Navigator.of(ctx).pop();
                           onReset();
                         },
-                        child: const Text('Réinitialiser'),
+                        child: Text(strings.reset),
                       ),
                     ],
                   ),
@@ -75,12 +75,12 @@ class MaintenanceSection extends StatelessWidget {
             const Divider(height: 8),
             _ActionTile(
               icon: Icons.delete_sweep_rounded,
-              title: 'Vider le cache',
-              subtitle: 'Supprimer les fichiers temporaires',
+              title: strings.clearCache,
+              subtitle: strings.clearTemporaryFiles,
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Cache vidé avec succès.'),
+                  SnackBar(
+                    content: Text(strings.cacheCleared),
                     behavior: SnackBarBehavior.floating,
                   ),
                 );

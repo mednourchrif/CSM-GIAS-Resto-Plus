@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -111,7 +112,16 @@ void main() {
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
-          child: const MaterialApp(home: HomeScreen()),
+          child: const MaterialApp(
+            locale: Locale('fr'),
+            supportedLocales: [Locale('fr')],
+            localizationsDelegates: [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            home: HomeScreen(),
+          ),
         ),
       );
       await tester.pump(const Duration(seconds: 1));
@@ -223,7 +233,16 @@ void main() {
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
-          child: const MaterialApp(home: HomeScreen()),
+          child: const MaterialApp(
+            locale: Locale('fr'),
+            supportedLocales: [Locale('fr')],
+            localizationsDelegates: [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            home: HomeScreen(),
+          ),
         ),
       );
       await tester.pump();
@@ -257,7 +276,16 @@ void main() {
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
-          child: const MaterialApp(home: HomeScreen()),
+          child: const MaterialApp(
+            locale: Locale('fr'),
+            supportedLocales: [Locale('fr')],
+            localizationsDelegates: [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            home: HomeScreen(),
+          ),
         ),
       );
       await tester.pump(const Duration(seconds: 1));
@@ -290,11 +318,14 @@ void main() {
       final first = notifier.registerMeal(
         identificationToken: 'grant',
         categorieUuid: 'category',
+        mealLabel: 'Plat',
       );
       final second = notifier.registerMeal(
         identificationToken: 'grant',
         categorieUuid: 'category',
+        mealLabel: 'Plat',
       );
+      await Future<void>.delayed(const Duration(milliseconds: 20));
       expect(repository.calls, 1);
 
       repository.complete();
@@ -317,6 +348,7 @@ void main() {
       final pending = notifier.registerMeal(
         identificationToken: 'grant',
         categorieUuid: 'category',
+        mealLabel: 'Plat',
       );
       notifier.reset();
       repository.complete();

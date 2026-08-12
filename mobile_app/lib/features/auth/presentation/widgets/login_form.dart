@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/spacing.dart';
 
 class LoginForm extends StatefulWidget {
@@ -36,16 +37,18 @@ class _LoginFormState extends State<LoginForm> {
   }
 
   String? _validateEmail(String? value) {
-    if (value == null || value.trim().isEmpty) return 'L\'email est requis';
+    final strings = AppStrings.of(context);
+    if (value == null || value.trim().isEmpty) return strings.emailRequired;
     if (!value.contains('@') || !value.contains('.')) {
-      return 'Format d\'email invalide';
+      return strings.invalidEmail;
     }
     return null;
   }
 
   String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty) return 'Le mot de passe est requis';
-    if (value.length < 8) return 'Minimum 8 caractères';
+    final strings = AppStrings.of(context);
+    if (value == null || value.isEmpty) return strings.passwordRequired;
+    if (value.length < 8) return strings.min8Characters;
     return null;
   }
 
@@ -58,6 +61,7 @@ class _LoginFormState extends State<LoginForm> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppStrings.of(context);
 
     return Form(
       key: _formKey,
@@ -68,9 +72,9 @@ class _LoginFormState extends State<LoginForm> {
           TextFormField(
             controller: _emailController,
             focusNode: _emailFocus,
-            decoration: const InputDecoration(
-              labelText: 'Adresse email',
-              prefixIcon: Icon(Icons.email_outlined),
+            decoration: InputDecoration(
+              labelText: strings.emailAddress,
+              prefixIcon: const Icon(Icons.email_outlined),
             ),
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.next,
@@ -89,7 +93,7 @@ class _LoginFormState extends State<LoginForm> {
             controller: _passwordController,
             focusNode: _passwordFocus,
             decoration: InputDecoration(
-              labelText: 'Mot de passe',
+              labelText: strings.password,
               prefixIcon: const Icon(Icons.lock_outlined),
               suffixIcon: IconButton(
                 icon: Icon(
@@ -101,8 +105,8 @@ class _LoginFormState extends State<LoginForm> {
                   setState(() => _obscurePassword = !_obscurePassword);
                 },
                 tooltip: _obscurePassword
-                    ? 'Afficher le mot de passe'
-                    : 'Masquer le mot de passe',
+                    ? strings.showPassword
+                    : strings.hidePassword,
               ),
             ),
             obscureText: _obscurePassword,
@@ -169,7 +173,7 @@ class _LoginFormState extends State<LoginForm> {
                         ),
                       ),
                     )
-                  : const Text('Se connecter'),
+                  : Text(strings.login),
             ),
           ),
         ],

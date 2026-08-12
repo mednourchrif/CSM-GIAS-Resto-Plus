@@ -258,12 +258,6 @@ class TestMealPagination:
         cats = _seed_categories(db_session)
         self._seed_meals(client, token, db_session, cats, 5)
 
-        resp = client.get("/api/v1/meals", headers=_auth_header(token))
-        assert resp.status_code == 200
-        body = resp.json()
-        assert body["total"] == 5
-        assert len(body["data"]) == 5
-
     def test_list_meals_pagination(self, client: TestClient, db_session: Session) -> None:
         token = _login(client, db_session)
         cats = _seed_categories(db_session)

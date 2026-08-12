@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/localization/app_strings.dart';
 
 import '../../domain/entities/setting.dart';
 import 'setting_field.dart';
@@ -36,6 +37,7 @@ class SettingsGroupCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final icon = _categoryIcon(group.category);
+    final strings = AppStrings.of(context);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -49,7 +51,7 @@ class SettingsGroupCard extends StatelessWidget {
                 Icon(icon, size: 20, color: theme.colorScheme.primary),
                 const SizedBox(width: 8),
                 Text(
-                  group.label,
+                  strings.settingsGroupLabel(group.category, group.label),
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -64,6 +66,7 @@ class SettingsGroupCard extends StatelessWidget {
                   SettingField(
                     setting: setting,
                     currentValue: currentValue,
+                    isPending: pendingChanges.containsKey(setting.key),
                     onChanged: (value) => onChanged(setting.key, value),
                   ),
                   if (setting != group.settings.last) const Divider(height: 8),

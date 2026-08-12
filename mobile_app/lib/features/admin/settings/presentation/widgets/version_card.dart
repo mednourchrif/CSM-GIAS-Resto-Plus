@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/localization/app_strings.dart';
 
 import '../../domain/entities/setting.dart';
 
@@ -11,6 +12,7 @@ class VersionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppStrings.of(context);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -31,7 +33,7 @@ class VersionCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Version',
+                    strings.version,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -41,20 +43,26 @@ class VersionCard extends StatelessWidget {
                     TextButton.icon(
                       onPressed: onTap,
                       icon: const Icon(Icons.refresh_rounded, size: 16),
-                      label: const Text('Charger'),
+                      label: Text(strings.load),
                     ),
                 ],
               ),
               if (version != null) ...[
                 const Divider(height: 24),
                 _InfoRow(
-                  label: 'Application',
+                  label: strings.application,
                   value: version!.applicationVersion,
                 ),
                 const SizedBox(height: 8),
-                _InfoRow(label: 'Backend', value: version!.backendVersion),
+                _InfoRow(
+                  label: strings.backend,
+                  value: version!.backendVersion,
+                ),
                 const SizedBox(height: 8),
-                _InfoRow(label: 'Environnement', value: version!.environment),
+                _InfoRow(
+                  label: strings.environment,
+                  value: version!.environment,
+                ),
               ],
             ],
           ),

@@ -142,6 +142,16 @@ def _mock_restaurant_hours() -> Generator[None]:
         yield
 
 
+@pytest.fixture(scope="function", autouse=True)
+def _reset_login_rate_limiter() -> Generator[None]:
+    """Keep the in-process login limiter isolated between tests."""
+    from app.api.v1.auth import _login_limiter
+
+    _login_limiter.clear()
+    yield
+    _login_limiter.clear()
+
+
 @pytest.fixture(scope="function")
 def override_get_db(db_session: Session) -> Any:
     """Return a ``get_db`` override that injects the per-test session.

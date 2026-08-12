@@ -15,6 +15,7 @@ abstract class StorageService {
 
 final class SecureStorageService implements StorageService {
   final FlutterSecureStorage _storage;
+  final Map<String, String> _ephemeralFallback = {};
 
   SecureStorageService({
     FlutterSecureStorage? storage,
@@ -44,6 +45,8 @@ final class SecureStorageService implements StorageService {
     }
     try {
       await _storage.write(key: key, value: value);
+    } on MissingPluginException {
+      _ephemeralFallback[key] = value;
     } on PlatformException catch (e) {
       throw CacheException(
         CacheFailure(
@@ -65,6 +68,8 @@ final class SecureStorageService implements StorageService {
     }
     try {
       return await _storage.read(key: key);
+    } on MissingPluginException {
+      return _ephemeralFallback[key];
     } on PlatformException catch (e) {
       throw CacheException(
         CacheFailure(
@@ -82,6 +87,8 @@ final class SecureStorageService implements StorageService {
     }
     try {
       await _storage.delete(key: key);
+    } on MissingPluginException {
+      _ephemeralFallback.remove(key);
     } on PlatformException catch (e) {
       throw CacheException(
         CacheFailure(
@@ -99,6 +106,8 @@ final class SecureStorageService implements StorageService {
     }
     try {
       await _storage.deleteAll();
+    } on MissingPluginException {
+      _ephemeralFallback.clear();
     } on PlatformException catch (e) {
       throw CacheException(
         CacheFailure(

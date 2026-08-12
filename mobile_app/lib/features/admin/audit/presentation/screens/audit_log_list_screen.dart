@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -137,11 +139,6 @@ class _AuditLogListScreenState extends ConsumerState<AuditLogListScreen> {
               onTap: () => Navigator.of(ctx).pop(ExportFormat.csv),
             ),
             ListTile(
-              leading: const Icon(Icons.grid_on_rounded, color: AppColors.info),
-              title: const Text('Excel'),
-              onTap: () => Navigator.of(ctx).pop(ExportFormat.excel),
-            ),
-            ListTile(
               leading: const Icon(
                 Icons.picture_as_pdf_rounded,
                 color: AppColors.error,
@@ -174,17 +171,20 @@ class _AuditLogListScreenState extends ConsumerState<AuditLogListScreen> {
 
     result.when(
       success: (items) async {
-        final content = _buildExportContent(items, format);
         final dir = await getTemporaryDirectory();
         final ext = switch (format) {
           ExportFormat.csv => 'csv',
-          ExportFormat.excel => 'xlsx',
           ExportFormat.pdf => 'pdf',
         };
         final file = File(
           '${dir.path}/audit_logs.${DateTime.now().millisecondsSinceEpoch}.$ext',
         );
-        await file.writeAsString(content);
+        switch (format) {
+          case ExportFormat.csv:
+            await file.writeAsString(_buildCsvContent(items));
+          case ExportFormat.pdf:
+            await file.writeAsBytes(await _buildPdfContent(items));
+        }
 
         if (!mounted) return;
         await Share.shareXFiles([XFile(file.path)], text: 'Logs d\'audit');
@@ -198,20 +198,97 @@ class _AuditLogListScreenState extends ConsumerState<AuditLogListScreen> {
     );
   }
 
-  String _buildExportContent(
-    List<AuditLogExportItem> items,
-    ExportFormat format,
-  ) {
+  String _buildCsvContent(List<AuditLogExportItem> items) {
     final buf = StringBuffer();
-    buf.writeln('Timestamp;Utilisateur;Rôle;Action;Entité;Statut;Description');
+    _csvLine(buf, ['CSM-GIAS Resto+ - Logs d\'audit']);
+    _csvLine(buf, ['Généré le ${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}']);
+    _csvLine(buf, []);
+    _csvLine(buf, ['Timestamp', 'Utilisateur', 'Rôle', 'Action', 'Entité', 'Statut', 'Description']);
     for (final item in items) {
       final ts = DateFormat('yyyy-MM-dd HH:mm:ss').format(item.timestamp);
-      final desc = (item.description ?? '').replaceAll('"', '""');
-      buf.writeln(
-        '$ts;${item.userName};${item.userRole};${item.action};${item.entityName ?? ''};${item.status};"$desc"',
-      );
+      _csvLine(buf, [
+        ts,
+        item.userName,
+        item.userRole,
+        item.action,
+        item.entityName ?? '',
+        item.status,
+        item.description ?? '',
+      ]);
     }
     return buf.toString();
+  }
+
+  Future<List<int>> _buildPdfContent(List<AuditLogExportItem> items) async {
+    final doc = pw.Document();
+    doc.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(32),
+        header: (_) => pw.Text(
+          'CSM-GIAS Resto+ - Logs d\'audit',
+          style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+        ),
+        build: (_) => [
+          pw.SizedBox(height: 12),
+          pw.Text(
+            'Généré le ${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}',
+            style: const pw.TextStyle(fontSize: 11),
+          ),
+          pw.SizedBox(height: 16),
+          pw.TableHelper.fromTextArray(
+            headers: const [
+              'Timestamp',
+              'Utilisateur',
+              'Rôle',
+              'Action',
+              'Entité',
+              'Statut',
+              'Description',
+            ],
+            data: items
+                .map(
+                  (item) => [
+                    DateFormat('yyyy-MM-dd HH:mm:ss').format(item.timestamp),
+                    item.userName,
+                    item.userRole,
+                    item.action,
+                    item.entityName ?? '',
+                    item.status,
+                    item.description ?? '',
+                  ],
+                )
+                .toList(),
+            border: pw.TableBorder.all(),
+            headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+            cellStyle: const pw.TextStyle(fontSize: 9),
+            cellAlignment: pw.Alignment.centerLeft,
+            headerDecoration: const pw.BoxDecoration(color: PdfColors.grey300),
+            columnWidths: const {
+              0: pw.FlexColumnWidth(1.3),
+              1: pw.FlexColumnWidth(1.2),
+              2: pw.FlexColumnWidth(0.9),
+              3: pw.FlexColumnWidth(1.2),
+              4: pw.FlexColumnWidth(1.2),
+              5: pw.FlexColumnWidth(0.8),
+              6: pw.FlexColumnWidth(1.8),
+            },
+          ),
+        ],
+      ),
+    );
+    return doc.save();
+  }
+
+  void _csvLine(StringBuffer buffer, List<String> values) {
+    buffer.writeln(values.map(_csvEscape).join(';'));
+  }
+
+  String _csvEscape(String value) {
+    if (value.contains(';') || value.contains('"') || value.contains('\n')) {
+      return '"${value.replaceAll('"', '""')}"';
+    }
+    return value;
   }
 
   @override
@@ -675,7 +752,7 @@ class _AuditLogListScreenState extends ConsumerState<AuditLogListScreen> {
   }
 }
 
-enum ExportFormat { csv, excel, pdf }
+enum ExportFormat { csv, pdf }
 
 class _AuditLogCard extends StatelessWidget {
   final AuditLog log;

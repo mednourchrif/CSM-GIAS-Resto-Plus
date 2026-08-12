@@ -158,6 +158,23 @@ class TestLogin:
         assert admin.derniere_connexion is not None
         assert admin.tentatives_echouees == 0
 
+    def test_repeated_failed_logins_lock_account(
+        self, client: TestClient, db_session: Session
+    ) -> None:
+        """Repeated wrong-password attempts increment counters and lock the account."""
+        admin = _seed_admin(db_session)
+
+        for attempt in range(1, 6):
+            resp = client.post(
+                "/api/v1/auth/login",
+                json=_login_payload(password=f"WrongPass{attempt}!"),
+            )
+            assert resp.status_code == 401
+
+        db_session.refresh(admin)
+        assert admin.tentatives_echouees == 5
+        assert admin.statut == StatutUtilisateur.INACTIF
+
 
 class TestMe:
     """GET /api/v1/auth/me"""

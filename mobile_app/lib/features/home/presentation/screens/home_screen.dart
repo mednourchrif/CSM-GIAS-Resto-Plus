@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/colors.dart';
 import '../../../../core/theme/spacing.dart';
 import '../../../../shared/widgets/animated_fade_in.dart';
@@ -100,6 +101,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     }
     _scheduleGrantExpiry(activeIdentification);
     final registrationState = ref.watch(mealRegistrationProvider);
+    final offlineQueueCount = registrationState.offlineQueueCount;
     final viewport = MediaQuery.sizeOf(context);
     final useWideLayout =
         ResponsiveLayout.isDesktop(context) ||
@@ -116,6 +118,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     selectedMeal,
                     categoriesAsync,
                     activeIdentification,
+                    offlineQueueCount,
                   )
                 : _buildPortraitLayout(
                     context,
@@ -123,6 +126,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     selectedMeal,
                     categoriesAsync,
                     activeIdentification,
+                    offlineQueueCount,
                   ),
           ),
           if (registrationState.isLoading) ...[
@@ -141,6 +145,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     MealType? selectedMeal,
     AsyncValue<List<MealCategory>> categoriesAsync,
     IdentificationGrant? pendingIdentification,
+    int offlineQueueCount,
   ) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -161,9 +166,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         AnimatedFadeIn(
                           child: HomeHeader(
                             compact: constraints.maxHeight < 720,
-                            subtitle: pendingIdentification == null
-                                ? 'Présentez votre visage ou votre QR code'
-                                : 'Identification confirmée · choisissez votre repas',
+                            subtitle: _buildHeaderSubtitle(
+                              context,
+                              pendingIdentification,
+                              offlineQueueCount,
+                            ),
                           ),
                         ),
                         SizedBox(
@@ -209,6 +216,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     MealType? selectedMeal,
     AsyncValue<List<MealCategory>> categoriesAsync,
     IdentificationGrant? pendingIdentification,
+    int offlineQueueCount,
   ) {
     return Row(
       children: [
@@ -235,9 +243,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   children: [
                     HomeHeader(
                       compact: MediaQuery.sizeOf(context).height < 680,
-                      subtitle: pendingIdentification == null
-                          ? 'Présentez votre visage ou votre QR code'
-                          : 'Identification confirmée · choisissez votre repas',
+                      subtitle: _buildHeaderSubtitle(
+                        context,
+                        pendingIdentification,
+                        offlineQueueCount,
+                      ),
                     ),
                     const SizedBox(height: Spacing.lg),
                     const AdministrationButton(),
@@ -281,6 +291,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       ],
     );
   }
+
+  String _buildHeaderSubtitle(
+    BuildContext context,
+    IdentificationGrant? pendingIdentification,
+    int offlineQueueCount,
+  ) {
+    final strings = AppStrings.of(context);
+    final base = pendingIdentification == null
+        ? strings.faceOrQrPrompt
+        : strings.chooseMealAfterIdentification;
+    if (offlineQueueCount <= 0) return base;
+    return '$base · ${strings.offlineQueueSubtitle(offlineQueueCount)}';
+  }
 }
 
 // ─── Meal Grid ────────────────────────────────────────────────────────────────
@@ -298,20 +321,21 @@ class _MealGrid extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final strings = AppStrings.of(context);
     return categoriesAsync.when(
       data: (categories) => _buildGrid(context, ref, categories),
       loading: () => _buildSkeleton(context),
       error: (e, _) => ErrorState(
-        message: 'Impossible de charger les catégories.',
+        message: strings.loadingCategories,
         onRetry: () => ref.invalidate(mealCategoriesProvider),
       ),
     );
   }
 
   static const _meals = <(MealType, IconData, String)>[
-    (MealType.plat, Icons.restaurant_rounded, 'Repas traditionnel'),
-    (MealType.pizza, Icons.local_pizza_rounded, 'Pizza fraîche'),
-    (MealType.sandwich, Icons.lunch_dining_rounded, 'Sandwich'),
+    (MealType.plat, Icons.restaurant_rounded, ''),
+    (MealType.pizza, Icons.local_pizza_rounded, ''),
+    (MealType.sandwich, Icons.lunch_dining_rounded, ''),
   ];
 
   Widget _buildGrid(
@@ -438,6 +462,7 @@ class _MealCardItem extends ConsumerWidget {
     WidgetRef ref,
     MealType type,
   ) async {
+    final strings = AppStrings.of(context);
     if (ref.read(kioskSubmissionLockedProvider)) return;
     ref.read(kioskSubmissionLockedProvider.notifier).state = true;
 
@@ -446,9 +471,9 @@ class _MealCardItem extends ConsumerWidget {
           .where((c) => c.nom.toLowerCase() == type.name.toLowerCase())
           .firstOrNull;
       if (category == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Cette catégorie est indisponible.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(strings.unavailableCategory)));
         return;
       }
 
@@ -456,19 +481,16 @@ class _MealCardItem extends ConsumerWidget {
         context: context,
         builder: (dialogContext) => AlertDialog(
           icon: Icon(meal.$2),
-          title: Text('Confirmer ${type.label.toLowerCase()} ?'),
-          content: const Text(
-            'Vérifiez votre choix. Un seul repas peut être enregistré '
-            'aujourd’hui.',
-          ),
+          title: Text(strings.confirmMeal(strings.mealLabel(type))),
+          content: Text(strings.confirmMealWarning),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Annuler'),
+              child: Text(strings.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Confirmer'),
+              child: Text(strings.confirm),
             ),
           ],
         ),
@@ -480,13 +502,9 @@ class _MealCardItem extends ConsumerWidget {
       }
       if (identificationGrant.isExpired) {
         ref.read(resetKioskFlowProvider)();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Identification expirée. Veuillez vous identifier à nouveau.',
-            ),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(strings.identificationExpired)));
         return;
       }
 
@@ -497,6 +515,7 @@ class _MealCardItem extends ConsumerWidget {
           .registerMeal(
             identificationToken: identificationGrant.token,
             categorieUuid: category.uuid,
+            mealLabel: strings.mealLabel(type),
           );
       if (!context.mounted) return;
       final state = ref.read(mealRegistrationProvider);
@@ -505,19 +524,18 @@ class _MealCardItem extends ConsumerWidget {
         return;
       }
 
-      final message =
-          state.error ?? 'Une erreur est survenue. Veuillez réessayer.';
+      final message = state.error ?? strings.retry;
       ref.read(resetKioskFlowProvider)();
       await showDialog<void>(
         context: context,
         builder: (dialogContext) => AlertDialog(
           icon: const Icon(Icons.error_outline_rounded),
-          title: const Text('Repas non enregistré'),
+          title: Text(strings.unavailableCategory),
           content: Text(message),
           actions: [
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Compris'),
+              child: Text(strings.confirm),
             ),
           ],
         ),
@@ -536,6 +554,7 @@ class _KioskStartPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppStrings.of(context);
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 520),
       child: DecoratedBox(
@@ -570,7 +589,7 @@ class _KioskStartPanel extends StatelessWidget {
               ),
               const SizedBox(height: Spacing.md),
               Text(
-                'Identifiez-vous',
+                strings.identifyYourself,
                 style: theme.textTheme.headlineSmall?.copyWith(
                   color: theme.colorScheme.primary,
                   fontWeight: FontWeight.w800,
@@ -578,8 +597,7 @@ class _KioskStartPanel extends StatelessWidget {
               ),
               const SizedBox(height: Spacing.sm),
               Text(
-                'Présentez votre visage ou votre QR code. '
-                'Vous choisirez ensuite votre repas.',
+                strings.faceOrQrPrompt,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
@@ -591,7 +609,7 @@ class _KioskStartPanel extends StatelessWidget {
                 child: FilledButton.icon(
                   onPressed: () => context.push('/kiosk-camera'),
                   icon: const Icon(Icons.qr_code_scanner_rounded),
-                  label: const Text('Démarrer l’identification'),
+                  label: Text(strings.startIdentification),
                 ),
               ),
               const SizedBox(height: Spacing.md),
@@ -604,7 +622,7 @@ class _KioskStartPanel extends StatelessWidget {
                     color: theme.colorScheme.tertiary,
                   ),
                   const SizedBox(width: Spacing.xs),
-                  Text('Visage', style: theme.textTheme.labelMedium),
+                  Text(strings.faceLabel, style: theme.textTheme.labelMedium),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: Spacing.sm),
                     child: Text(
@@ -618,7 +636,7 @@ class _KioskStartPanel extends StatelessWidget {
                     color: theme.colorScheme.secondary,
                   ),
                   const SizedBox(width: Spacing.xs),
-                  Text('QR code', style: theme.textTheme.labelMedium),
+                  Text(strings.qrLabel, style: theme.textTheme.labelMedium),
                 ],
               ),
             ],

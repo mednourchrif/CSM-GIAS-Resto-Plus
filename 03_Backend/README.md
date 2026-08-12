@@ -18,7 +18,23 @@ Copy-Item .env.example .env
 docker compose up -d
 alembic upgrade head
 python scripts/seed.py
-uvicorn app.main:app --reload
+python -m uvicorn app.main:app --reload
+```
+
+Always run the server with the Python interpreter from this backend's `.venv`.
+If another virtual environment is active, deactivate it first:
+
+```powershell
+deactivate  # repeat if a parent environment is still active
+\.venv\Scripts\Activate.ps1
+python -m pip install -e ".[dev]"
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+You can also bypass activation completely:
+
+```powershell
+\.venv\Scripts\python.exe -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 Configure real secrets and database credentials in `.env`; never commit it.

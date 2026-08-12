@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/spacing.dart';
 import '../../domain/enums/meal_type.dart';
 
@@ -22,6 +23,11 @@ class MealCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppStrings.of(context);
+    final mealLabel = strings.mealLabel(type);
+    final mealSubtitle = subtitle.isEmpty
+        ? strings.mealSubtitle(type)
+        : subtitle;
 
     final bgColor = isSelected
         ? theme.colorScheme.primaryContainer
@@ -69,7 +75,7 @@ class MealCard extends StatelessWidget {
             ),
             child: Semantics(
               button: true,
-              label: 'Sélectionner ${type.label}',
+              label: '${strings.confirm} $mealLabel',
               selected: isSelected,
               child: LayoutBuilder(
                 builder: (context, constraints) {
@@ -85,7 +91,14 @@ class MealCard extends StatelessWidget {
                             children: [
                               _iconTile(theme, 56),
                               const SizedBox(width: Spacing.md),
-                              Expanded(child: _labels(theme, TextAlign.start)),
+                              Expanded(
+                                child: _labels(
+                                  theme,
+                                  TextAlign.start,
+                                  mealLabel,
+                                  mealSubtitle,
+                                ),
+                              ),
                               if (isSelected) ...[
                                 const SizedBox(width: Spacing.sm),
                                 Icon(
@@ -101,7 +114,12 @@ class MealCard extends StatelessWidget {
                             children: [
                               _iconTile(theme, 64),
                               const SizedBox(height: Spacing.md),
-                              _labels(theme, TextAlign.center),
+                              _labels(
+                                theme,
+                                TextAlign.center,
+                                mealLabel,
+                                mealSubtitle,
+                              ),
                               if (isSelected) ...[
                                 const SizedBox(height: Spacing.sm),
                                 Icon(
@@ -143,7 +161,12 @@ class MealCard extends StatelessWidget {
     );
   }
 
-  Widget _labels(ThemeData theme, TextAlign alignment) {
+  Widget _labels(
+    ThemeData theme,
+    TextAlign alignment,
+    String mealLabel,
+    String mealSubtitle,
+  ) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: alignment == TextAlign.start
@@ -151,7 +174,7 @@ class MealCard extends StatelessWidget {
           : CrossAxisAlignment.center,
       children: [
         Text(
-          type.label,
+          mealLabel,
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w800,
             color: isSelected
@@ -162,7 +185,7 @@ class MealCard extends StatelessWidget {
         ),
         const SizedBox(height: Spacing.xxs),
         Text(
-          subtitle,
+          mealSubtitle,
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),

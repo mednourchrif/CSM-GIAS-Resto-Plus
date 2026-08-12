@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/colors.dart';
 import '../../../../core/theme/spacing.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../shared/widgets/brand_logo.dart';
 import '../../../../shared/widgets/responsive_layout.dart';
 import '../providers/auth_provider.dart';
@@ -31,6 +32,7 @@ class LoginScreen extends ConsumerWidget {
     dynamic authState,
   ) {
     final theme = Theme.of(context);
+    final strings = AppStrings.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     return Row(
@@ -73,7 +75,7 @@ class LoginScreen extends ConsumerWidget {
                         const BrandLogo(width: 260, showRestoBadge: true),
                         const SizedBox(height: Spacing.xl),
                         Text(
-                          'Administration du restaurant',
+                          strings.adminRestaurantTitle,
                           textAlign: TextAlign.center,
                           style: theme.textTheme.headlineSmall?.copyWith(
                             color: Colors.white,
@@ -82,7 +84,7 @@ class LoginScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: Spacing.sm),
                         Text(
-                          'Pilotez les repas, les accès et les rapports depuis un espace unifié.',
+                          strings.adminRestaurantSubtitle,
                           textAlign: TextAlign.center,
                           style: theme.textTheme.bodyLarge?.copyWith(
                             color: Colors.white.withValues(alpha: 0.85),
@@ -119,6 +121,7 @@ class LoginScreen extends ConsumerWidget {
     dynamic authState,
   ) {
     final theme = Theme.of(context);
+    final strings = AppStrings.of(context);
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(Spacing.xl),
@@ -138,7 +141,7 @@ class LoginScreen extends ConsumerWidget {
 
               // Title
               Text(
-                'Connexion Administration',
+                strings.adminLoginTitle,
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: theme.colorScheme.onSurface,
@@ -146,7 +149,7 @@ class LoginScreen extends ConsumerWidget {
               ),
               const SizedBox(height: Spacing.xs),
               Text(
-                'Connectez-vous pour accéder au panneau d\'administration.',
+                strings.adminLoginSubtitle,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -177,7 +180,7 @@ class LoginScreen extends ConsumerWidget {
                 child: TextButton.icon(
                   onPressed: () => context.go('/home'),
                   icon: const Icon(Icons.arrow_back_rounded),
-                  label: const Text('Retour à l\'accueil kiosque'),
+                  label: Text(strings.backToKiosk),
                   style: TextButton.styleFrom(
                     foregroundColor: theme.colorScheme.onSurfaceVariant,
                   ),

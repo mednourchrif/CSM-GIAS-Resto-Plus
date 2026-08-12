@@ -89,8 +89,16 @@ class AuthService:
             )
 
         if not self._password.verify(password, admin.mot_de_passe):
+            admin.tentatives_echouees += 1
+            if admin.tentatives_echouees >= settings.LOGIN_RATE_LIMIT_ATTEMPTS:
+                admin.statut = StatutUtilisateur.INACTIF
             raise UnauthorizedException(
                 message="Email ou mot de passe incorrect.",
+                details={
+                    "reason": "invalid_credentials",
+                    "failed_attempts": admin.tentatives_echouees,
+                    "locked": admin.statut == StatutUtilisateur.INACTIF,
+                },
             )
 
         # 6. Generate JWT

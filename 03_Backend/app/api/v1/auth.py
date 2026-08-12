@@ -72,6 +72,14 @@ async def login(
         )
     except UnauthorizedException:
         _login_limiter.record_failure(limiter_key)
+        _audit.log_login(
+            db,
+            user_name=body.email,
+            user_role="ADMIN",
+            success=False,
+            ip_address=ip_address,
+            user_agent=user_agent,
+        )
         raise
     _login_limiter.reset(limiter_key)
 

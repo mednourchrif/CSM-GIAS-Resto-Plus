@@ -74,6 +74,7 @@ class DashboardStats {
   int get mealsToday => overview['meals_today'] as int? ?? 0;
   int get mealsThisWeek => overview['meals_this_week'] as int? ?? 0;
   int get mealsThisMonth => overview['meals_this_month'] as int? ?? 0;
+  int get forecastMealsNextDay => overview['forecast_meals_next_day'] as int? ?? 0;
   int get employees => overview['employees'] as int? ?? 0;
   int get interns => overview['interns'] as int? ?? 0;
   int get visitors => overview['visitors'] as int? ?? 0;

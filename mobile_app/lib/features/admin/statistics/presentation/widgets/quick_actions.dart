@@ -37,37 +37,54 @@ class QuickActions extends StatelessWidget {
       ),
     ];
 
-    return GridView.count(
-      crossAxisCount: 2,
-      childAspectRatio: 2,
-      mainAxisSpacing: Spacing.sm,
-      crossAxisSpacing: Spacing.sm,
-      physics: const NeverScrollableScrollPhysics(),
-      children: actions.map((a) {
-        return InkWell(
-          onTap: () => onSectionTap(a.index),
-          borderRadius: BorderRadius.circular(Spacing.radiusMd),
-          child: Container(
-            decoration: BoxDecoration(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final crossAxisCount = width >= 720 ? 3 : 2;
+        final childAspectRatio = width >= 720 ? 3.2 : 2.8;
+
+        return GridView.count(
+          crossAxisCount: crossAxisCount,
+          childAspectRatio: childAspectRatio,
+          mainAxisSpacing: Spacing.sm,
+          crossAxisSpacing: Spacing.sm,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          children: actions.map((a) {
+            return InkWell(
+              onTap: () => onSectionTap(a.index),
               borderRadius: BorderRadius.circular(Spacing.radiusMd),
-              border: Border.all(color: theme.colorScheme.outlineVariant),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(a.icon, size: 20, color: theme.colorScheme.primary),
-                const SizedBox(width: Spacing.sm),
-                Text(
-                  a.label,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w500,
-                  ),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: Spacing.sm,
+                  vertical: Spacing.sm,
                 ),
-              ],
-            ),
-          ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(Spacing.radiusMd),
+                  border: Border.all(color: theme.colorScheme.outlineVariant),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(a.icon, size: 20, color: theme.colorScheme.primary),
+                    const SizedBox(width: Spacing.sm),
+                    Flexible(
+                      child: Text(
+                        a.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
         );
-      }).toList(),
+      },
     );
   }
 }

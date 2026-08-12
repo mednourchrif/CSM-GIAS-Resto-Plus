@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../core/localization/app_strings.dart';
 
 import '../providers/settings_provider.dart';
 import '../providers/settings_state.dart';
@@ -28,12 +29,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(settingsProvider);
     final theme = Theme.of(context);
+    final strings = AppStrings.of(context);
 
     ref.listen(settingsProvider, (previous, next) {
       if (next.successMessage != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(next.successMessage!),
+            content: Text(
+              next.successMessage!.contains('réinitialisés')
+                  ? strings.settingsReset
+                  : strings.settingsSaved,
+            ),
             backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
           ),
@@ -54,7 +60,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Paramètres'),
+        title: Text(strings.settingsTitle),
         actions: [
           if (state.hasUnsavedChanges)
             TextButton.icon(
@@ -68,7 +74,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.save_rounded),
-              label: Text(state.isSaving ? 'Enregistrement…' : 'Enregistrer'),
+              label: Text(state.isSaving ? strings.saving : strings.save),
             ),
         ],
       ),
@@ -81,6 +87,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     ThemeData theme,
     SettingsState state,
   ) {
+    final strings = AppStrings.of(context);
     if (state.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -108,7 +115,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 onPressed: () =>
                     ref.read(settingsProvider.notifier).loadSettings(),
                 icon: const Icon(Icons.refresh_rounded),
-                label: const Text('Réessayer'),
+                label: Text(strings.retry),
               ),
             ],
           ),
@@ -118,7 +125,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     final settings = state.settings;
     if (settings == null) {
-      return const Center(child: Text('Aucun paramètre disponible.'));
+      return Center(child: Text(strings.noSettingsAvailable));
     }
 
     return RefreshIndicator(
@@ -144,7 +151,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Modifications non enregistrées',
+                      strings.unsavedChanges,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onTertiaryContainer,
                       ),

@@ -40,6 +40,10 @@ class LoginRateLimiter:
         with self._lock:
             self._attempts.pop(key, None)
 
+    def clear(self) -> None:
+        with self._lock:
+            self._attempts.clear()
+
     def _prune(self, attempts: deque[float], now: float) -> None:
         cutoff = now - self._window_seconds
         while attempts and attempts[0] <= cutoff:

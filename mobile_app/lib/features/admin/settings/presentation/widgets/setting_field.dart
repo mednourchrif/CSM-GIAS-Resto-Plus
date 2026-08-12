@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../../../core/localization/app_strings.dart';
 
 import '../../domain/entities/setting.dart';
 
@@ -9,74 +10,83 @@ class SettingField extends StatelessWidget {
   final Setting setting;
   final String currentValue;
   final ValueChanged<String> onChanged;
+  final bool isPending;
 
   const SettingField({
     super.key,
     required this.setting,
     required this.currentValue,
     required this.onChanged,
+    this.isPending = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isChanged = currentValue != setting.defaultValue;
+    final strings = AppStrings.of(context);
+
+    final label = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                strings.settingLabel(setting.key, setting.label),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+            if (isPending)
+              Container(
+                margin: const EdgeInsetsDirectional.only(start: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withAlpha(30),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  strings.modified,
+                  style: const TextStyle(fontSize: 10, color: Colors.orange),
+                ),
+              ),
+          ],
+        ),
+        if (setting.description != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text(
+              strings.settingDescription(setting.key, setting.description!),
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+            ),
+          ),
+      ],
+    );
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: 2,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth < 560) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        setting.label,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                    if (isChanged)
-                      Container(
-                        margin: const EdgeInsets.only(left: 8),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.withAlpha(30),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: const Text(
-                          'Modifié',
-                          style: TextStyle(fontSize: 10, color: Colors.orange),
-                        ),
-                      ),
-                  ],
-                ),
-                if (setting.description != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(
-                      setting.description!,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                  ),
+                label,
+                const SizedBox(height: 8),
+                _buildField(context),
               ],
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(flex: 2, child: _buildField(context)),
-        ],
+            );
+          }
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: label),
+              const SizedBox(width: 16),
+              Expanded(child: _buildField(context)),
+            ],
+          );
+        },
       ),
     );
   }
@@ -134,7 +144,7 @@ class SettingField extends StatelessWidget {
               final isSelected = selected.contains(opt);
               return FilterChip(
                 label: Text(
-                  _optionLabel(opt),
+                  AppStrings.of(context).settingOption(opt),
                   style: const TextStyle(fontSize: 12),
                 ),
                 selected: isSelected,
@@ -164,7 +174,7 @@ class SettingField extends StatelessWidget {
               items: options.map((opt) {
                 return DropdownMenuItem(
                   value: opt,
-                  child: Text(_optionLabel(opt)),
+                  child: Text(AppStrings.of(context).settingOption(opt)),
                 );
               }).toList(),
               onChanged: (v) {
@@ -197,59 +207,6 @@ class SettingField extends StatelessWidget {
           ),
           onChanged: onChanged,
         );
-    }
-  }
-
-  String _optionLabel(String value) {
-    switch (value) {
-      case 'fr':
-        return 'Français';
-      case 'en':
-        return 'Anglais';
-      case 'ar':
-        return 'Arabe';
-      case 'light':
-        return 'Clair';
-      case 'dark':
-        return 'Sombre';
-      case 'system':
-        return 'Système';
-      case 'low':
-        return 'Basse';
-      case 'medium':
-        return 'Moyenne';
-      case 'high':
-        return 'Haute';
-      case 'L':
-        return 'Faible';
-      case 'M':
-        return 'Moyenne';
-      case 'Q':
-        return 'Élevée';
-      case 'H':
-        return 'Maximale';
-      case 'default':
-        return 'Par défaut';
-      case 'strict':
-        return 'Stricte';
-      case 'very_strict':
-        return 'Très stricte';
-      case '1':
-        return 'Lundi';
-      case '2':
-        return 'Mardi';
-      case '3':
-        return 'Mercredi';
-      case '4':
-        return 'Jeudi';
-      case '5':
-        return 'Vendredi';
-      case '6':
-        return 'Samedi';
-      case '7':
-        return 'Dimanche';
-      default:
-        return value;
     }
   }
 }

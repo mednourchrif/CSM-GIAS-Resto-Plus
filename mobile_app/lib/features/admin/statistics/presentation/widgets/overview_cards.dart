@@ -30,6 +30,12 @@ class OverviewCards extends StatelessWidget {
         color: AppColors.info,
       ),
       _StatCard(
+        label: 'Prévision demain',
+        value: stats.forecastMealsNextDay.toString(),
+        icon: Icons.trending_up_rounded,
+        color: AppColors.brandOrange,
+      ),
+      _StatCard(
         label: 'Employés',
         value: stats.employees.toString(),
         icon: Icons.badge_rounded,
@@ -75,17 +81,20 @@ class OverviewCards extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth > 900
+        final width = constraints.maxWidth;
+        final crossAxisCount = width >= 1200
             ? 5
-            : constraints.maxWidth > 600
+            : width >= 900
             ? 4
+            : width >= 700
+            ? 3
             : 2;
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
-            childAspectRatio: 1.6,
+            childAspectRatio: width >= 900 ? 1.75 : 1.55,
             crossAxisSpacing: 8,
             mainAxisSpacing: 8,
           ),

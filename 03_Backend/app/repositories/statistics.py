@@ -32,9 +32,10 @@ class DashboardStats:
         today = self._today
         week_start = today - timedelta(days=today.weekday())
         month_start = today.replace(day=1)
+        forecast_next_day = self._forecast_next_day(today)
 
         return DashboardStatsResponse(
-            overview=self._overview(today, week_start, month_start),
+            overview=self._overview(today, week_start, month_start, forecast_next_day),
             meals_per_day=self._meals_per_day(week_start, today),
             meal_distribution=self._meal_distribution(today, month_start),
             user_type_distribution=self._user_type_distribution(),
@@ -47,7 +48,13 @@ class DashboardStats:
     # Overview
     # ------------------------------------------------------------------
 
-    def _overview(self, today: date, week_start: date, month_start: date) -> dict[str, int]:
+    def _overview(
+        self,
+        today: date,
+        week_start: date,
+        month_start: date,
+        forecast_next_day: int,
+    ) -> dict[str, int]:
         meals_today = self._count_meals(today, today)
         meals_week = self._count_meals(week_start, today)
         meals_month = self._count_meals(month_start, today)
@@ -65,6 +72,7 @@ class DashboardStats:
             "meals_today": meals_today,
             "meals_this_week": meals_week,
             "meals_this_month": meals_month,
+            "forecast_meals_next_day": forecast_next_day,
             "employees": employees,
             "interns": interns,
             "visitors": visitors,
@@ -93,6 +101,12 @@ class DashboardStats:
             )
         )
         return self._db.execute(stmt).scalar() or 0
+
+    def _forecast_next_day(self, today: date) -> int:
+        start_date = today - timedelta(days=7)
+        end_date = today - timedelta(days=1)
+        historical_count = self._count_meals(start_date, end_date)
+        return round(historical_count / 7) if historical_count > 0 else 0
 
     def _count_users(self, user_type: str) -> int:
         stmt = (

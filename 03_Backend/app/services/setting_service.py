@@ -36,6 +36,7 @@ RUNTIME_SETTING_KEYS = {
     "camera_quality",
     "face_recognition_enabled",
     "qr_validation_enabled",
+    "language",
     "theme",
     "welcome_message",
     "success_message",
@@ -385,6 +386,10 @@ class SettingService(BaseService[SettingRepository]):
         if key == "theme":
             if value not in {"light", "dark", "system"}:
                 raise ValidationException(message="Thème invalide.")
+            return
+        if key == "language":
+            if value not in {"fr", "en", "ar"}:
+                raise ValidationException(message="Langue invalide.")
             return
         if key == "camera_quality":
             if value not in {"low", "medium", "high"}:

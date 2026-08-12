@@ -20,6 +20,7 @@ def test_only_effective_settings_are_exposed(db_session: Session) -> None:
     )
     assert "password_policy" not in result.raw
     assert "company_logo" not in result.raw
+    assert result.raw["language"] == "fr"
 
 
 @pytest.mark.usefixtures("client")
@@ -34,6 +35,8 @@ def test_runtime_values_are_validated(db_session: Session) -> None:
         service.update_settings(db_session, {"opening_hour": "25:00"})
     with pytest.raises(ValidationException):
         service.update_settings(db_session, {"closing_hour": "14:00:30"})
+    with pytest.raises(ValidationException):
+        service.update_settings(db_session, {"language": "de"})
 
     updated = service.update_settings(
         db_session,
@@ -42,12 +45,14 @@ def test_runtime_values_are_validated(db_session: Session) -> None:
             "qr_validation_enabled": "false",
             "opening_hour": "08:00",
             "closing_hour": "10:00",
+            "language": "ar",
         },
     )
     assert updated.raw["face_similarity_threshold"] == "0.82"
     assert updated.raw["qr_validation_enabled"] == "false"
     assert updated.raw["opening_hour"] == "08:00"
     assert updated.raw["closing_hour"] == "10:00"
+    assert updated.raw["language"] == "ar"
 
 
 def test_kiosk_settings_require_tablet_credentials(client: TestClient) -> None:
@@ -67,3 +72,4 @@ def test_kiosk_settings_require_tablet_credentials(client: TestClient) -> None:
     payload = response.json()
     assert payload["success"] is True
     assert set(payload["data"]["raw"]) == RUNTIME_SETTING_KEYS
+    assert payload["data"]["raw"]["language"] == "fr"
