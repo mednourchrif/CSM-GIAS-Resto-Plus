@@ -39,6 +39,7 @@ class BaseAppSettings(BaseSettings):
     APP_NAME: str = "CSM-GIAS Resto+"
     APP_VERSION: str = "1.0.0"
     APP_DEBUG: bool = False
+    API_DOCS_ENABLED: bool = True
     APP_ENVIRONMENT: Environment = Environment.DEVELOPMENT
     APP_SECRET_KEY: str = ""
 
@@ -189,6 +190,7 @@ class ProductionSettings(BaseAppSettings):
     """Settings for production deployment with strict security."""
 
     APP_DEBUG: bool = False
+    API_DOCS_ENABLED: bool = False
     DB_ECHO_SQL: bool = False
     LOG_LEVEL: str = "INFO"
     SERVER_WORKERS: int = 4

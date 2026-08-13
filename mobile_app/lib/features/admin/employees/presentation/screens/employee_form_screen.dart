@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/theme/spacing.dart';
 import '../../../../../core/utils/validators.dart';
 import '../../domain/entities/employee.dart';
+import '../../domain/entities/employee_creation.dart';
+import '../../../qr/domain/entities/qr_code.dart';
+import '../../../../../shared/services/qr_print_service.dart';
 import '../providers/employee_provider.dart';
 
 class EmployeeFormScreen extends ConsumerStatefulWidget {
@@ -49,6 +54,7 @@ class _EmployeeFormScreenState extends ConsumerState<EmployeeFormScreen> {
     setState(() => _isSaving = true);
 
     bool success;
+    EmployeeCreation? creation;
     if (_isEditing) {
       success = await ref
           .read(employeeProvider.notifier)
@@ -60,7 +66,7 @@ class _EmployeeFormScreenState extends ConsumerState<EmployeeFormScreen> {
             statut: _statut,
           );
     } else {
-      success = await ref
+      creation = await ref
           .read(employeeProvider.notifier)
           .createEmployee(
             nom: _nomController.text.trim(),
@@ -68,6 +74,7 @@ class _EmployeeFormScreenState extends ConsumerState<EmployeeFormScreen> {
             matricule: _matriculeController.text.trim(),
             statut: _statut,
           );
+      success = creation != null;
     }
 
     if (!mounted) return;
@@ -75,6 +82,10 @@ class _EmployeeFormScreenState extends ConsumerState<EmployeeFormScreen> {
     setState(() => _isSaving = false);
 
     if (success) {
+      if (creation != null) {
+        await _showGeneratedQr(creation.qrCode);
+        if (!mounted) return;
+      }
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -91,6 +102,68 @@ class _EmployeeFormScreenState extends ConsumerState<EmployeeFormScreen> {
         SnackBar(content: Text(error ?? 'Une erreur est survenue.')),
       );
     }
+  }
+
+  Future<void> _showGeneratedQr(QrCode qr) {
+    final encoded = qr.qrBase64;
+    final bytes = encoded == null
+        ? null
+        : base64Decode(
+            encoded.contains(',') ? encoded.split(',').last : encoded,
+          );
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        icon: const Icon(
+          Icons.check_circle_rounded,
+          color: Colors.green,
+          size: 42,
+        ),
+        title: const Text('Employé et QR créés'),
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 360),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Le visage reste optionnel et peut être enrôlé plus tard.',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: Spacing.md),
+                if (bytes != null)
+                  Image.memory(
+                    bytes,
+                    width: 220,
+                    height: 220,
+                    fit: BoxFit.contain,
+                  ),
+                const SizedBox(height: Spacing.sm),
+                Text(
+                  '${_prenomController.text.trim()} ${_nomController.text.trim()}',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text('Matricule : ${_matriculeController.text.trim()}'),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          OutlinedButton.icon(
+            onPressed: () => QrPrintService.printQr(qr),
+            icon: const Icon(Icons.print_rounded),
+            label: const Text('Imprimer'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Terminer'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -182,14 +255,15 @@ class _EmployeeFormScreenState extends ConsumerState<EmployeeFormScreen> {
                   ),
                 ),
                 const SizedBox(height: Spacing.lg),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                OverflowBar(
+                  alignment: MainAxisAlignment.end,
+                  spacing: Spacing.sm,
+                  overflowSpacing: Spacing.xs,
                   children: [
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
                       child: const Text('Annuler'),
                     ),
-                    const SizedBox(width: Spacing.sm),
                     FilledButton(
                       onPressed: _isSaving ? null : _submit,
                       child: _isSaving

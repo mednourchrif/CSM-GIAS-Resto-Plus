@@ -5,6 +5,7 @@ from datetime import date, datetime
 from pydantic import Field
 
 from app.schemas.base import BaseResponse, BaseSchema
+from app.schemas.receipt import ReceiptResponse
 
 
 class MealCategoryResponse(BaseResponse):
@@ -38,6 +39,7 @@ class MealRegisterResponse(BaseResponse):
     date_repas: date
     heure_repas: datetime
     categorie_nom: str | None = None
+    receipt: ReceiptResponse
 
 
 class MealResponse(BaseResponse):

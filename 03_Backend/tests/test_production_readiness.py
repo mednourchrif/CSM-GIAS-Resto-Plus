@@ -34,6 +34,18 @@ def test_qr_only_production_configuration_is_valid() -> None:
     assert configured.is_production
     assert configured.FACE_ENGINE == "disabled"
     assert configured.TZ == "Africa/Tunis"
+    assert configured.API_DOCS_ENABLED is False
+
+
+def test_development_keeps_api_docs_enabled() -> None:
+    configured = DevelopmentSettings(
+        _env_file=None,
+        APP_ENVIRONMENT="development",
+        APP_SECRET_KEY="development-app-secret",
+        JWT_SECRET_KEY="development-jwt-secret",
+    )
+
+    assert configured.API_DOCS_ENABLED is True
 
 
 def test_production_requires_an_explicit_valid_timezone() -> None:

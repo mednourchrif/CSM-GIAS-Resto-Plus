@@ -7,6 +7,7 @@ enum AdminSection {
   qrCodes(Icons.qr_code_rounded, 'QR Codes'),
   faceEnrollment(Icons.face_rounded, 'Visages'),
   mealHistory(Icons.restaurant_menu_rounded, 'Repas'),
+  receipts(Icons.receipt_long_rounded, 'Reçus'),
   statistics(Icons.bar_chart_rounded, 'Statistiques'),
   reports(Icons.assessment_rounded, 'Rapports'),
   users(Icons.admin_panel_settings_rounded, 'Utilisateurs'),

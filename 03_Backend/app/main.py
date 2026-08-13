@@ -52,9 +52,9 @@ def create_app() -> FastAPI:
         title=APP_NAME,
         description=APP_DESCRIPTION,
         version=APP_VERSION,
-        docs_url=f"{API_DOCS_PREFIX}",
-        redoc_url=f"{API_REDOC_PREFIX}",
-        openapi_url="/openapi.json",
+        docs_url=f"{API_DOCS_PREFIX}" if settings.API_DOCS_ENABLED else None,
+        redoc_url=f"{API_REDOC_PREFIX}" if settings.API_DOCS_ENABLED else None,
+        openapi_url="/openapi.json" if settings.API_DOCS_ENABLED else None,
         lifespan=lifespan,
         contact={
             "name": CONTACT_NAME,

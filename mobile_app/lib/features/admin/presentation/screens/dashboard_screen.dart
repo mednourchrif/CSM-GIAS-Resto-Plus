@@ -12,6 +12,7 @@ import '../../../admin/reports/presentation/screens/report_screen.dart';
 import '../../domain/enums/admin_section.dart';
 import '../../../admin/interns/presentation/screens/intern_list_screen.dart';
 import '../../../admin/meals/presentation/screens/meal_history_list_screen.dart';
+import '../../../receipts/presentation/screens/receipt_list_screen.dart';
 import '../../../admin/qr/presentation/screens/qr_list_screen.dart';
 import '../../../admin/statistics/presentation/screens/statistics_dashboard_screen.dart';
 import '../../../admin/settings/presentation/screens/settings_screen.dart';
@@ -63,6 +64,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       AdminSection.qrCodes => const QrListScreen(),
       AdminSection.faceEnrollment => const FaceEnrollmentDirectoryScreen(),
       AdminSection.mealHistory => const MealHistoryListScreen(),
+      AdminSection.receipts => const ReceiptListScreen(),
       AdminSection.statistics => const StatisticsDashboardScreen(),
       AdminSection.reports => const ReportScreen(),
       AdminSection.users => const UserListScreen(),

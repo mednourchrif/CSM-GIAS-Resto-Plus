@@ -4,6 +4,7 @@ import '../dto/create_employee_request_dto.dart';
 import '../dto/employee_detail_dto.dart';
 import '../dto/employee_dto.dart';
 import '../dto/update_employee_request_dto.dart';
+import '../../../qr/data/dto/qr_code_dto.dart';
 
 class EmployeeRemoteDataSource {
   final Dio _dio;
@@ -56,13 +57,19 @@ class EmployeeRemoteDataSource {
     return EmployeeDetailDto.fromJson(body['data'] as Map<String, dynamic>);
   }
 
-  Future<EmployeeDto> createEmployee(CreateEmployeeRequestDto request) async {
+  Future<EmployeeCreationResponse> createEmployee(
+    CreateEmployeeRequestDto request,
+  ) async {
     final response = await _dio.post<Map<String, dynamic>>(
       '/employees',
       data: request.toJson(),
     );
     final body = response.data!;
-    return EmployeeDto.fromJson(body['data'] as Map<String, dynamic>);
+    final data = body['data'] as Map<String, dynamic>;
+    return EmployeeCreationResponse(
+      employee: EmployeeDto.fromJson(data),
+      qrCode: QrCodeDto.fromJson(data['qr_code'] as Map<String, dynamic>),
+    );
   }
 
   Future<EmployeeDto> updateEmployee(
@@ -80,6 +87,16 @@ class EmployeeRemoteDataSource {
   Future<void> deleteEmployee(String uuid) async {
     await _dio.delete('/employees/$uuid');
   }
+}
+
+class EmployeeCreationResponse {
+  final EmployeeDto employee;
+  final QrCodeDto qrCode;
+
+  const EmployeeCreationResponse({
+    required this.employee,
+    required this.qrCode,
+  });
 }
 
 class EmployeesListResponse {

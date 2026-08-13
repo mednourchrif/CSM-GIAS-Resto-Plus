@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +11,8 @@ import '../../../../core/theme/app_shadows.dart';
 import '../../../admin/settings/presentation/providers/app_settings_provider.dart';
 import '../../../identification/presentation/providers/kiosk_flow_provider.dart';
 import '../../../meal_registration/presentation/providers/meal_registration_provider.dart';
+import '../../../receipts/data/receipt_print_service.dart';
+import '../../../../providers.dart';
 
 class SuccessScreen extends ConsumerStatefulWidget {
   const SuccessScreen({super.key});
@@ -30,6 +34,9 @@ class _SuccessScreenState extends ConsumerState<SuccessScreen>
   late final Animation<double> _countdown;
 
   late final Duration _redirectDelay;
+  Timer? _redirectTimer;
+  bool _isPrinting = false;
+  bool _printAttempted = false;
 
   @override
   void initState() {
@@ -71,11 +78,44 @@ class _SuccessScreenState extends ConsumerState<SuccessScreen>
     _checkController.forward().then((_) => _contentController.forward());
     _countdownController.forward();
 
-    Future.delayed(_redirectDelay, () {
+    _scheduleRedirect();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _autoPrintReceipt());
+  }
+
+  Future<void> _autoPrintReceipt() async {
+    if (_printAttempted || !mounted) return;
+    final receipt = ref.read(mealRegistrationResultProvider)?.receipt;
+    if (receipt == null) return;
+    _printAttempted = true;
+    await _printReceipt();
+  }
+
+  void _scheduleRedirect() {
+    _redirectTimer?.cancel();
+    _redirectTimer = Timer(_redirectDelay, () {
       if (!mounted) return;
       ref.read(resetKioskFlowProvider)();
       context.go('/home');
     });
+  }
+
+  Future<void> _printReceipt() async {
+    final receipt = ref.read(mealRegistrationResultProvider)?.receipt;
+    if (receipt == null || _isPrinting) return;
+    _redirectTimer?.cancel();
+    _countdownController.stop();
+    setState(() => _isPrinting = true);
+    try {
+      await ReceiptPrintService(
+        ref.read(apiClientProvider).dio,
+      ).printReceipt(receipt);
+    } finally {
+      if (mounted) {
+        setState(() => _isPrinting = false);
+        _countdownController.forward(from: 0);
+        _scheduleRedirect();
+      }
+    }
   }
 
   @override
@@ -93,6 +133,7 @@ class _SuccessScreenState extends ConsumerState<SuccessScreen>
     _checkController.dispose();
     _contentController.dispose();
     _countdownController.dispose();
+    _redirectTimer?.cancel();
     super.dispose();
   }
 
@@ -319,6 +360,26 @@ class _SuccessScreenState extends ConsumerState<SuccessScreen>
                                           ),
                                     ),
                                   ],
+                                ),
+                              ],
+                              if (registration?.receipt != null &&
+                                  !offlineQueued) ...[
+                                const SizedBox(height: Spacing.lg),
+                                FilledButton.icon(
+                                  onPressed: _isPrinting ? null : _printReceipt,
+                                  icon: _isPrinting
+                                      ? const SizedBox.square(
+                                          dimension: 18,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      : const Icon(Icons.print_rounded),
+                                  label: Text(
+                                    _isPrinting
+                                        ? 'Préparation du reçu...'
+                                        : 'Imprimer le reçu',
+                                  ),
                                 ),
                               ],
                             ],

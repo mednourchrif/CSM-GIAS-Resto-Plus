@@ -5,6 +5,7 @@ import '../../../../../shared/models/result.dart';
 import '../../../../../shared/utils/dio_error_mapper.dart';
 import '../../domain/entities/employee.dart';
 import '../../domain/entities/employee_detail.dart';
+import '../../domain/entities/employee_creation.dart';
 import '../../domain/repositories/employee_repository.dart';
 import '../datasources/employee_remote_datasource.dart';
 import '../dto/create_employee_request_dto.dart';
@@ -78,7 +79,7 @@ class EmployeeRepositoryImpl implements EmployeeRepository {
   }
 
   @override
-  Future<Result<Employee>> createEmployee({
+  Future<Result<EmployeeCreation>> createEmployee({
     required String nom,
     required String prenom,
     required String matricule,
@@ -91,8 +92,13 @@ class EmployeeRepositoryImpl implements EmployeeRepository {
         matricule: matricule,
         statut: statut,
       );
-      final dto = await _dataSource.createEmployee(request);
-      return Success(dto.toDomain());
+      final response = await _dataSource.createEmployee(request);
+      return Success(
+        EmployeeCreation(
+          employee: response.employee.toDomain(),
+          qrCode: response.qrCode.toDomain(),
+        ),
+      );
     } on DioException catch (e) {
       return Fail(mapDioError(e, resourceName: 'employé'));
     } catch (e) {

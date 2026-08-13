@@ -138,7 +138,7 @@ def test_failed_registration_does_not_burn_identification_grant(
     assert grant.consumed_at is None
 
 
-def test_qr_grant_cannot_register_an_employee(
+def test_qr_grant_can_register_an_active_employee(
     client: TestClient,
     db_session: Session,
 ) -> None:
@@ -147,11 +147,11 @@ def test_qr_grant_cannot_register_an_employee(
     category = MealService().get_categories(db_session)[0]
     employee = Employee(
         nom="QR",
-        prenom="Interdit",
-        email="employee.qr.denied@example.com",
+        prenom="Autorise",
+        email="employee.qr.allowed@example.com",
         type="EMPLOYE",
         statut=StatutUtilisateur.ACTIF,
-        matricule="EMP-QR-DENIED",
+        matricule="EMP-QR-ALLOWED",
         langue="FR",
     )
     db_session.add(employee)
@@ -172,8 +172,9 @@ def test_qr_grant_cannot_register_an_employee(
     )
 
     db_session.refresh(grant)
-    assert response.status_code == 400
-    assert grant.consumed_at is None
+    assert response.status_code == 201
+    assert response.json()["data"]["receipt"]["matricule"] == employee.matricule
+    assert grant.consumed_at is not None
 
 
 @pytest.mark.parametrize(

@@ -19,10 +19,12 @@ from app.schemas.employee import (
     MealSummaryResponse,
 )
 from app.schemas.pagination import PaginationParams
+from app.schemas.qr_code import QrGenerateResponse
 from app.schemas.response import PaginatedResponse, SuccessResponse
 from app.security.dependencies import require_admin
 from app.services.audit_service import AuditLogService
 from app.services.employee_service import EmployeeService
+from app.utils.qr_code import generate_qr_base64
 
 router = APIRouter(prefix="/employees", tags=["employees"])
 
@@ -120,13 +122,30 @@ async def create_employee(
 ) -> SuccessResponse[EmployeeResponse]:
     """Create a new employee."""
     employee = _service.create(db, body, admin)
+    generated_qr = employee.__dict__.get("_generated_qr")
     _audit.log_employee_created(
         db,
         admin=admin,
         employee_uuid=employee.uuid,
         employee_name=f"{employee.prenom} {employee.nom}",
     )
-    return SuccessResponse(data=EmployeeResponse.model_validate(employee))
+    response = EmployeeResponse.model_validate(employee)
+    if generated_qr is not None:
+        response.qr_code = QrGenerateResponse(
+            id=generated_qr.id,
+            uuid=generated_qr.uuid,
+            created_at=generated_qr.created_at,
+            updated_at=generated_qr.updated_at,
+            qr_hash=generated_qr.qr_hash,
+            proprietaire_uuid=generated_qr.proprietaire_uuid,
+            type_proprietaire=generated_qr.type_proprietaire,
+            statut=generated_qr.statut,
+            date_expiration=generated_qr.date_expiration,
+            qr_token=generated_qr.raw_token,
+            qr_base64=generate_qr_base64(generated_qr.raw_token),
+            cree_par_uuid=generated_qr.cree_par_uuid,
+        )
+    return SuccessResponse(data=response)
 
 
 @router.put(

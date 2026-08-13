@@ -70,6 +70,7 @@ def _log_startup_banner(db_healthy: bool) -> None:
         "stub": "DEVELOPMENT STUB (NOT BIOMETRIC)",
         "disabled": "Disabled (QR-only mode)",
     }.get(settings.FACE_ENGINE.strip().lower(), settings.FACE_ENGINE)
+    docs_status = "/docs" if settings.API_DOCS_ENABLED else "Disabled"
     banner = (
         f"\n{'=' * 54}"
         f"\n  CSM-GIAS Resto+ - Solution de Gestion du Restaurant"
@@ -81,7 +82,7 @@ def _log_startup_banner(db_healthy: bool) -> None:
         f"\n  Face engine : {face_mode}"
         f"\n  Server      : {settings.SERVER_HOST}:{settings.SERVER_PORT}"
         f"\n  API Prefix  : /api/v1"
-        f"\n  Docs        : /docs"
+        f"\n  Docs        : {docs_status}"
         f"\n{'=' * 54}\n"
     )
     logger.info(banner)

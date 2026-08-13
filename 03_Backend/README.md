@@ -39,6 +39,13 @@ You can also bypass activation completely:
 
 Configure real secrets and database credentials in `.env`; never commit it.
 Swagger UI is at `http://127.0.0.1:8000/docs`.
+API documentation is enabled for development and disabled by default in
+production; expose it in production only through an authenticated, controlled
+operations path if required.
+
+Migration `d7f4a2c9e810` adds the receipt journal. Every newly confirmed meal
+creates one immutable receipt snapshot, and new employees receive an active QR
+credential automatically while face enrollment remains optional.
 
 ## Structure
 

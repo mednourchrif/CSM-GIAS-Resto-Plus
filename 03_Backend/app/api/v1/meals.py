@@ -23,20 +23,23 @@ from app.schemas.meal import (
     MealResponse,
 )
 from app.schemas.pagination import MealFilterParams
+from app.schemas.receipt import ReceiptResponse
 from app.schemas.response import PaginatedResponse, SuccessResponse
 from app.security.dependencies import require_admin, require_kiosk_access
 from app.services.meal_service import MealService
+from app.services.receipt_service import ReceiptService
+from app.utils.receipt_qr import make_receipt_token
 
 router = APIRouter(prefix="/meals", tags=["meals"])
 
 _service = MealService()
+_receipt_service = ReceiptService()
 
 
 def _enrich_meal_response(meal: Meal, db: Session) -> MealResponse:
     """Enrich a MealResponse with category name and user name."""
     cat_stmt = select(MealCategory).where(MealCategory.uuid == meal.categorie_uuid)
     category = db.execute(cat_stmt).scalar_one_or_none()
-
     user_stmt = select(User).where(User.uuid == meal.utilisateur_uuid)
     user = db.execute(user_stmt).scalar_one_or_none()
 
@@ -153,6 +156,7 @@ async def register_meal(
 
     cat_stmt = select(MealCategory).where(MealCategory.uuid == meal.categorie_uuid)
     category = db.execute(cat_stmt).scalar_one_or_none()
+    receipt = _receipt_service.get_by_meal(db, meal.uuid)
 
     return SuccessResponse(
         data=MealRegisterResponse(
@@ -165,6 +169,9 @@ async def register_meal(
             date_repas=meal.date_repas,
             heure_repas=meal.heure_repas,
             categorie_nom=category.nom if category else None,
+            receipt=ReceiptResponse.model_validate(receipt).model_copy(
+                update={"qr_token": make_receipt_token(receipt.uuid, receipt.numero)}
+            ),
         ),
     )
 

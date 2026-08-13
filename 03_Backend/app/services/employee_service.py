@@ -18,6 +18,7 @@ from app.repositories.qr_code import QrCodeRepository
 from app.repositories.user import UserRepository
 from app.schemas.employee import EmployeeCreate, EmployeeUpdate
 from app.schemas.pagination import PaginatedResult, PaginationParams
+from app.services.qr_code_service import QrCodeService
 from app.utils.date_utils import today_local
 from app.utils.password import hash_password
 
@@ -43,12 +44,14 @@ class EmployeeService:
         meal_repo: MealRepository | None = None,
         face_repo: FaceEmbeddingRepository | None = None,
         qr_repo: QrCodeRepository | None = None,
+        qr_service: QrCodeService | None = None,
     ) -> None:
         self._employee_repo = employee_repo or EmployeeRepository()
         self._user_repo = user_repo or UserRepository()
         self._meal_repo = meal_repo or MealRepository()
         self._face_repo = face_repo or FaceEmbeddingRepository()
         self._qr_repo = qr_repo or QrCodeRepository()
+        self._qr_service = qr_service or QrCodeService(qr_repo=self._qr_repo)
 
     def create(self, db: Session, data: EmployeeCreate, admin: Admin) -> Employee:
         self._validate_unique_matricule(db, data.matricule)
@@ -63,7 +66,9 @@ class EmployeeService:
         attrs["updated_by_id"] = admin.uuid
 
         employee = self._employee_repo.create(db, **attrs)
-        logger.info("Employee created")
+        generated_qr = self._qr_service.generate_for_employee(db, employee.uuid, admin)
+        employee.__dict__["_generated_qr"] = generated_qr
+        logger.info("Employee created with QR credential")
         return employee
 
     def get(self, db: Session, uuid: str) -> Employee:
@@ -126,6 +131,9 @@ class EmployeeService:
     def delete(self, db: Session, uuid: str, admin: Admin) -> None:
         employee = self.get(db, uuid)
         self._face_repo.delete_all_for_user(db, uuid)
+        active_qr = self._qr_repo.get_active_by_owner(db, uuid)
+        if active_qr is not None:
+            self._qr_service.revoke(db, active_qr.uuid, admin, "Employe desactive")
         employee.date_suppression = datetime.now(UTC)
         employee.statut = StatutUtilisateur.SUPPRIME
         employee.updated_by_id = admin.uuid

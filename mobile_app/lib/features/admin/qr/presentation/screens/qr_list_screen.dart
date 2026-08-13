@@ -147,6 +147,14 @@ class _QrListScreenState extends ConsumerState<QrListScreen> {
                 ),
                 const SizedBox(width: Spacing.sm),
                 _FilterChip(
+                  label: 'Employés',
+                  selected: _typeFilter == 'EMPLOYE',
+                  onSelected: () {
+                    setState(() => _typeFilter = 'EMPLOYE');
+                    ref.read(qrProvider.notifier).setTypeFilter('EMPLOYE');
+                  },
+                ),
+                _FilterChip(
                   label: 'Stagiaires',
                   selected: _typeFilter == 'STAGIAIRE',
                   onSelected: () {

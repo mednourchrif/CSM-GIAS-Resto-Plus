@@ -52,6 +52,9 @@ class TestEmployeeCRUD:
         assert body["data"]["nom"] == "Dupont"
         assert body["data"]["matricule"] == "EMP001"
         assert body["data"]["uuid"] is not None
+        assert body["data"]["qr_code"]["type_proprietaire"] == "EMPLOYE"
+        assert body["data"]["qr_code"]["statut"] == "ACTIF"
+        assert body["data"]["qr_code"]["qr_base64"].startswith("data:image/png;base64,")
 
     def test_get_employee(self, client: TestClient, db_session: Session) -> None:
         token = _login(client, db_session)
@@ -67,9 +70,28 @@ class TestEmployeeCRUD:
         data = resp.json()["data"]
         assert data["uuid"] == uuid
         assert data["face_enrolled"] is False
-        assert data["qr_generated"] is False
+        assert data["qr_generated"] is True
         assert data["today_meal"] is None
         assert data["last_meals"] == []
+
+    def test_created_employee_qr_can_identify(
+        self, client: TestClient, db_session: Session
+    ) -> None:
+        token = _login(client, db_session)
+        created = client.post(
+            "/api/v1/employees",
+            json=_employee_payload(),
+            headers=_auth_header(token),
+        )
+
+        identified = client.post(
+            "/api/v1/identification/qr",
+            json={"token": created.json()["data"]["qr_code"]["qr_token"]},
+            headers=_auth_header(token),
+        )
+
+        assert identified.status_code == 200
+        assert identified.json()["data"]["identification_type"] == "QR"
 
     def test_get_employee_not_found(self, client: TestClient, db_session: Session) -> None:
         token = _login(client, db_session)

@@ -26,6 +26,7 @@ from app.models.meal import Meal
 # Identity Domain
 from app.models.meal_category import MealCategory
 from app.models.qr_code import QrCode
+from app.models.receipt import Receipt
 from app.models.role import Role
 
 # Settings
@@ -51,6 +52,7 @@ __all__ = [
     "Meal",
     "MealCategory",
     "QrCode",
+    "Receipt",
     "Visitor",
     # Face Recognition
     "FaceEmbedding",

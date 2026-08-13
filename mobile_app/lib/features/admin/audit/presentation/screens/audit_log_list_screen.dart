@@ -201,9 +201,19 @@ class _AuditLogListScreenState extends ConsumerState<AuditLogListScreen> {
   String _buildCsvContent(List<AuditLogExportItem> items) {
     final buf = StringBuffer();
     _csvLine(buf, ['CSM-GIAS Resto+ - Logs d\'audit']);
-    _csvLine(buf, ['Généré le ${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}']);
+    _csvLine(buf, [
+      'Généré le ${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}',
+    ]);
     _csvLine(buf, []);
-    _csvLine(buf, ['Timestamp', 'Utilisateur', 'Rôle', 'Action', 'Entité', 'Statut', 'Description']);
+    _csvLine(buf, [
+      'Timestamp',
+      'Utilisateur',
+      'Rôle',
+      'Action',
+      'Entité',
+      'Statut',
+      'Description',
+    ]);
     for (final item in items) {
       final ts = DateFormat('yyyy-MM-dd HH:mm:ss').format(item.timestamp);
       _csvLine(buf, [

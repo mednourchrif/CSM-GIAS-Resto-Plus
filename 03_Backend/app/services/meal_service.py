@@ -31,6 +31,7 @@ from app.models.meal_category import MealCategory
 from app.models.user import StatutUtilisateur, User
 from app.models.visitor import Visitor
 from app.repositories.meal import MealRepository, MealStats
+from app.repositories.receipt import ReceiptRepository
 from app.repositories.setting import SettingRepository
 from app.repositories.user import UserRepository
 from app.schemas.pagination import PaginatedResult, PaginationParams
@@ -38,6 +39,8 @@ from app.services.audit_service import AuditLogService
 from app.services.identification_service import IdentificationService
 from app.services.qr_code_service import QrCodeService
 from app.utils.date_utils import to_business_timezone, today_local
+from app.utils.qr_code import hash_token
+from app.utils.receipt_qr import make_receipt_token
 
 _audit_service = AuditLogService()
 
@@ -83,12 +86,14 @@ class MealService:
         user_repo: UserRepository | None = None,
         identification_service: IdentificationService | None = None,
         setting_repo: SettingRepository | None = None,
+        receipt_repo: ReceiptRepository | None = None,
     ) -> None:
         self._meal_repo = meal_repo or MealRepository()
         self._qr_service = qr_service or QrCodeService()
         self._user_repo = user_repo or UserRepository()
         self._identification_service = identification_service or IdentificationService()
         self._setting_repo = setting_repo or SettingRepository()
+        self._receipt_repo = receipt_repo or ReceiptRepository()
 
     # ==================================================================
     # Registration methods
@@ -260,6 +265,24 @@ class MealService:
                     heure_repas=now,
                     enregistre_par_uuid=admin.uuid if admin else None,
                 )
+                receipt_number = f"RCP-{today:%Y%m%d}-{meal.uuid.replace('-', '')[-16:].upper()}"
+                receipt_token = make_receipt_token(meal.uuid, receipt_number)
+                self._receipt_repo.create(
+                    db,
+                    numero=receipt_number,
+                    repas_uuid=meal.uuid,
+                    utilisateur_uuid=user.uuid,
+                    nom=user.nom,
+                    prenom=user.prenom,
+                    matricule=getattr(user, "matricule", None),
+                    type_utilisateur=str(user.type),
+                    categorie_uuid=category.uuid,
+                    categorie_nom=category.nom,
+                    type_identification=type_identification,
+                    date_repas=today,
+                    heure_repas=now,
+                    qr_token_hash=hash_token(receipt_token),
+                )
         except IntegrityError as exc:
             raise ConflictException(
                 message=("Un repas a déjà été enregistré pour cette personne aujourd'hui."),
@@ -415,6 +438,9 @@ class MealService:
                 raise BusinessException(
                     message="Le QR visiteur n'est valable que le jour de la visite.",
                 )
+            return user
+
+        if isinstance(user, Employee):
             return user
 
         raise BusinessException(

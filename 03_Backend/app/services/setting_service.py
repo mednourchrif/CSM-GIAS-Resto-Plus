@@ -375,7 +375,9 @@ class SettingService(BaseService[SettingRepository]):
         return setting.value if setting is not None else fallback
 
     @staticmethod
-    def _validate_runtime_value(key: str, value: str) -> None:
+    def _validate_runtime_value(  # noqa: PLR0912 - explicit setting-key validation
+        key: str, value: str
+    ) -> None:
         if SettingService._validate_restaurant_hour(key, value):
             return
         if key in {"face_recognition_enabled", "qr_validation_enabled"}:

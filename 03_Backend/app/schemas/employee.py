@@ -7,6 +7,7 @@ from pydantic import Field
 from app.models.employee import StatutEnrolement
 from app.models.user import Langue, StatutUtilisateur
 from app.schemas.base import BaseResponse, BaseSchema
+from app.schemas.qr_code import QrGenerateResponse
 
 
 class EmployeeCreate(BaseSchema):
@@ -48,6 +49,7 @@ class EmployeeResponse(BaseResponse):
     statut: StatutUtilisateur = StatutUtilisateur.ACTIF
     langue: Langue | None = None
     date_suppression: datetime | None = None
+    qr_code: QrGenerateResponse | None = None
 
 
 class MealSummaryResponse(BaseResponse):

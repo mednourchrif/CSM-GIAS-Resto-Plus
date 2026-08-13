@@ -56,6 +56,8 @@ class QrCode {
 
   String get typeLabel {
     switch (typeProprietaire) {
+      case 'EMPLOYE':
+        return 'Employé';
       case 'STAGIAIRE':
         return 'Stagiaire';
       case 'VISITEUR':

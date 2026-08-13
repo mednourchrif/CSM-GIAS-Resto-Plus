@@ -16,8 +16,8 @@ from app.core.exceptions import BusinessException, ConflictException
 from app.models.employee import Employee
 from app.models.meal_category import MealCategory
 from app.models.user import StatutUtilisateur
-from app.services.meal_service import MealService, is_restaurant_open
 from app.repositories.setting import SettingRepository
+from app.services.meal_service import MealService, is_restaurant_open
 from tests.test_auth import _auth_header, _login_payload, _seed_admin
 from tests.test_qr_codes import _seed_intern, _seed_visitor
 
@@ -144,6 +144,8 @@ class TestMealRegistration:
         assert body["data"]["type_identification"] == "QR"
         assert body["data"]["categorie_uuid"] == cats["Plat"]
         assert body["data"]["date_repas"] == str(datetime.now(UTC).date())
+        assert body["data"]["receipt"]["numero"].startswith("RCP-")
+        assert body["data"]["receipt"]["categorie_nom"] == "Plat"
 
     def test_register_visitor_meal(self, client: TestClient, db_session: Session) -> None:
         token = _login(client, db_session)

@@ -5,6 +5,7 @@ import '../../data/datasources/employee_remote_datasource.dart';
 import '../../data/repositories/employee_repository_impl.dart';
 import '../../domain/entities/employee.dart';
 import '../../domain/entities/employee_detail.dart';
+import '../../domain/entities/employee_creation.dart';
 import '../../domain/repositories/employee_repository.dart';
 import 'employee_state.dart';
 
@@ -106,7 +107,7 @@ class EmployeeNotifier extends StateNotifier<EmployeeState> {
     );
   }
 
-  Future<bool> createEmployee({
+  Future<EmployeeCreation?> createEmployee({
     required String nom,
     required String prenom,
     required String matricule,
@@ -120,13 +121,13 @@ class EmployeeNotifier extends StateNotifier<EmployeeState> {
     );
 
     return result.when(
-      success: (_) {
+      success: (creation) {
         refresh();
-        return true;
+        return creation;
       },
       failure: (failure) {
         state = state.copyWith(error: failure.message);
-        return false;
+        return null;
       },
     );
   }

@@ -21,7 +21,8 @@ class MealOfflineQueueItem {
       categorieUuid: json['categorie_uuid'] as String,
       mealLabel: json['meal_label'] as String? ?? '',
       queuedAt:
-          DateTime.tryParse(json['queued_at'] as String? ?? '') ?? DateTime.now(),
+          DateTime.tryParse(json['queued_at'] as String? ?? '') ??
+          DateTime.now(),
     );
   }
 
@@ -48,7 +49,10 @@ class MealOfflineQueueService {
 
     final decoded = jsonDecode(raw) as List<dynamic>;
     return decoded
-        .map((entry) => MealOfflineQueueItem.fromJson(entry as Map<String, dynamic>))
+        .map(
+          (entry) =>
+              MealOfflineQueueItem.fromJson(entry as Map<String, dynamic>),
+        )
         .toList();
   }
 

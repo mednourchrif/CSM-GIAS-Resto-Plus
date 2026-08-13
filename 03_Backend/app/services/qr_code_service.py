@@ -12,6 +12,7 @@ The service provides five core operations:
 """
 
 import base64
+from datetime import UTC, datetime
 from typing import overload
 
 from loguru import logger
@@ -19,6 +20,7 @@ from sqlalchemy.orm import Session
 
 from app.core.exceptions import BusinessException, NotFoundException
 from app.models.admin import Admin
+from app.models.employee import Employee
 from app.models.intern import Intern
 from app.models.qr_code import QrCode
 from app.models.user import StatutUtilisateur
@@ -48,6 +50,30 @@ class QrCodeService:
     # ==================================================================
     # Generate
     # ==================================================================
+
+    def generate_for_employee(self, db: Session, employee_uuid: str, admin: Admin) -> QrCode:
+        """Generate the account-bound QR issued automatically to an employee."""
+        owner = self._user_repo.get_by_uuid(db, employee_uuid)
+        if owner is None or not isinstance(owner, Employee) or owner.date_suppression is not None:
+            raise NotFoundException(message=f"Employe {employee_uuid} introuvable.")
+        employee = owner
+        self._revoke_active_qr(db, employee_uuid, admin, "Regeneration")
+
+        token = generate_token()
+        qr_base64 = generate_qr_base64(token)
+        qr = self._qr_repo.create(
+            db,
+            qr_hash=hash_token(token),
+            proprietaire_uuid=employee.uuid,
+            type_proprietaire="EMPLOYE",
+            statut="ACTIF",
+            date_expiration=datetime(2099, 12, 31, 23, 59, 59, tzinfo=UTC),
+            cree_par_uuid=admin.uuid,
+            metadata_json=self._payload_cipher.encrypt(qr_base64),
+        )
+        logger.info("QR generated for employee")
+        qr.raw_token = token
+        return qr
 
     def generate_for_intern(self, db: Session, intern_uuid: str, admin: Admin) -> QrCode:
         """Generate a new QR code for an intern.
@@ -227,6 +253,8 @@ class QrCodeService:
         Revokes the currently active QR (if any) and creates a new one.
         Preserves full audit history.
         """
+        if owner_type == "EMPLOYE":
+            return self.generate_for_employee(db, owner_uuid, admin)
         if owner_type == "STAGIAIRE":
             return self.generate_for_intern(db, owner_uuid, admin)
         elif owner_type == "VISITEUR":
@@ -320,6 +348,11 @@ class QrCodeService:
 
     @overload
     def _load_owner(
+        self, db: Session, uuid: str, model_cls: type[Employee], label: str
+    ) -> Employee: ...
+
+    @overload
+    def _load_owner(
         self, db: Session, uuid: str, model_cls: type[Intern], label: str
     ) -> Intern: ...
 
@@ -332,9 +365,9 @@ class QrCodeService:
         self,
         db: Session,
         uuid: str,
-        model_cls: type[Intern] | type[Visitor],
+        model_cls: type[Employee] | type[Intern] | type[Visitor],
         label: str,
-    ) -> Intern | Visitor:
+    ) -> Employee | Intern | Visitor:
         """Load a polymorphic owner by UUID and verify it is active."""
         owner = self._user_repo.get_by_uuid(db, uuid)
 

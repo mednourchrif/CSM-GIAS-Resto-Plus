@@ -9,11 +9,7 @@ class HomeHeader extends StatelessWidget {
   final String subtitle;
   final bool compact;
 
-  const HomeHeader({
-    super.key,
-    this.subtitle = '',
-    this.compact = false,
-  });
+  const HomeHeader({super.key, this.subtitle = '', this.compact = false});
 
   @override
   Widget build(BuildContext context) {
