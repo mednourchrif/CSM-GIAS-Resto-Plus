@@ -12,6 +12,7 @@ containing ``.env``, ``alembic.ini``, and the ``app/`` package).
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -44,11 +45,11 @@ ROLE_DEFINITIONS: list[dict[str, str | None]] = [
     {"nom": "RECEPTION", "description": "Agent de réception"},
 ]
 
-ADMIN_EMAIL = "admin@csm-gias.tn"
-ADMIN_PASSWORD = "Admin@123"
+ADMIN_EMAIL = os.getenv("SEED_ADMIN_EMAIL", "admin@csm-gias.tn")
+ADMIN_PASSWORD = os.getenv("SEED_ADMIN_PASSWORD", "Admin@123")
 
-RECEPTION_EMAIL = "reception@csm-gias.tn"
-RECEPTION_PASSWORD = "Reception@123"
+RECEPTION_EMAIL = os.getenv("SEED_RECEPTION_EMAIL", "reception@csm-gias.tn")
+RECEPTION_PASSWORD = os.getenv("SEED_RECEPTION_PASSWORD", "Reception@123")
 
 # =========================================================================
 # Seed implementation

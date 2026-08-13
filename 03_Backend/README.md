@@ -10,6 +10,16 @@ bcrypt, Fernet, Loguru, and Pytest.
 
 ## Setup
 
+For a Windows VM without Docker, run `deploy_windows.bat` from the repository
+root. It creates the Python environment, installs dependencies, writes secure
+production settings, runs Alembic migrations, seeds the database, and opens
+the API firewall port. A reachable MySQL 8+ server is required; the script
+does not silently fall back to SQLite. Start the API with `run_backend.bat`.
+On a brand-new local MySQL VM, use `deploy_windows.bat -InstallMysql
+-ProvisionDatabase`; the installer will request the MySQL root password once
+to create the application database and user.
+Add `-StartAfterDeploy` to launch the API automatically when setup finishes.
+
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
