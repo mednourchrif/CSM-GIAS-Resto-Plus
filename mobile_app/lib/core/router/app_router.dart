@@ -38,6 +38,17 @@ abstract final class AppRouter {
         GoRoute(
           path: '/home',
           name: RouteNames.home,
+          builder: (context, state) => const HomeScreen(),
+        ),
+        GoRoute(
+          path: '/meal-selection',
+          name: RouteNames.mealSelection,
+          redirect: (context, state) {
+            final extra = state.extra;
+            return extra is IdentificationGrant && !extra.isExpired
+                ? null
+                : '/home';
+          },
           builder: (context, state) {
             final extra = state.extra;
             return HomeScreen(

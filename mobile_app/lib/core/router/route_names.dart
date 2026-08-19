@@ -1,6 +1,7 @@
 abstract final class RouteNames {
   static const String splash = 'splash';
   static const String home = 'home';
+  static const String mealSelection = 'mealSelection';
   static const String login = 'login';
   static const String kioskCamera = 'kioskCamera';
   static const String success = 'success';

@@ -330,6 +330,18 @@ class AppStrings {
     _ => 'Erreur lors de l’identification. Veuillez réessayer.',
   };
 
+  String get faceNotRegistered => switch (_code) {
+    'en' => 'Face not recognized or not registered.',
+    'ar' => 'الوجه غير معروف أو غير مسجل.',
+    _ => 'Visage non reconnu ou non enregistré.',
+  };
+
+  String get qrNotRegistered => switch (_code) {
+    'en' => 'This QR code is invalid or not registered.',
+    'ar' => 'رمز QR غير صالح أو غير مسجل.',
+    _ => 'Ce QR Code est invalide ou non enregistré.',
+  };
+
   String faceNotRecognized(int attempts) => switch (_code) {
     'en' =>
       'Face not recognized after $attempts attempts. Please contact reception.',

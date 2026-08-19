@@ -34,13 +34,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     with WidgetsBindingObserver {
   Timer? _grantExpiryTimer;
   String? _scheduledGrantToken;
+  IdentificationGrant? _handoffGrant;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     final grant = widget.initialIdentificationGrant;
+    _handoffGrant = grant;
     if (grant != null && !grant.isExpired) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ref.read(pendingIdentificationProvider.notifier).state = grant;
+      });
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant HomeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final grant = widget.initialIdentificationGrant;
+    if (grant != null &&
+        !grant.isExpired &&
+        grant.token != _handoffGrant?.token) {
+      _handoffGrant = grant;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         ref.read(pendingIdentificationProvider.notifier).state = grant;
@@ -65,8 +82,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       // app as paused while the camera surface is released. When this screen
       // was opened with a fresh route grant, preserve it for the meal-choice
       // handoff; the grant expiry timer still bounds its lifetime.
-      if (widget.initialIdentificationGrant != null &&
-          !widget.initialIdentificationGrant!.isExpired) {
+      if (_handoffGrant != null && !_handoffGrant!.isExpired) {
         return;
       }
       ref.read(resetKioskFlowProvider)();
@@ -96,7 +112,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final selectedMeal = ref.watch(selectedMealProvider);
     final categoriesAsync = ref.watch(mealCategoriesProvider);
     final pendingIdentification = ref.watch(pendingIdentificationProvider);
-    final initialGrant = widget.initialIdentificationGrant;
+    // The route grant is the authoritative handoff from the camera screen.
+    // Keep it locally so a transient camera lifecycle event cannot erase the
+    // meal-selection screen while the provider state is being refreshed.
+    final initialGrant = _handoffGrant ?? widget.initialIdentificationGrant;
     final activeIdentification =
         pendingIdentification != null && !pendingIdentification.isExpired
         ? pendingIdentification
@@ -507,6 +526,7 @@ class _MealCardItem extends ConsumerWidget {
       if (!context.mounted) return;
       if (confirmed != true) {
         ref.read(resetKioskFlowProvider)();
+        GoRouter.maybeOf(context)?.go('/home');
         return;
       }
       if (identificationGrant.isExpired) {
