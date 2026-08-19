@@ -51,6 +51,27 @@ void main() {
       expect(response.identificationExpiresAt, isNotNull);
     });
 
+    test('face no-match response preserves the error shown by the kiosk', () {
+      final response = FaceIdentifyResponseDto.fromJson({
+        'statut': 'NO_MATCH',
+        'message': 'Aucune correspondance faciale trouvée.',
+      }).toDomain();
+
+      expect(response.isMatch, isFalse);
+      expect(response.message, 'Aucune correspondance faciale trouvée.');
+      expect(response.identificationToken, isNull);
+    });
+
+    test('QR success response requires a complete identification grant', () {
+      expect(
+        () => IdentificationGrantDto.fromJson({
+          'identification_type': 'QR',
+          'expires_at': '2026-07-29T10:29:01Z',
+        }),
+        throwsFormatException,
+      );
+    });
+
     test('timezone-less backend grant expiration is interpreted as UTC', () {
       final qrGrant = IdentificationGrantDto.fromJson({
         'identification_token': 'qr-token',

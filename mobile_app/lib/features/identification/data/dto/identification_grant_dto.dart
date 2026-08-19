@@ -13,13 +13,21 @@ class IdentificationGrantDto {
   });
 
   factory IdentificationGrantDto.fromJson(Map<String, dynamic> json) {
+    final token = json['identification_token'];
+    final type = json['identification_type'];
     final expiresAt = tryParseApiUtcDateTime(json['expires_at']);
+    if (token is! String || token.trim().isEmpty) {
+      throw const FormatException('Invalid identification token.');
+    }
+    if (type is! String || type.trim().isEmpty) {
+      throw const FormatException('Invalid identification type.');
+    }
     if (expiresAt == null) {
       throw const FormatException('Invalid identification expiration.');
     }
     return IdentificationGrantDto(
-      token: json['identification_token'] as String,
-      type: json['identification_type'] as String,
+      token: token,
+      type: type,
       expiresAt: expiresAt,
     );
   }

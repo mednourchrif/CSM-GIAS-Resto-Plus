@@ -52,13 +52,10 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
   String _guidanceMessage = '';
   Timer? _stabilityTimer;
   bool _canCapture = true;
-  bool _faceCooldown = false;
   int _recognitionAttempts = 0;
-  Timer? _faceCooldownTimer;
 
   static const Duration _stabilityDuration = Duration(milliseconds: 1000);
   static const double _centerThreshold = 0.2;
-  static const Duration _faceCooldownDuration = Duration(seconds: 5);
 
   // ─── Timeout ─────────────────────────────────────────────────────────────
   Timer? _timeoutTimer;
@@ -94,7 +91,6 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
     WidgetsBinding.instance.removeObserver(this);
     _stabilityTimer?.cancel();
     _timeoutTimer?.cancel();
-    _faceCooldownTimer?.cancel();
 
     _faceDetector?.close();
     _barcodeScanner?.close();
@@ -272,7 +268,7 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
 
       // QR has priority so a face in the background cannot starve scanning.
       if (_qrEnabled && await _detectBarcode(frame.inputImage)) return;
-      if (!_faceEnabled || _faceCooldown || _faceDetector == null) return;
+      if (!_faceEnabled || _faceDetector == null) return;
 
       final faces = await _faceDetector!.processImage(frame.inputImage);
       if (_isDisposed || _isProcessing || !_canCapture) return;
@@ -398,7 +394,7 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
         final error = ref.read(faceRecognitionProvider).error;
         _showError(error ?? AppStrings.of(context).identificationFailure);
       } else {
-        _onFaceNotRecognized();
+        _onFaceNotRecognized(result.message);
       }
     } catch (e) {
       if (_isDisposed || !mounted) return;
@@ -406,24 +402,16 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
     }
   }
 
-  void _onFaceNotRecognized() {
+  void _onFaceNotRecognized(String? backendMessage) {
     _recognitionAttempts++;
     final maxAttempts = ref.read(appSettingsProvider).maxRecognitionAttempts;
-    if (_recognitionAttempts >= maxAttempts) {
-      _showError(
-        AppStrings.of(context).faceNotRecognized(maxAttempts),
-        allowRetry: false,
-      );
-      return;
-    }
-    _faceCooldown = true;
-    _faceCooldownTimer?.cancel();
-    _faceCooldownTimer = Timer(_faceCooldownDuration, () {
-      if (_isDisposed) return;
-      _faceCooldown = false;
-    });
-
-    _restartScanning();
+    final message = backendMessage?.trim();
+    _showError(
+      message == null || message.isEmpty
+          ? AppStrings.of(context).faceNotRegistered
+          : message,
+      allowRetry: _recognitionAttempts < maxAttempts,
+    );
   }
 
   // ─── QR / Barcode detection ──────────────────────────────────────────────
@@ -462,6 +450,10 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
   // ─── Meal registration ───────────────────────────────────────────────────
 
   Future<void> _identifyByQr(String qrToken) async {
+    if (qrToken.trim().length < 32) {
+      _showError(AppStrings.of(context).qrNotRegistered);
+      return;
+    }
     setState(() => _guidanceMessage = AppStrings.of(context).validatingQr);
     final result = await ref
         .read(identificationRepositoryProvider)
@@ -476,9 +468,13 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
 
   void _completeIdentification(IdentificationGrant grant) {
     if (_isDisposed || !mounted) return;
+    if (grant.token.trim().isEmpty || grant.isExpired) {
+      _showError(AppStrings.of(context).invalidIdentificationProof);
+      return;
+    }
     ref.read(resetKioskMealSelectionProvider)();
     ref.read(pendingIdentificationProvider.notifier).state = grant;
-    context.go('/home', extra: grant);
+    context.go('/meal-selection', extra: grant);
   }
 
   // ─── Timeout ─────────────────────────────────────────────────────────────

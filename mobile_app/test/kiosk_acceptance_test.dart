@@ -135,7 +135,7 @@ void main() {
       await tester.pump();
     });
 
-    testWidgets('home route extra can carry an identification grant', (
+    testWidgets('meal-selection route displays a valid identification grant', (
       tester,
     ) async {
       final grant = IdentificationGrant(
@@ -158,13 +158,13 @@ void main() {
             path: '/camera',
             builder: (context, state) => Scaffold(
               body: FilledButton(
-                onPressed: () => context.go('/home', extra: grant),
+                onPressed: () => context.go('/meal-selection', extra: grant),
                 child: const Text('identified'),
               ),
             ),
           ),
           GoRoute(
-            path: '/home',
+            path: '/meal-selection',
             builder: (context, state) {
               final extra = state.extra;
               return HomeScreen(
