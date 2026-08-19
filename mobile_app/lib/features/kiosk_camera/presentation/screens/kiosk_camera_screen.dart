@@ -111,7 +111,15 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
     if (state == AppLifecycleState.resumed) {
       _resumeScanning();
     } else if (state == AppLifecycleState.paused) {
-      ref.read(resetKioskFlowProvider)();
+      // A successful face/QR request sets `_isProcessing` and immediately
+      // navigates to the meal-selection screen. Android can emit a transient
+      // paused event while the camera surface is being released; clearing
+      // the grant here would make the home screen fall back to kiosk mode.
+      // Keep the grant during that handoff and let the destination/expiry
+      // logic own its lifecycle cleanup.
+      if (!_isProcessing) {
+        ref.read(resetKioskFlowProvider)();
+      }
       _cameraController?.stopImageStream();
     }
   }

@@ -30,17 +30,19 @@ MlKitCameraFrame? createMlKitCameraFrame(
   final rotation = _rotationFor(camera, controller.value.deviceOrientation);
   if (rotation == null) return null;
 
-  if (image.planes.length != 1) return null;
-
   final format = InputImageFormatValue.fromRawValue(image.format.raw);
-  if (format == null ||
-      (defaultTargetPlatform == TargetPlatform.android &&
-          format != InputImageFormat.nv21) ||
-      (defaultTargetPlatform == TargetPlatform.iOS &&
-          format != InputImageFormat.bgra8888)) {
+  if (defaultTargetPlatform == TargetPlatform.iOS) {
+    if (format != InputImageFormat.bgra8888 || image.planes.length != 1) {
+      return null;
+    }
+  } else if (defaultTargetPlatform != TargetPlatform.android) {
     return null;
   }
-  final plane = image.planes.first;
+
+  final bytes = defaultTargetPlatform == TargetPlatform.android
+      ? _androidNv21Bytes(image)
+      : image.planes.first.bytes;
+  if (bytes == null) return null;
 
   final swapsDimensions =
       rotation == InputImageRotation.rotation90deg ||
@@ -51,12 +53,16 @@ MlKitCameraFrame? createMlKitCameraFrame(
 
   return MlKitCameraFrame(
     inputImage: InputImage.fromBytes(
-      bytes: plane.bytes,
+      bytes: bytes,
       metadata: InputImageMetadata(
         size: Size(image.width.toDouble(), image.height.toDouble()),
         rotation: rotation,
-        format: format,
-        bytesPerRow: plane.bytesPerRow,
+        format: defaultTargetPlatform == TargetPlatform.android
+            ? InputImageFormat.nv21
+            : format!,
+        bytesPerRow: defaultTargetPlatform == TargetPlatform.android
+            ? image.width
+            : image.planes.first.bytesPerRow,
       ),
     ),
     rotatedSize: rotatedSize,
@@ -76,8 +82,7 @@ InputImageRotation? _rotationFor(
   }
   if (defaultTargetPlatform != TargetPlatform.android) return null;
 
-  final deviceRotation = _orientations[deviceOrientation];
-  if (deviceRotation == null) return null;
+  final deviceRotation = _orientations[deviceOrientation] ?? 0;
   final compensation = camera.lensDirection == CameraLensDirection.front
       ? (sensorOrientation + deviceRotation) % 360
       : (sensorOrientation - deviceRotation + 360) % 360;
@@ -85,4 +90,46 @@ InputImageRotation? _rotationFor(
     (rotation) => rotation?.rawValue == compensation,
     orElse: () => null,
   );
+}
+
+Uint8List? _androidNv21Bytes(CameraImage image) {
+  if (image.planes.isEmpty) return null;
+  if (image.planes.length == 1) {
+    final plane = image.planes.first;
+    if (plane.bytes.isEmpty) return null;
+    return plane.bytes;
+  }
+  if (image.planes.length < 3) return null;
+
+  final width = image.width;
+  final height = image.height;
+  final yPlane = image.planes[0];
+  final uPlane = image.planes[1];
+  final vPlane = image.planes[2];
+  final output = Uint8List(width * height + (width * height ~/ 2));
+  var offset = 0;
+
+  for (var row = 0; row < height; row++) {
+    final rowStart = row * yPlane.bytesPerRow;
+    for (var col = 0; col < width; col++) {
+      final index = rowStart + col * (yPlane.bytesPerPixel ?? 1);
+      if (index >= yPlane.bytes.length) return null;
+      output[offset++] = yPlane.bytes[index];
+    }
+  }
+
+  for (var row = 0; row < height ~/ 2; row++) {
+    final uRowStart = row * uPlane.bytesPerRow;
+    final vRowStart = row * vPlane.bytesPerRow;
+    for (var col = 0; col < width; col += 2) {
+      final uIndex = uRowStart + (col ~/ 2) * (uPlane.bytesPerPixel ?? 1);
+      final vIndex = vRowStart + (col ~/ 2) * (vPlane.bytesPerPixel ?? 1);
+      if (uIndex >= uPlane.bytes.length || vIndex >= vPlane.bytes.length) {
+        return null;
+      }
+      output[offset++] = vPlane.bytes[vIndex];
+      output[offset++] = uPlane.bytes[uIndex];
+    }
+  }
+  return output;
 }

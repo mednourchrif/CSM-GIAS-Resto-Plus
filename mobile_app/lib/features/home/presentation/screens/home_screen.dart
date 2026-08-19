@@ -60,6 +60,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden ||
         state == AppLifecycleState.detached) {
+      // `/home` is kept underneath `/kiosk-camera` in the navigation stack.
+      // During a successful identification Android may briefly report the
+      // app as paused while the camera surface is released. When this screen
+      // was opened with a fresh route grant, preserve it for the meal-choice
+      // handoff; the grant expiry timer still bounds its lifetime.
+      if (widget.initialIdentificationGrant != null &&
+          !widget.initialIdentificationGrant!.isExpired) {
+        return;
+      }
       ref.read(resetKioskFlowProvider)();
     }
   }

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
@@ -136,8 +137,14 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
         _onSingleFace(faces.first, frame.rotatedSize);
       }
     } catch (error) {
+      if (kDebugMode) {
+        debugPrint('Face enrollment frame rejected: $error');
+      }
       if (mounted) {
-        setState(() => _guidanceMessage = 'Erreur de détection: $error');
+        setState(
+          () => _guidanceMessage =
+              'Image caméra incompatible, réessayez dans un instant',
+        );
       }
     } finally {
       _isDetectingFrame = false;
@@ -238,11 +245,11 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
       _captureCooldown?.cancel();
       _captureCooldown = Timer(_captureCooldownDuration, () async {
         if (mounted && !_isDisposed) {
+          _canCapture = true;
+          _isStable = false;
           if (!(_cameraController?.value.isStreamingImages ?? false)) {
             await _cameraController?.startImageStream(_processImage);
           }
-          _canCapture = true;
-          _isStable = false;
         }
       });
     } catch (e) {

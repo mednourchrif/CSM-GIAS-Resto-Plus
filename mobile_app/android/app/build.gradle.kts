@@ -49,6 +49,11 @@ android {
 
     buildTypes {
         release {
+            // R8 currently strips ML Kit component registrar constructors on
+            // some release builds, leaving face and barcode engines unusable.
+            // Reliability is more important than the small APK size saving.
+            isMinifyEnabled = false
+            isShrinkResources = false
             signingConfig = if (signingPropertiesFile.exists()) {
                 signingConfigs.getByName("release")
             } else {
