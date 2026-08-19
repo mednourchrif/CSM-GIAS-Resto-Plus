@@ -14,7 +14,9 @@ $EnvFile = Join-Path $Backend '.env'
 function Fail([string]$Message) { Write-Host "ERROR: $Message" -ForegroundColor Red; exit 1 }
 function New-Secret {
     $bytes = New-Object byte[] 48
-    [Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
+    $rng = [Security.Cryptography.RandomNumberGenerator]::Create()
+    try { $rng.GetBytes($bytes) }
+    finally { $rng.Dispose() }
     [Convert]::ToBase64String($bytes).Replace('+','-').Replace('/','_').TrimEnd('=')
 }
 function Ask([string]$Label, [string]$Default) {
@@ -67,6 +69,8 @@ $adminPassword = Read-Secret 'Initial administrator password'
 $receptionEmail = Ask 'Initial receptionist email' 'reception@csm-gias.tn'
 $receptionPassword = Read-Secret 'Initial receptionist password'
 $tabletKey = New-Secret; $appSecret = New-Secret; $jwtSecret = New-Secret
+$biometricKey = (& $vp -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())").Trim()
+if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($biometricKey)) { Fail 'Could not generate the biometric encryption key.' }
 $quoteList = { param($value) (($value -split ',' | ForEach-Object { '"' + $_.Trim() + '"' }) -join ',') }
 
 $lines = @(
@@ -74,7 +78,7 @@ $lines = @(
     'APP_ENVIRONMENT=production',"APP_SECRET_KEY=$appSecret",'SERVER_HOST=0.0.0.0',"SERVER_PORT=$Port",'SERVER_WORKERS=4',
     "TRUSTED_HOSTS=[$(&$quoteList $trustedHosts)]", "DB_HOST=$dbHost", "DB_PORT=$dbPort", "DB_USER=$dbUser", "DB_PASSWORD=$dbPassword", "DB_NAME=$dbName",
     'DB_POOL_SIZE=10','DB_MAX_OVERFLOW=20','DB_ECHO_SQL=false',"JWT_SECRET_KEY=$jwtSecret",'JWT_ALGORITHM=HS256','JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30','JWT_REFRESH_TOKEN_EXPIRE_DAYS=7','BCRYPT_ROUNDS=12',
-    "TABLET_API_KEY=$tabletKey",'FACE_ENGINE=disabled','BIOMETRIC_ENCRYPTION_KEY=','LOG_LEVEL=INFO','LOG_FORMAT=json','LOG_FILE_PATH=logs/app.log','LOG_ROTATION=1 day','LOG_RETENTION=30 days',
+    "TABLET_API_KEY=$tabletKey",'FACE_ENGINE=disabled',"BIOMETRIC_ENCRYPTION_KEY=$biometricKey",'LOG_LEVEL=INFO','LOG_FORMAT=json','LOG_FILE_PATH=logs/app.log','LOG_ROTATION=1 day','LOG_RETENTION=30 days',
     "CORS_ORIGINS=[$(&$quoteList $corsOrigins)]", "TZ=$timezone", "SEED_ADMIN_EMAIL=$adminEmail", "SEED_ADMIN_PASSWORD=$adminPassword", "SEED_RECEPTION_EMAIL=$receptionEmail", "SEED_RECEPTION_PASSWORD=$receptionPassword"
 )
 Set-Content -LiteralPath $EnvFile -Value $lines -Encoding UTF8
