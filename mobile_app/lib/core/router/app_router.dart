@@ -45,7 +45,9 @@ abstract final class AppRouter {
           name: RouteNames.mealSelection,
           redirect: (context, state) {
             final extra = state.extra;
-            return extra is IdentificationGrant && !extra.isExpired
+            // Expiry is checked by the backend when the meal is registered.
+            // Avoid using the tablet clock to discard a valid handoff.
+            return extra is IdentificationGrant && extra.token.trim().isNotEmpty
                 ? null
                 : '/home';
           },

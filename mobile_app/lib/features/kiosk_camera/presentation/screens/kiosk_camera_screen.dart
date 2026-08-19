@@ -468,7 +468,11 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
 
   void _completeIdentification(IdentificationGrant grant) {
     if (_isDisposed || !mounted) return;
-    if (grant.token.trim().isEmpty || grant.isExpired) {
+    // The API is authoritative for grant expiry.  Do not compare the API
+    // timestamp with the kiosk device clock here: a tablet clock that is
+    // ahead of the backend can make a freshly-issued proof look expired and
+    // send the user back to the kiosk without ever showing meal selection.
+    if (grant.token.trim().isEmpty) {
       _showError(AppStrings.of(context).invalidIdentificationProof);
       return;
     }

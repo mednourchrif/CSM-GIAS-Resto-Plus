@@ -42,7 +42,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     WidgetsBinding.instance.addObserver(this);
     final grant = widget.initialIdentificationGrant;
     _handoffGrant = grant;
-    if (grant != null && !grant.isExpired) {
+    if (grant?.token.trim().isNotEmpty == true) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         ref.read(pendingIdentificationProvider.notifier).state = grant;
@@ -55,7 +55,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     super.didUpdateWidget(oldWidget);
     final grant = widget.initialIdentificationGrant;
     if (grant != null &&
-        !grant.isExpired &&
+        grant.token.trim().isNotEmpty &&
         grant.token != _handoffGrant?.token) {
       _handoffGrant = grant;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -82,7 +82,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       // app as paused while the camera surface is released. When this screen
       // was opened with a fresh route grant, preserve it for the meal-choice
       // handoff; the grant expiry timer still bounds its lifetime.
-      if (_handoffGrant != null && !_handoffGrant!.isExpired) {
+      if (_handoffGrant?.token.trim().isNotEmpty == true) {
         return;
       }
       ref.read(resetKioskFlowProvider)();
@@ -90,21 +90,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   void _scheduleGrantExpiry(IdentificationGrant? grant) {
-    if (grant?.token == _scheduledGrantToken) return;
     _grantExpiryTimer?.cancel();
     _scheduledGrantToken = grant?.token;
-    if (grant == null) return;
-
-    final remaining = grant.expiresAt.difference(DateTime.now());
-    if (remaining <= Duration.zero) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) ref.read(resetKioskFlowProvider)();
-      });
-      return;
-    }
-    _grantExpiryTimer = Timer(remaining, () {
-      if (mounted) ref.read(resetKioskFlowProvider)();
-    });
+    // The API validates the proof when the meal is submitted. Do not use the
+    // tablet clock here because clock skew can discard a fresh grant.
   }
 
   @override
@@ -117,9 +106,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     // meal-selection screen while the provider state is being refreshed.
     final initialGrant = _handoffGrant ?? widget.initialIdentificationGrant;
     final activeIdentification =
-        pendingIdentification != null && !pendingIdentification.isExpired
+        pendingIdentification?.token.trim().isNotEmpty == true
         ? pendingIdentification
-        : initialGrant != null && !initialGrant.isExpired
+        : initialGrant?.token.trim().isNotEmpty == true
         ? initialGrant
         : null;
     if (pendingIdentification != null && activeIdentification == null) {
@@ -529,14 +518,6 @@ class _MealCardItem extends ConsumerWidget {
         GoRouter.maybeOf(context)?.go('/home');
         return;
       }
-      if (identificationGrant.isExpired) {
-        ref.read(resetKioskFlowProvider)();
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(strings.identificationExpired)));
-        return;
-      }
-
       ref.read(selectedMealProvider.notifier).state = type;
       ref.read(selectedCategoryUuidProvider.notifier).state = category.uuid;
       await ref
