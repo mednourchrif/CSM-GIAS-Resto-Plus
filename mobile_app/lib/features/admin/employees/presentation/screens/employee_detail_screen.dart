@@ -10,6 +10,7 @@ import '../../../../../shared/widgets/error_state.dart';
 import '../../../../../shared/widgets/shimmer_loading.dart';
 import '../../../../admin/face_enrollment/presentation/providers/face_enrollment_provider.dart';
 import '../../../../admin/face_enrollment/presentation/screens/face_enrollment_screen.dart';
+import '../../../qr/presentation/widgets/owner_qr_actions.dart';
 import '../../domain/entities/employee_detail.dart';
 import '../providers/employee_provider.dart';
 import '../widgets/employee_status_badge.dart';
@@ -350,6 +351,18 @@ class _IdentificationSection extends ConsumerWidget {
               ),
             ),
           ],
+        ),
+        const SizedBox(height: Spacing.md),
+        _IdMethodCard(
+          icon: Icons.qr_code_2_rounded,
+          title: 'QR Code',
+          statusLabel: detail.qrGenerated ? 'Actif' : 'Non généré',
+          statusColor: detail.qrGenerated
+              ? const Color(0xFF1B8A1B)
+              : theme.colorScheme.onSurfaceVariant,
+          actions: detail.qrGenerated
+              ? [OwnerQrActions(ownerUuid: emp.uuid)]
+              : const [],
         ),
         const SizedBox(height: Spacing.md),
         _IdMethodCard(

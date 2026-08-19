@@ -157,6 +157,11 @@ class _EmployeeFormScreenState extends ConsumerState<EmployeeFormScreen> {
             icon: const Icon(Icons.print_rounded),
             label: const Text('Imprimer'),
           ),
+          OutlinedButton.icon(
+            onPressed: () => QrPrintService.shareQr(qr),
+            icon: const Icon(Icons.share_rounded),
+            label: const Text('Partager'),
+          ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
             child: const Text('Terminer'),

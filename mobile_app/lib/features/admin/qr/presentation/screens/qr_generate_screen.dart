@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/theme/spacing.dart';
+import '../../../../../shared/services/qr_print_service.dart';
 import '../../../../admin/interns/domain/entities/intern.dart';
 import '../../../../admin/interns/presentation/providers/intern_provider.dart';
 import '../../../../admin/visitors/domain/entities/visitor.dart';
@@ -31,7 +32,7 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
   late String _ownerType;
   bool _isGenerating = false;
   String? _selectedOwnerUuid;
-  String? _generatedQrBase64;
+  QrCode? _generatedQr;
 
   @override
   void initState() {
@@ -54,7 +55,7 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
 
     setState(() {
       _isGenerating = true;
-      _generatedQrBase64 = null;
+      _generatedQr = null;
     });
 
     QrCode? qr;
@@ -76,7 +77,7 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
 
     if (qr != null) {
       setState(() {
-        _generatedQrBase64 = qr!.qrBase64;
+        _generatedQr = qr;
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('QR code généré avec succès.')),
@@ -126,7 +127,7 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
                     setState(() {
                       _ownerType = v.first;
                       _selectedOwnerUuid = null;
-                      _generatedQrBase64 = null;
+                      _generatedQr = null;
                     });
                     _loadOwners();
                   },
@@ -159,7 +160,7 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
                   ),
                 ),
               const SizedBox(height: Spacing.md),
-              if (_generatedQrBase64 != null) ...[
+              if (_generatedQr?.qrBase64 != null) ...[
                 Center(
                   child: Container(
                     padding: const EdgeInsets.all(Spacing.sm),
@@ -172,9 +173,9 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
                       borderRadius: BorderRadius.circular(Spacing.radiusXs),
                       child: Image.memory(
                         base64Decode(
-                          _generatedQrBase64!.contains(',')
-                              ? _generatedQrBase64!.split(',').last
-                              : _generatedQrBase64!,
+                          _generatedQr!.qrBase64!.contains(',')
+                              ? _generatedQr!.qrBase64!.split(',').last
+                              : _generatedQr!.qrBase64!,
                         ),
                         width: 160,
                         height: 160,
@@ -182,6 +183,24 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
                       ),
                     ),
                   ),
+                ),
+                const SizedBox(height: Spacing.md),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: Spacing.sm,
+                  runSpacing: Spacing.sm,
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: () => QrPrintService.printQr(_generatedQr!),
+                      icon: const Icon(Icons.print_rounded),
+                      label: const Text('Imprimer'),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: () => QrPrintService.shareQr(_generatedQr!),
+                      icon: const Icon(Icons.share_rounded),
+                      label: const Text('Partager'),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: Spacing.md),
               ],
@@ -260,7 +279,7 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
           onTap: () {
             setState(() {
               _selectedOwnerUuid = intern.uuid;
-              _generatedQrBase64 = null;
+              _generatedQr = null;
             });
           },
         );
@@ -308,7 +327,7 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
           onTap: () {
             setState(() {
               _selectedOwnerUuid = visitor.uuid;
-              _generatedQrBase64 = null;
+              _generatedQr = null;
             });
           },
         );

@@ -5,6 +5,7 @@ import '../../../../../core/theme/spacing.dart';
 import '../../../../../shared/widgets/detail_row.dart';
 import '../../../../../shared/widgets/status_badge.dart';
 import '../../../qr/presentation/screens/qr_generate_screen.dart';
+import '../../../qr/presentation/widgets/owner_qr_actions.dart';
 import '../../domain/entities/intern.dart';
 import '../providers/intern_provider.dart';
 import 'intern_form_screen.dart';
@@ -132,6 +133,8 @@ class InternDetailScreen extends ConsumerWidget {
                   label: const Text('Générer un QR code'),
                 ),
               ),
+              const SizedBox(height: Spacing.md),
+              OwnerQrActions(ownerUuid: intern.uuid),
             ],
           ),
         ),

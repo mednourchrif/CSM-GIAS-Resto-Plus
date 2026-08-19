@@ -4,6 +4,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
 import '../../features/admin/qr/domain/entities/qr_code.dart';
+import 'share_service.dart';
 
 class QrPrintService {
   const QrPrintService._();
@@ -50,6 +51,16 @@ class QrPrintService {
         );
         return document.save();
       },
+    );
+  }
+
+  static Future<bool> shareQr(QrCode qr) async {
+    final encoded = qr.qrBase64;
+    if (encoded == null || encoded.isEmpty) return false;
+    return ShareService.shareQrImage(
+      base64Image: encoded,
+      ownerName: qr.proprietaireFullName,
+      typeLabel: qr.typeLabel,
     );
   }
 }

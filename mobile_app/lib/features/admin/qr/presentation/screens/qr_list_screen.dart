@@ -68,7 +68,7 @@ class _QrListScreenState extends ConsumerState<QrListScreen> {
   void _showDetail(String uuid) {
     Navigator.of(
       context,
-    ).push(MaterialPageRoute(builder: (_) => _QrDetailScreen(uuid: uuid)));
+    ).push(MaterialPageRoute(builder: (_) => QrDetailScreen(uuid: uuid)));
   }
 
   void _showGenerateDialog() {
@@ -394,16 +394,16 @@ class _FilterChip extends StatelessWidget {
 
 // ---- Detail Screen ----
 
-class _QrDetailScreen extends ConsumerStatefulWidget {
+class QrDetailScreen extends ConsumerStatefulWidget {
   final String uuid;
 
-  const _QrDetailScreen({required this.uuid});
+  const QrDetailScreen({super.key, required this.uuid});
 
   @override
-  ConsumerState<_QrDetailScreen> createState() => _QrDetailScreenState();
+  ConsumerState<QrDetailScreen> createState() => _QrDetailScreenState();
 }
 
-class _QrDetailScreenState extends ConsumerState<_QrDetailScreen> {
+class _QrDetailScreenState extends ConsumerState<QrDetailScreen> {
   QrCode? _qrCode;
   bool _isLoading = true;
 
