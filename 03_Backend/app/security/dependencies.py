@@ -147,9 +147,9 @@ def require_kiosk_access(
 
     The API key is mandatory for unauthenticated kiosk operation. An admin
     Bearer token remains accepted for diagnostics and API tests. In development
-    only, a request without a key may come directly from a private/loopback
-    client so a physical device can be tested without embedding a shared secret
-    in a debug APK.
+    only, a request may come directly from a private/loopback client so a
+    physical device can be tested even when an older debug APK still carries a
+    stale key. Production always requires the configured key or an admin token.
     """
     configured_key = settings.TABLET_API_KEY.strip()
     unsafe_values = {"", "change-me", "change-me-to-tablet-api-key"}
@@ -160,7 +160,7 @@ def require_kiosk_access(
     ):
         return None
 
-    if settings.is_development and tablet_key is None and _is_private_client(request):
+    if settings.is_development and _is_private_client(request):
         return None
 
     if credentials is not None:

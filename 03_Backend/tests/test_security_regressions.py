@@ -347,6 +347,16 @@ def test_private_lan_kiosk_is_allowed_only_in_development(db_session: Session) -
         )
         is None
     )
+    assert (
+        require_kiosk_access(
+            request=_request_from("10.138.217.34"),
+            db=db_session,
+            tablet_key="stale-key-from-an-older-debug-apk",
+            credentials=None,
+            settings=development,
+        )
+        is None
+    )
 
     production = ProductionSettings(
         _env_file=None,
