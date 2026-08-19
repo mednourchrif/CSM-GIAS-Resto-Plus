@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
@@ -24,11 +26,32 @@ android {
         versionName = flutter.versionName
     }
 
+    val signingPropertiesFile = rootProject.file("key.properties")
+    val signingProperties = Properties()
+    if (signingPropertiesFile.exists()) {
+        signingPropertiesFile.inputStream().use { stream -> signingProperties.load(stream) }
+    }
+
+    signingConfigs {
+        if (signingPropertiesFile.exists()) {
+            create("release") {
+                keyAlias = signingProperties.getProperty("keyAlias")
+                keyPassword = signingProperties.getProperty("keyPassword")
+                storeFile = file(signingProperties.getProperty("storeFile"))
+                storePassword = signingProperties.getProperty("storePassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // Intentionally unsigned until a private release signing
-            // configuration is provisioned by the deployment owner.
-            signingConfig = null
+            signingConfig = if (signingPropertiesFile.exists()) {
+                signingConfigs.getByName("release")
+            } else {
+                // Local fallback keeps development APKs installable. Configure
+                // android/key.properties for a distributable production APK.
+                signingConfigs.getByName("debug")
+            }
         }
     }
 }

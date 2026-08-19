@@ -76,8 +76,16 @@ dev_dependencies:
   json_serializable: ^6.8.0
   riverpod_generator: ^2.6.3
   riverpod_lint: ^2.6.3
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
   assets:
-    - assets/branding/csm-gias.png
+    - assets/branding/app_logo.png
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: assets/branding/app_logo.png
+  adaptive_icon_background: '#FFFFFF'
+  adaptive_icon_foreground: assets/branding/app_logo.png

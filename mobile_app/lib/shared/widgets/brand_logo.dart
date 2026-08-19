@@ -21,7 +21,7 @@ class BrandLogo extends StatelessWidget {
       image: true,
       label: 'CSM-GIAS Ingrédients',
       child: Image.asset(
-        'assets/branding/csm-gias.png',
+        'assets/branding/app_logo.png',
         width: width,
         fit: BoxFit.contain,
         filterQuality: FilterQuality.high,

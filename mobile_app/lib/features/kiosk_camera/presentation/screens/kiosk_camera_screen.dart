@@ -747,7 +747,7 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
                           ],
                         ),
                         child: Image.asset(
-                          'assets/branding/csm-gias.png',
+                          'assets/branding/app_logo.png',
                           fit: BoxFit.contain,
                         ),
                       ),
