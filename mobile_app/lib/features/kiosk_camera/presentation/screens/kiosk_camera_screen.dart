@@ -19,6 +19,7 @@ import '../../../face_recognition/presentation/widgets/face_scan_overlay.dart';
 import '../../../identification/domain/entities/identification_grant.dart';
 import '../../../identification/presentation/providers/identification_provider.dart';
 import '../../../identification/presentation/providers/kiosk_flow_provider.dart';
+import '../../../../shared/services/mlkit_camera_image.dart';
 
 class KioskCameraScreen extends ConsumerStatefulWidget {
   const KioskCameraScreen({super.key});
@@ -38,6 +39,7 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
   bool _isCameraInitialized = false;
   String? _cameraError;
   bool _isProcessing = false;
+  bool _isDetectingFrame = false;
   bool _isSwitchingCamera = false;
   bool _isDisposed = false;
 
@@ -70,11 +72,11 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
     _faceEnabled = appSettings.faceRecognitionEnabled;
     _qrEnabled = appSettings.qrValidationEnabled;
 
-    _initializeCamera();
     _faceDetector = FaceDetector(options: FaceDetectorOptions());
     if (_qrEnabled) {
       _barcodeScanner = BarcodeScanner(formats: [BarcodeFormat.qrCode]);
     }
+    _initializeCamera();
     _startTimeout();
   }
 
@@ -150,7 +152,7 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
       camera,
       appSettings.resolutionPreset,
       enableAudio: false,
-      imageFormatGroup: ImageFormatGroup.nv21,
+      imageFormatGroup: mlKitCameraImageFormatGroup,
     );
     _cameraController = controller;
     _selectedCamera = camera;
@@ -248,106 +250,61 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
 
   // ─── Image processing ────────────────────────────────────────────────────
 
-  void _processImage(CameraImage image) {
-    if (_isProcessing || !_canCapture || _isDisposed) return;
+  Future<void> _processImage(CameraImage image) async {
+    if (_isProcessing || _isDetectingFrame || !_canCapture || _isDisposed) {
+      return;
+    }
+    final controller = _cameraController;
+    if (controller == null) return;
 
+    _isDetectingFrame = true;
     try {
-      final inputImage = _inputImageFromCamera(image);
-      if (inputImage == null) return;
+      final frame = createMlKitCameraFrame(image, controller);
+      if (frame == null) return;
 
-      if (_faceEnabled && !_faceCooldown) {
-        _faceDetector?.processImage(inputImage).then((faces) {
-          if (_isDisposed || _isProcessing || !_canCapture) return;
+      // QR has priority so a face in the background cannot starve scanning.
+      if (_qrEnabled && await _detectBarcode(frame.inputImage)) return;
+      if (!_faceEnabled || _faceCooldown || _faceDetector == null) return;
 
-          if (faces.isEmpty) {
-            _onNoFace(inputImage);
-          } else if (faces.length > 1) {
-            _onMultipleFaces(inputImage);
-          } else {
-            _onSingleFace(faces.first, image.width, image.height, inputImage);
-          }
-        });
-      } else if (_qrEnabled) {
-        _detectBarcode(inputImage);
+      final faces = await _faceDetector!.processImage(frame.inputImage);
+      if (_isDisposed || _isProcessing || !_canCapture) return;
+      if (faces.isEmpty) {
+        _onNoFace();
+      } else if (faces.length > 1) {
+        _onMultipleFaces();
+      } else {
+        _onSingleFace(faces.first, frame.rotatedSize);
       }
     } catch (e) {
       if (kDebugMode) {
         debugPrint('KioskCamera: error processing image: $e');
       }
+    } finally {
+      _isDetectingFrame = false;
     }
-  }
-
-  InputImage? _inputImageFromCamera(CameraImage image) {
-    final camera = _cameraController?.description;
-    if (camera == null) return null;
-
-    final sensorOrientation = camera.sensorOrientation;
-    InputImageRotation? rotation;
-
-    if (camera.lensDirection == CameraLensDirection.front) {
-      rotation = InputImageRotation.values.firstWhere(
-        (r) => r.rawValue == (sensorOrientation + 90) % 360,
-        orElse: () => InputImageRotation.rotation0deg,
-      );
-    } else {
-      rotation = InputImageRotation.values.firstWhere(
-        (r) => r.rawValue == (sensorOrientation + 270) % 360,
-        orElse: () => InputImageRotation.rotation0deg,
-      );
-    }
-
-    final format = InputImageFormat.values.firstWhere(
-      (f) => f.rawValue == image.format.raw,
-      orElse: () => InputImageFormat.nv21,
-    );
-
-    final plane = image.planes.first;
-
-    return InputImage.fromBytes(
-      bytes: plane.bytes,
-      metadata: InputImageMetadata(
-        size: Size(image.width.toDouble(), image.height.toDouble()),
-        rotation: rotation,
-        format: format,
-        bytesPerRow: plane.bytesPerRow,
-      ),
-    );
   }
 
   // ─── Face detection handlers ─────────────────────────────────────────────
 
-  void _onNoFace(InputImage inputImage) {
+  void _onNoFace() {
     if (_isFaceDetected) {
       _isFaceDetected = false;
       _isStable = false;
       _stabilityTimer?.cancel();
     }
     setState(() => _guidanceMessage = AppStrings.of(context).noFaceDetected);
-
-    if (_qrEnabled) {
-      _detectBarcode(inputImage);
-    }
   }
 
-  void _onMultipleFaces(InputImage inputImage) {
+  void _onMultipleFaces() {
     _isFaceDetected = false;
     _isStable = false;
     _stabilityTimer?.cancel();
     setState(
       () => _guidanceMessage = AppStrings.of(context).multipleFacesDetected,
     );
-
-    if (_qrEnabled) {
-      _detectBarcode(inputImage);
-    }
   }
 
-  void _onSingleFace(
-    Face face,
-    int imageWidth,
-    int imageHeight,
-    InputImage inputImage,
-  ) {
+  void _onSingleFace(Face face, Size imageSize) {
     _timeoutTimer?.cancel();
 
     if (!_isFaceDetected) {
@@ -358,8 +315,8 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
     final box = face.boundingBox;
     final centerX = box.left + box.width / 2;
     final centerY = box.top + box.height / 2;
-    final normX = centerX / imageWidth;
-    final normY = centerY / imageHeight;
+    final normX = centerX / imageSize.width;
+    final normY = centerY / imageSize.height;
 
     final isCentered =
         (normX - 0.5).abs() < _centerThreshold &&
@@ -463,13 +420,15 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
 
   // ─── QR / Barcode detection ──────────────────────────────────────────────
 
-  Future<void> _detectBarcode(InputImage inputImage) async {
-    if (_isProcessing || !_canCapture || !_qrEnabled) return;
-    if (_barcodeScanner == null) return;
+  Future<bool> _detectBarcode(InputImage inputImage) async {
+    if (_isProcessing || !_canCapture || !_qrEnabled) return false;
+    if (_barcodeScanner == null) return false;
 
     try {
       final barcodes = await _barcodeScanner!.processImage(inputImage);
-      if (_isDisposed || !mounted || _isProcessing || !_canCapture) return;
+      if (_isDisposed || !mounted || _isProcessing || !_canCapture) {
+        return false;
+      }
 
       if (barcodes.isNotEmpty) {
         final barcode = barcodes.first;
@@ -481,6 +440,7 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
           _stopCameraStream();
           setState(() => _guidanceMessage = AppStrings.of(context).qrDetected);
           await _identifyByQr(qrToken);
+          return true;
         }
       }
     } catch (e) {
@@ -488,6 +448,7 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
         debugPrint('KioskCamera: error detecting barcode: $e');
       }
     }
+    return false;
   }
 
   // ─── Meal registration ───────────────────────────────────────────────────

@@ -15,6 +15,7 @@ import '../providers/face_enrollment_state.dart';
 
 import '../../../../../core/theme/colors.dart';
 import '../../../../../core/theme/spacing.dart';
+import '../../../../../shared/services/mlkit_camera_image.dart';
 
 class FaceEnrollmentScreen extends ConsumerStatefulWidget {
   final Employee employee;
@@ -38,6 +39,8 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
   Timer? _stabilityTimer;
   Timer? _captureCooldown;
   bool _canCapture = true;
+  bool _isDetectingFrame = false;
+  bool _isDisposed = false;
 
   static const int _minImages = 3;
   static const int _maxImages = 5;
@@ -49,12 +52,13 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _initializeCamera();
     _faceDetector = FaceDetector(options: FaceDetectorOptions());
+    _initializeCamera();
   }
 
   @override
   void dispose() {
+    _isDisposed = true;
     WidgetsBinding.instance.removeObserver(this);
     _stabilityTimer?.cancel();
     _captureCooldown?.cancel();
@@ -69,7 +73,7 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
       return;
     }
     if (state == AppLifecycleState.resumed) {
-      _cameraController?.resumePreview();
+      _resumeCamera();
     } else if (state == AppLifecycleState.paused) {
       _cameraController?.stopImageStream();
     }
@@ -88,7 +92,7 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
         frontCamera,
         appSettings.resolutionPreset,
         enableAudio: false,
-        imageFormatGroup: ImageFormatGroup.nv21,
+        imageFormatGroup: mlKitCameraImageFormatGroup,
       );
 
       await _cameraController!.initialize();
@@ -107,62 +111,46 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
     }
   }
 
-  void _processImage(CameraImage image) {
-    if (!_canCapture || _captureCount >= _maxImages) return;
+  Future<void> _processImage(CameraImage image) async {
+    if (_isDisposed ||
+        _isDetectingFrame ||
+        !_canCapture ||
+        _captureCount >= _maxImages) {
+      return;
+    }
+    final controller = _cameraController;
+    final detector = _faceDetector;
+    if (controller == null || detector == null) return;
 
+    _isDetectingFrame = true;
     try {
-      final inputImage = _inputImageFromCamera(image);
-      if (inputImage == null) return;
-
-      _faceDetector?.processImage(inputImage).then((faces) {
-        if (!mounted || !_canCapture) return;
-
-        if (faces.isEmpty) {
-          _onNoFace();
-        } else if (faces.length > 1) {
-          _onMultipleFaces();
-        } else {
-          _onSingleFace(faces.first, image.width, image.height);
-        }
-      });
-    } catch (_) {}
+      final frame = createMlKitCameraFrame(image, controller);
+      if (frame == null) return;
+      final faces = await detector.processImage(frame.inputImage);
+      if (_isDisposed || !mounted || !_canCapture) return;
+      if (faces.isEmpty) {
+        _onNoFace();
+      } else if (faces.length > 1) {
+        _onMultipleFaces();
+      } else {
+        _onSingleFace(faces.first, frame.rotatedSize);
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() => _guidanceMessage = 'Erreur de détection: $error');
+      }
+    } finally {
+      _isDetectingFrame = false;
+    }
   }
 
-  InputImage? _inputImageFromCamera(CameraImage image) {
-    final camera = _cameraController?.description;
-    if (camera == null) return null;
-
-    final sensorOrientation = camera.sensorOrientation;
-    InputImageRotation? rotation;
-
-    if (camera.lensDirection == CameraLensDirection.front) {
-      rotation = InputImageRotation.values.firstWhere(
-        (r) => r.rawValue == (sensorOrientation + 90) % 360,
-        orElse: () => InputImageRotation.rotation0deg,
-      );
-    } else {
-      rotation = InputImageRotation.values.firstWhere(
-        (r) => r.rawValue == (sensorOrientation + 270) % 360,
-        orElse: () => InputImageRotation.rotation0deg,
-      );
+  Future<void> _resumeCamera() async {
+    final controller = _cameraController;
+    if (controller == null || !controller.value.isInitialized) return;
+    await controller.resumePreview();
+    if (!controller.value.isStreamingImages && _canCapture) {
+      await controller.startImageStream(_processImage);
     }
-
-    final format = InputImageFormat.values.firstWhere(
-      (f) => f.rawValue == image.format.raw,
-      orElse: () => InputImageFormat.nv21,
-    );
-
-    final plane = image.planes.first;
-
-    return InputImage.fromBytes(
-      bytes: plane.bytes,
-      metadata: InputImageMetadata(
-        size: Size(image.width.toDouble(), image.height.toDouble()),
-        rotation: rotation,
-        format: format,
-        bytesPerRow: plane.bytesPerRow,
-      ),
-    );
   }
 
   void _onNoFace() {
@@ -179,7 +167,7 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
     setState(() => _guidanceMessage = 'Plus d\'un visage détecté');
   }
 
-  void _onSingleFace(Face face, int imageWidth, int imageHeight) {
+  void _onSingleFace(Face face, Size imageSize) {
     if (!_isFaceDetected) {
       _isFaceDetected = true;
       setState(
@@ -190,8 +178,8 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
     final box = face.boundingBox;
     final centerX = box.left + box.width / 2;
     final centerY = box.top + box.height / 2;
-    final normX = centerX / imageWidth;
-    final normY = centerY / imageHeight;
+    final normX = centerX / imageSize.width;
+    final normY = centerY / imageSize.height;
 
     final isCentered =
         (normX - 0.5).abs() < _centerThreshold &&
@@ -227,6 +215,9 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
 
     try {
       HapticFeedback.heavyImpact();
+      if (_cameraController!.value.isStreamingImages) {
+        await _cameraController!.stopImageStream();
+      }
       final file = await _cameraController!.takePicture();
 
       if (!mounted) return;
@@ -240,14 +231,16 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
 
       if (_captureCount >= _minImages) {
         _canCapture = false;
-        _cameraController?.stopImageStream();
         ref.read(faceEnrollmentProvider.notifier).goToPreview();
         return;
       }
 
       _captureCooldown?.cancel();
-      _captureCooldown = Timer(_captureCooldownDuration, () {
-        if (mounted) {
+      _captureCooldown = Timer(_captureCooldownDuration, () async {
+        if (mounted && !_isDisposed) {
+          if (!(_cameraController?.value.isStreamingImages ?? false)) {
+            await _cameraController?.startImageStream(_processImage);
+          }
           _canCapture = true;
           _isStable = false;
         }
@@ -256,11 +249,14 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
       if (mounted) {
         _canCapture = true;
         setState(() => _guidanceMessage = 'Erreur de capture, réessayez');
+        if (!(_cameraController?.value.isStreamingImages ?? false)) {
+          await _cameraController?.startImageStream(_processImage);
+        }
       }
     }
   }
 
-  void _retakeAll() {
+  Future<void> _retakeAll() async {
     _captureCount = 0;
     _canCapture = true;
     _isStable = false;
@@ -268,7 +264,9 @@ class _FaceEnrollmentScreenState extends ConsumerState<FaceEnrollmentScreen>
     _stabilityTimer?.cancel();
     _captureCooldown?.cancel();
     ref.read(faceEnrollmentProvider.notifier).reset();
-    _cameraController?.startImageStream(_processImage);
+    if (!(_cameraController?.value.isStreamingImages ?? false)) {
+      await _cameraController?.startImageStream(_processImage);
+    }
     setState(() {
       _isCameraInitialized = true;
       _guidanceMessage = 'Placez votre visage dans le cadre';
