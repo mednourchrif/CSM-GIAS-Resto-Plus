@@ -1,7 +1,5 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:universal_platform/universal_platform.dart';
 
 import '../errors/exceptions.dart';
 import '../errors/failures.dart';
@@ -36,13 +34,6 @@ final class SecureStorageService implements StorageService {
 
   @override
   Future<void> write({required String key, required String value}) async {
-    if (UniversalPlatform.isWeb) {
-      debugPrint(
-        'Storage: write($key) on Web is not supported by '
-        'flutter_secure_storage. Use a web-compatible implementation.',
-      );
-      return;
-    }
     try {
       await _storage.write(key: key, value: value);
     } on MissingPluginException {
@@ -59,13 +50,6 @@ final class SecureStorageService implements StorageService {
 
   @override
   Future<String?> read({required String key}) async {
-    if (UniversalPlatform.isWeb) {
-      debugPrint(
-        'Storage: read($key) on Web is not supported by '
-        'flutter_secure_storage. Use a web-compatible implementation.',
-      );
-      return null;
-    }
     try {
       return await _storage.read(key: key);
     } on MissingPluginException {
@@ -82,9 +66,6 @@ final class SecureStorageService implements StorageService {
 
   @override
   Future<void> delete({required String key}) async {
-    if (UniversalPlatform.isWeb) {
-      return;
-    }
     try {
       await _storage.delete(key: key);
     } on MissingPluginException {
@@ -101,9 +82,6 @@ final class SecureStorageService implements StorageService {
 
   @override
   Future<void> deleteAll() async {
-    if (UniversalPlatform.isWeb) {
-      return;
-    }
     try {
       await _storage.deleteAll();
     } on MissingPluginException {

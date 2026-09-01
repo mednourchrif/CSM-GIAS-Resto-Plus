@@ -1,12 +1,12 @@
 {
-    "name": "mobile_app",
-    "short_name": "mobile_app",
+    "name": "CSM-GIAS Resto+ Administration",
+    "short_name": "Resto+ Admin",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#F6F8F7",
+    "theme_color": "#006C4C",
+    "description": "Portail d’administration du restaurant CSM-GIAS Resto+.",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {

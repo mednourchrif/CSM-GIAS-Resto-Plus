@@ -1,5 +1,18 @@
 # CSM-GIAS Resto+ — Enhancement Changelog
 
+## 2026-09-01 — Web and Android shared delivery
+
+- Added an admin-only Flutter Web target while preserving the complete Android
+  kiosk and administration experience.
+- Prevented the shared tablet API key from being required or compiled into Web
+  builds.
+- Added Web session restoration, platform-aware routing, responsive Web
+  metadata, and a clear Android-only state for biometric enrollment.
+- Added `mobile_app/tool/build_all.ps1` and documented local, production, CORS,
+  and deployment workflows.
+- Added router coverage proving kiosk routes are absent from Web and retained on
+  Android.
+
 ## 2026-07-25 — Professional audit and stabilization
 
 ### Audit and architecture

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:logger/logger.dart';
 
+import 'core/config/app_config.dart';
 import 'core/network/api_client.dart';
 import 'core/router/app_router.dart';
 import 'core/storage/storage_service.dart';
@@ -29,6 +30,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
   });
 
   return AppRouter.create(
+    webAdminOnly: AppConfig.isWebAdmin,
     refreshListenable: refreshNotifier,
     redirect: (context, state) {
       final authState = ref.read(authStateProvider);
@@ -40,8 +42,22 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         return null;
       }
 
-      // Splash → Home (public)
-      if (location == '/splash') return '/home';
+      // Select the platform's authenticated or public landing screen.
+      if (AppConfig.isWebAdmin) {
+        if (location == '/splash') {
+          return authState.isAuthenticated ? '/dashboard' : '/login';
+        }
+
+        // Only authenticated administration is exposed in a browser. The
+        // public kiosk journey and its shared tablet key remain Android-only.
+        final isWebRoute =
+            location == '/login' || location.startsWith('/dashboard');
+        if (!isWebRoute) {
+          return authState.isAuthenticated ? '/dashboard' : '/login';
+        }
+      } else if (location == '/splash') {
+        return '/home';
+      }
 
       // Dashboard requires admin authentication
       if (location.startsWith('/dashboard') && !authState.isAuthenticated) {

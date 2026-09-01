@@ -1,6 +1,6 @@
-# CSM-GIAS Resto+ Mobile
+# CSM-GIAS Resto+ Flutter
 
-Flutter tablet application for private meal identification/registration and
+Shared Flutter application for Android meal-kiosk operation and responsive Web
 restaurant administration.
 
 ## Setup
@@ -25,6 +25,20 @@ flutter build apk --release `
 ```
 
 The release keystore remains private and is not stored in this repository.
+
+Build Web and Android with one command (the tablet key is passed only to the
+Android build):
+
+```powershell
+$env:RESTO_TABLET_API_KEY = '<real-secret>'
+.\tool\build_all.ps1 `
+  -Production `
+  -ApiBaseUrl https://api.example.org/api/v1
+Remove-Item Env:RESTO_TABLET_API_KEY
+```
+
+See [Web and mobile builds](../docs/WEB_AND_MOBILE_BUILD.md) for local run,
+deployment, CORS, output paths, and security details.
 
 ## Architecture
 

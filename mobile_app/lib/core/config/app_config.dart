@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import 'environment.dart';
 
 class AppConfig {
@@ -8,4 +10,5 @@ class AppConfig {
   static bool get isProduction => Environment.isProduction;
   static bool get isDevelopment => Environment.isDevelopment;
   static String get environmentName => Environment.environmentName;
+  static bool get isWebAdmin => kIsWeb;
 }

@@ -7,7 +7,8 @@ backend enforces eligibility, the restaurant window (12:30–14:00,
 in the explicitly configured restaurant IANA timezone), and one meal per
 person per local day.
 
-The repository contains a Flutter application and a FastAPI/MySQL API. It was
+The repository contains a shared Flutter Android/Web application and a
+FastAPI/MySQL API. It was
 reviewed and hardened as an internship demonstration project; the original
 assessment is recorded in [the project audit](docs/PROJECT_AUDIT.md).
 
@@ -22,6 +23,7 @@ assessment is recorded in [the project audit](docs/PROJECT_AUDIT.md).
 - Employee, intern, visitor, receptionist, and administrator management
 - Meal history, filters, statistics, reports, settings, and audit trail
 - Responsive Material 3 administration UI with light and dark themes
+- Admin-only Web target; Android retains the kiosk, camera, and administration
 - Consistent loading, empty, error, success, and confirmation states
 - JWT admin sessions stored in platform secure storage
 - Tablet-key protection for kiosk endpoints
@@ -56,7 +58,8 @@ The kiosk never sends a person UUID to register a meal. Face or QR
 identification returns an opaque, short-lived grant. The meal service consumes
 that grant atomically and derives the person and identification method on the
 server. See [Architecture](docs/ARCHITECTURE.md) and
-[API overview](docs/API_OVERVIEW.md).
+[API overview](docs/API_OVERVIEW.md). Instructions for producing both Flutter
+targets are in [Web and mobile builds](docs/WEB_AND_MOBILE_BUILD.md).
 
 ## Repository layout
 
@@ -98,10 +101,10 @@ Edit `.env` with real local values. Never commit it. Then:
 docker compose up -d
 alembic upgrade head
 python scripts/seed.py
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --host 0.0.0.0 --port 4212
 ```
 
-Swagger UI is available at `http://127.0.0.1:8000/docs`. Production startup
+Swagger UI is available at `http://127.0.0.1:4212/docs`. Production startup
 fails if strict configuration validation or database connectivity fails.
 
 ## Environment variables

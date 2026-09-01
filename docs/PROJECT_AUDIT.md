@@ -539,12 +539,15 @@ which is an important last line of defense for the one-meal-per-day rule.
 #### M-07 — API URL fallback is unsuitable for an Android tablet
 
 - **Affected:** `lib/core/config/environment.dart`
-- **Problem:** The fallback is `http://localhost:8000/api/v1`; on a tablet,
-  localhost is the tablet itself. Cleartext HTTP is not a production choice.
-- **Impact:** Default builds cannot reach the backend and may encourage
-  insecure deployment.
-- **Recommendation:** Require `API_BASE_URL` for release builds, validate HTTPS
-  in production, and document emulator/device development values.
+- **Status:** Resolved in the enhancement pass.
+- **Problem:** The original fallback used a local development URL that could
+  not reliably reach the backend from Web and Android targets. Cleartext HTTP
+  remains unsuitable for production.
+- **Impact:** Incorrect local defaults caused failed API calls and misleading
+  browser CORS errors when the app targeted the wrong backend port.
+- **Recommendation:** Keep release builds requiring explicit HTTPS
+  `API_BASE_URL`; use `127.0.0.1:4212` for local Web and `10.0.2.2:4212` for the
+  Android emulator.
 
 #### M-08 — Backend documentation and code drift
 

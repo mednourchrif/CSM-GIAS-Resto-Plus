@@ -19,6 +19,7 @@ abstract final class AppRouter {
   static GlobalKey<NavigatorState> get rootNavigatorKey => _rootNavigatorKey;
 
   static GoRouter create({
+    required bool webAdminOnly,
     required String? Function(BuildContext context, GoRouterState state)
     redirect,
     required Listenable refreshListenable,
@@ -35,45 +36,48 @@ abstract final class AppRouter {
           name: RouteNames.splash,
           builder: (context, state) => const SplashScreen(),
         ),
-        GoRoute(
-          path: '/home',
-          name: RouteNames.home,
-          builder: (context, state) => const HomeScreen(),
-        ),
-        GoRoute(
-          path: '/meal-selection',
-          name: RouteNames.mealSelection,
-          redirect: (context, state) {
-            final extra = state.extra;
-            // Expiry is checked by the backend when the meal is registered.
-            // Avoid using the tablet clock to discard a valid handoff.
-            return extra is IdentificationGrant && extra.token.trim().isNotEmpty
-                ? null
-                : '/home';
-          },
-          builder: (context, state) {
-            final extra = state.extra;
-            return HomeScreen(
-              initialIdentificationGrant: extra is IdentificationGrant
-                  ? extra
-                  : null,
-            );
-          },
-        ),
+        if (!webAdminOnly) ...[
+          GoRoute(
+            path: '/home',
+            name: RouteNames.home,
+            builder: (context, state) => const HomeScreen(),
+          ),
+          GoRoute(
+            path: '/meal-selection',
+            name: RouteNames.mealSelection,
+            redirect: (context, state) {
+              final extra = state.extra;
+              // Expiry is checked by the backend when the meal is registered.
+              // Avoid using the tablet clock to discard a valid handoff.
+              return extra is IdentificationGrant &&
+                      extra.token.trim().isNotEmpty
+                  ? null
+                  : '/home';
+            },
+            builder: (context, state) {
+              final extra = state.extra;
+              return HomeScreen(
+                initialIdentificationGrant: extra is IdentificationGrant
+                    ? extra
+                    : null,
+              );
+            },
+          ),
+          GoRoute(
+            path: '/kiosk-camera',
+            name: RouteNames.kioskCamera,
+            builder: (context, state) => const KioskCameraScreen(),
+          ),
+          GoRoute(
+            path: '/success',
+            name: RouteNames.success,
+            builder: (context, state) => const SuccessScreen(),
+          ),
+        ],
         GoRoute(
           path: '/login',
           name: RouteNames.login,
           builder: (context, state) => const LoginScreen(),
-        ),
-        GoRoute(
-          path: '/kiosk-camera',
-          name: RouteNames.kioskCamera,
-          builder: (context, state) => const KioskCameraScreen(),
-        ),
-        GoRoute(
-          path: '/success',
-          name: RouteNames.success,
-          builder: (context, state) => const SuccessScreen(),
         ),
         GoRoute(
           path: '/dashboard',
@@ -81,13 +85,16 @@ abstract final class AppRouter {
           builder: (context, state) => const DashboardScreen(),
         ),
       ],
-      errorBuilder: (context, state) => const _NotFoundPage(),
+      errorBuilder: (context, state) =>
+          _NotFoundPage(webAdminOnly: webAdminOnly),
     );
   }
 }
 
 class _NotFoundPage extends StatelessWidget {
-  const _NotFoundPage();
+  final bool webAdminOnly;
+
+  const _NotFoundPage({required this.webAdminOnly});
 
   @override
   Widget build(BuildContext context) {
@@ -123,7 +130,8 @@ class _NotFoundPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
                 FilledButton.icon(
-                  onPressed: () => context.go('/home'),
+                  onPressed: () =>
+                      context.go(webAdminOnly ? '/login' : '/home'),
                   icon: const Icon(Icons.home_rounded),
                   label: const Text('Retour à l’accueil'),
                 ),

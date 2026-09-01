@@ -352,7 +352,7 @@ use lowerCamelCase. The analyzer now passes with no findings.
 | `flutter build apk --debug` | passed |
 | `flutter build apk --release` | compile passed; unsigned/non-production |
 | `apkanalyzer` / `aapt` / `apksigner` / archive inspection | package/SDK/permissions/ABIs/size confirmed; signature absent |
-| tracked hardcoded URL scan | one code URL: emulator-only `http://10.0.2.2:8000/api/v1`; production getter requires explicit HTTPS |
+| tracked hardcoded URL scan | development-only fallbacks use local backend port `4212`; production getter requires explicit HTTPS |
 | tracked common embedded-secret scan | 0 matches |
 | mobile log scan | API path-only/debug logs and debug-only camera errors; no request body/token/image logging |
 

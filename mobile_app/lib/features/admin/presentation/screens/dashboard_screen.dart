@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/spacing.dart';
 import '../../../../core/localization/app_strings.dart';
+import '../../../../core/config/app_config.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../identification/presentation/providers/kiosk_flow_provider.dart';
 import '../../../admin/employees/presentation/screens/employee_list_screen.dart';
@@ -62,7 +63,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       AdminSection.interns => const InternListScreen(),
       AdminSection.visitors => const VisitorListScreen(),
       AdminSection.qrCodes => const QrListScreen(),
-      AdminSection.faceEnrollment => const FaceEnrollmentDirectoryScreen(),
+      AdminSection.faceEnrollment =>
+        AppConfig.isWebAdmin
+            ? const _AndroidOnlyFeaturePanel()
+            : const FaceEnrollmentDirectoryScreen(),
       AdminSection.mealHistory => const MealHistoryListScreen(),
       AdminSection.receipts => const ReceiptListScreen(),
       AdminSection.statistics => const StatisticsDashboardScreen(),
@@ -286,6 +290,50 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AndroidOnlyFeaturePanel extends StatelessWidget {
+  const _AndroidOnlyFeaturePanel();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(Spacing.xl),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.tablet_android_rounded,
+                size: 72,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(height: Spacing.lg),
+              Text(
+                'Enrôlement disponible sur tablette',
+                style: theme.textTheme.headlineSmall,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: Spacing.sm),
+              Text(
+                'La capture biométrique utilise la caméra sécurisée de la '
+                'tablette Android. Ouvrez l’application mobile pour enrôler '
+                'un visage. Les autres fonctions administratives restent '
+                'disponibles ici.',
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
       ),
     );

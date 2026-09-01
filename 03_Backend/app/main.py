@@ -89,6 +89,14 @@ def _register_middleware(application: FastAPI, settings: BaseAppSettings) -> Non
     application.add_middleware(
         CORSMiddleware,
         allow_origins=settings.CORS_ORIGINS,
+        # Flutter Web uses a different localhost port depending on how it is
+        # started. Keep development convenient without weakening production:
+        # production still relies exclusively on its explicit allowlist.
+        allow_origin_regex=(
+            r"^https?://(?:localhost|127\.0\.0\.1)(?::\d+)?$"
+            if settings.is_development
+            else None
+        ),
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

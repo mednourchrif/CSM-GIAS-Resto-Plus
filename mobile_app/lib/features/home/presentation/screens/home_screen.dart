@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -32,8 +30,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen>
     with WidgetsBindingObserver {
-  Timer? _grantExpiryTimer;
-  String? _scheduledGrantToken;
   IdentificationGrant? _handoffGrant;
 
   @override
@@ -68,7 +64,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _grantExpiryTimer?.cancel();
     super.dispose();
   }
 
@@ -87,13 +82,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       }
       ref.read(resetKioskFlowProvider)();
     }
-  }
-
-  void _scheduleGrantExpiry(IdentificationGrant? grant) {
-    _grantExpiryTimer?.cancel();
-    _scheduledGrantToken = grant?.token;
-    // The API validates the proof when the meal is submitted. Do not use the
-    // tablet clock here because clock skew can discard a fresh grant.
   }
 
   @override
@@ -116,7 +104,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         ref.read(pendingIdentificationProvider.notifier).state = null;
       });
     }
-    _scheduleGrantExpiry(activeIdentification);
     final registrationState = ref.watch(mealRegistrationProvider);
     final offlineQueueCount = registrationState.offlineQueueCount;
     final viewport = MediaQuery.sizeOf(context);

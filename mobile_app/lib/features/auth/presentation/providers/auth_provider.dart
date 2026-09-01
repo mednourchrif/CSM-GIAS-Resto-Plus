@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../providers.dart';
+import '../../../../core/config/app_config.dart';
 import '../../../admin/settings/presentation/providers/settings_provider.dart';
 import '../../data/datasources/auth_interceptor.dart';
 import '../../data/datasources/auth_remote_datasource.dart';
@@ -88,7 +89,9 @@ class AuthNotifier extends Notifier<AuthState> {
 
       final restoreUseCase = ref.read(restoreSessionUseCaseProvider);
       final result = await restoreUseCase();
-      await ref.read(settingsProvider.notifier).loadKioskSettings();
+      if (!AppConfig.isWebAdmin) {
+        await ref.read(settingsProvider.notifier).loadKioskSettings();
+      }
 
       result.when(
         success: (user) {

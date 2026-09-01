@@ -55,7 +55,7 @@ and monitoring remain required.
 Verify no development URL or secret is tracked:
 
 ```powershell
-git grep -n -I -E "10\.0\.2\.2|localhost:8000|TABLET_API_KEY=|BEGIN (RSA|PRIVATE)"
+git grep -n -I -E "10\.0\.2\.2|localhost:4212|localhost:8000|TABLET_API_KEY=|BEGIN (RSA|PRIVATE)"
 git status --short
 ```
 
