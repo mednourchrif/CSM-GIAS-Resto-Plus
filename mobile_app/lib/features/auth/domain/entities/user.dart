@@ -14,4 +14,7 @@ class User {
   });
 
   String get fullName => '$prenom $nom';
+
+  bool get isChef =>
+      role.toUpperCase() == 'CHEF_RESTO' || role.toUpperCase() == 'CHEF';
 }

@@ -7,7 +7,7 @@ from app.core.dependencies import get_db
 from app.models.admin import Admin
 from app.repositories.statistics import DashboardStats
 from app.schemas.response import SuccessResponse
-from app.security.dependencies import require_admin
+from app.security.dependencies import require_admin_or_chef
 from app.utils.date_utils import today_local
 
 router = APIRouter(prefix="/stats", tags=["statistics"])
@@ -21,7 +21,7 @@ router = APIRouter(prefix="/stats", tags=["statistics"])
 )
 async def get_dashboard_stats(
     db: Session = Depends(get_db),
-    admin: Admin = Depends(require_admin),
+    admin: Admin = Depends(require_admin_or_chef),
 ) -> SuccessResponse[dict[str, object]]:
     """Aggregate and return all dashboard statistics."""
     stats = DashboardStats(db, today_local()).compute()

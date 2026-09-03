@@ -412,7 +412,14 @@ def test_admin_cannot_disable_own_account(db_session: Session) -> None:
         )
 
 
-def test_last_active_admin_cannot_be_removed(db_session: Session) -> None:
+def test_last_active_admin_cannot_be_removed(
+    client: TestClient,
+    db_session: Session,
+) -> None:
+    for active_admin in db_session.query(Admin).filter(Admin.statut == StatutUtilisateur.ACTIF).all():
+        active_admin.statut = StatutUtilisateur.INACTIF
+    db_session.flush()
+
     target = _seed_admin(db_session)
     inactive_actor = Admin(
         nom="Secours",

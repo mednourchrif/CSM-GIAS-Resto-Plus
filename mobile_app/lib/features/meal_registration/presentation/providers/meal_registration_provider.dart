@@ -1,12 +1,17 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../../core/errors/failures.dart';
 import '../../../../providers.dart';
+import '../../../receipts/domain/entities/receipt.dart';
 import '../../data/datasources/meal_remote_datasource.dart';
-import '../../data/services/meal_offline_queue_service.dart';
 import '../../data/repositories/meal_repository_impl.dart';
+import '../../data/services/meal_offline_queue_service.dart';
+import '../../data/services/meal_sync_service.dart';
+import '../../data/services/offline_manifest_service.dart';
 import '../../domain/entities/meal_category.dart';
 import '../../domain/entities/meal_registration.dart';
 import '../../domain/repositories/meal_repository.dart';
@@ -30,6 +35,24 @@ final mealOfflineQueueServiceProvider = Provider<MealOfflineQueueService>((
   return MealOfflineQueueService(ref.watch(storageServiceProvider));
 });
 
+final offlineManifestServiceProvider = Provider<OfflineManifestService>((ref) {
+  return OfflineManifestService(ref.watch(storageServiceProvider));
+});
+
+final mealSyncServiceProvider = Provider<MealSyncService>((ref) {
+  final service = MealSyncService(
+    dio: ref.watch(apiClientProvider).dio,
+    queueService: ref.watch(mealOfflineQueueServiceProvider),
+    manifestService: ref.watch(offlineManifestServiceProvider),
+    onQueueCountChanged: (count) {
+      ref.read(mealRegistrationProvider.notifier).updateOfflineCount(count);
+    },
+  );
+  service.startPeriodicSync();
+  ref.onDispose(() => service.stopPeriodicSync());
+  return service;
+});
+
 final registerMealUseCaseProvider = Provider<RegisterMealUseCase>((ref) {
   return RegisterMealUseCase(ref.watch(mealRepositoryProvider));
 });
@@ -45,10 +68,18 @@ final mealRegistrationProvider =
 
 final mealCategoriesProvider = FutureProvider<List<MealCategory>>((ref) async {
   final repository = ref.watch(mealRepositoryProvider);
+  final manifest = ref.watch(offlineManifestServiceProvider);
+
   final result = await repository.getCategories();
   return result.when(
-    success: (categories) => categories,
-    failure: (failure) => throw StateError(failure.message),
+    success: (categories) {
+      unawaited(manifest.cacheCategories(categories));
+      return categories;
+    },
+    failure: (_) async {
+      // Return cached categories or default fallback if offline
+      return await manifest.getCachedCategories();
+    },
   );
 });
 
@@ -58,6 +89,13 @@ class MealRegistrationNotifier extends StateNotifier<MealRegistrationState> {
 
   MealRegistrationNotifier(this._ref) : super(const MealRegistrationState()) {
     unawaited(refreshOfflineQueueStatus());
+    // Eagerly initialize sync service so background sync starts immediately
+    _ref.read(mealSyncServiceProvider);
+  }
+
+  void updateOfflineCount(int count) {
+    if (!mounted) return;
+    state = state.copyWith(offlineQueueCount: count);
   }
 
   Future<void> refreshOfflineQueueStatus() async {
@@ -75,8 +113,20 @@ class MealRegistrationNotifier extends StateNotifier<MealRegistrationState> {
     final operationId = ++_operationId;
     state = state.copyWith(isLoading: true, clearError: true);
 
-    await _flushQueuedMeals();
-    if (!mounted || operationId != _operationId) return;
+    // If this is an offline grant, bypass backend API and queue locally
+    if (identificationToken.startsWith('OFFLINE_')) {
+      final qrToken = identificationToken.substring(8);
+      await _registerMealOffline(
+        qrToken: qrToken,
+        categorieUuid: categorieUuid,
+        mealLabel: mealLabel,
+        operationId: operationId,
+      );
+      return;
+    }
+
+    // Try flushing queued meals when online
+    unawaited(_ref.read(mealSyncServiceProvider).syncNow());
 
     final useCase = _ref.read(registerMealUseCaseProvider);
     final result = await useCase(
@@ -85,40 +135,19 @@ class MealRegistrationNotifier extends StateNotifier<MealRegistrationState> {
     );
     if (!mounted || operationId != _operationId) return;
 
-    result.when(
-      success: (registration) {
+    await result.when(
+      success: (registration) async {
         unawaited(refreshOfflineQueueStatus());
         _ref.read(mealRegistrationResultProvider.notifier).state = registration;
         state = MealRegistrationState(result: registration);
       },
       failure: (failure) async {
         if (failure is NetworkFailure) {
-          await _ref
-              .read(mealOfflineQueueServiceProvider)
-              .enqueue(
-                MealOfflineQueueItem(
-                  identificationToken: identificationToken,
-                  categorieUuid: categorieUuid,
-                  mealLabel: mealLabel,
-                  queuedAt: DateTime.now(),
-                ),
-              );
-          if (!mounted || operationId != _operationId) return;
-          final queueCount = await _ref
-              .read(mealOfflineQueueServiceProvider)
-              .count();
-          if (!mounted || operationId != _operationId) return;
-          final queuedRegistration = MealRegistration(
+          await _registerMealOffline(
+            qrToken: identificationToken,
+            categorieUuid: categorieUuid,
             mealLabel: mealLabel,
-            registeredAt: DateTime.now(),
-            identificationMethod: 'OFFLINE_QUEUE',
-          );
-          _ref.read(mealRegistrationResultProvider.notifier).state =
-              queuedRegistration;
-          state = MealRegistrationState(
-            result: queuedRegistration,
-            offlineQueueCount: queueCount,
-            offlineNotice: 'Connexion perdue. Repas mis en file d\'attente.',
+            operationId: operationId,
           );
           return;
         }
@@ -128,39 +157,71 @@ class MealRegistrationNotifier extends StateNotifier<MealRegistrationState> {
     );
   }
 
-  Future<void> _flushQueuedMeals() async {
-    final queueService = _ref.read(mealOfflineQueueServiceProvider);
-    final repository = _ref.read(mealRepositoryProvider);
-    var items = await queueService.load();
-    if (!mounted) return;
-    var updated = false;
+  Future<void> _registerMealOffline({
+    required String qrToken,
+    required String categorieUuid,
+    required String mealLabel,
+    required int operationId,
+  }) async {
+    final now = DateTime.now();
+    final randomSuffix = Random().nextInt(999999).toString().padLeft(6, '0');
+    final offlineId = 'OFF-${now.millisecondsSinceEpoch}-$randomSuffix';
+    final dateStr = DateFormat('yyyyMMdd').format(now);
+    final receiptNumber = 'RCP-OFF-$dateStr-$randomSuffix';
 
-    while (items.isNotEmpty) {
-      final item = items.first;
-      final result = await repository.registerMeal(
-        identificationToken: item.identificationToken,
-        categorieUuid: item.categorieUuid,
-      );
-      if (!mounted) return;
+    final manifestService = _ref.read(offlineManifestServiceProvider);
+    final cachedUser = await manifestService.findUserByQrToken(qrToken);
 
-      final shouldStop = result.when(
-        success: (_) => false,
-        failure: (failure) => failure is NetworkFailure,
-      );
+    final receipt = Receipt(
+      uuid: offlineId,
+      number: receiptNumber,
+      mealUuid: offlineId,
+      userUuid: cachedUser?.userUuid ?? 'offline-$randomSuffix',
+      firstName: cachedUser?.prenom ?? 'Employé',
+      lastName: cachedUser?.nom ?? '',
+      employeeNumber: cachedUser?.matricule,
+      userType: cachedUser?.type ?? 'EMPLOYE',
+      categoryUuid: categorieUuid,
+      categoryName: mealLabel,
+      identificationType: 'QR (Hors-ligne)',
+      mealDate: DateTime(now.year, now.month, now.day),
+      servedAt: now,
+      qrToken: qrToken,
+    );
 
-      updated = true;
+    final queueItem = MealOfflineQueueItem(
+      offlineId: offlineId,
+      qrToken: qrToken,
+      identificationToken: qrToken,
+      categorieUuid: categorieUuid,
+      mealLabel: mealLabel,
+      registeredAt: now,
+      userName: cachedUser?.fullName,
+      userMatricule: cachedUser?.matricule,
+      receiptNumber: receiptNumber,
+    );
 
-      if (shouldStop) {
-        break;
-      }
+    await _ref.read(mealOfflineQueueServiceProvider).enqueue(queueItem);
+    await manifestService.recordLocalMealToday(qrToken);
 
-      items = await queueService.removeFirst();
-      if (!mounted) return;
-    }
+    if (!mounted || operationId != _operationId) return;
+    final queueCount = await _ref.read(mealOfflineQueueServiceProvider).count();
+    if (!mounted || operationId != _operationId) return;
 
-    if (updated) {
-      await refreshOfflineQueueStatus();
-    }
+    final queuedRegistration = MealRegistration(
+      userName: cachedUser?.fullName,
+      mealLabel: mealLabel,
+      registeredAt: now,
+      identificationMethod: 'OFFLINE_QUEUE',
+      receipt: receipt,
+    );
+
+    _ref.read(mealRegistrationResultProvider.notifier).state = queuedRegistration;
+    state = MealRegistrationState(
+      result: queuedRegistration,
+      offlineQueueCount: queueCount,
+      offlineNotice: 'Connexion réseau absente. Repas enregistré et stocké localement.',
+    );
   }
 
   void reset() {

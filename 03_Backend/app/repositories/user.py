@@ -16,6 +16,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.models.admin import Admin
+from app.models.role import Role
 from app.models.user import StatutUtilisateur, TypeUtilisateur, User
 from app.repositories.base import BaseRepository
 
@@ -42,14 +43,15 @@ class UserRepository(BaseRepository[User]):
         return list(db.execute(stmt).scalars().all())
 
     def count_active_admins(self, db: Session) -> int:
-        """Count non-deleted administrator accounts that can authenticate."""
+        """Count non-deleted administrator accounts that can manage the system."""
         stmt = (
             select(func.count())
-            .select_from(User)
+            .select_from(Admin)
+            .outerjoin(Role, Admin.role_id == Role.id)
             .where(
-                User.type == TypeUtilisateur.ADMINISTRATEUR,
-                User.statut == StatutUtilisateur.ACTIF,
-                User.date_suppression.is_(None),
+                Admin.statut == StatutUtilisateur.ACTIF,
+                Admin.date_suppression.is_(None),
+                or_(Role.nom.is_(None), ~Role.nom.in_(["CHEF_RESTO", "CHEF"])),
             )
         )
         return db.execute(stmt).scalar() or 0

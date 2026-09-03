@@ -36,7 +36,7 @@ class _SuccessScreenState extends ConsumerState<SuccessScreen>
   late final Duration _redirectDelay;
   Timer? _redirectTimer;
   bool _isPrinting = false;
-  bool _printAttempted = false;
+  bool _hasPrinted = false;
 
   @override
   void initState() {
@@ -79,15 +79,6 @@ class _SuccessScreenState extends ConsumerState<SuccessScreen>
     _countdownController.forward();
 
     _scheduleRedirect();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _autoPrintReceipt());
-  }
-
-  Future<void> _autoPrintReceipt() async {
-    if (_printAttempted || !mounted) return;
-    final receipt = ref.read(mealRegistrationResultProvider)?.receipt;
-    if (receipt == null) return;
-    _printAttempted = true;
-    await _printReceipt();
   }
 
   void _scheduleRedirect() {
@@ -95,7 +86,7 @@ class _SuccessScreenState extends ConsumerState<SuccessScreen>
     _redirectTimer = Timer(_redirectDelay, () {
       if (!mounted) return;
       ref.read(resetKioskFlowProvider)();
-      context.go('/home');
+      context.go('/kiosk-camera');
     });
   }
 
@@ -106,9 +97,12 @@ class _SuccessScreenState extends ConsumerState<SuccessScreen>
     _countdownController.stop();
     setState(() => _isPrinting = true);
     try {
-      await ReceiptPrintService(
+      final printed = await ReceiptPrintService(
         ref.read(apiClientProvider).dio,
       ).printReceipt(receipt);
+      if (printed && mounted) {
+        setState(() => _hasPrinted = true);
+      }
     } finally {
       if (mounted) {
         setState(() => _isPrinting = false);
@@ -362,23 +356,41 @@ class _SuccessScreenState extends ConsumerState<SuccessScreen>
                                   ],
                                 ),
                               ],
-                              if (registration?.receipt != null &&
-                                  !offlineQueued) ...[
+                              if (registration?.receipt != null) ...[
                                 const SizedBox(height: Spacing.lg),
                                 FilledButton.icon(
+                                  style: FilledButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: Spacing.xl,
+                                      vertical: Spacing.md,
+                                    ),
+                                    backgroundColor: _hasPrinted
+                                        ? theme.colorScheme.secondary
+                                        : null,
+                                  ),
                                   onPressed: _isPrinting ? null : _printReceipt,
                                   icon: _isPrinting
                                       ? const SizedBox.square(
                                           dimension: 18,
                                           child: CircularProgressIndicator(
                                             strokeWidth: 2,
+                                            color: Colors.white,
                                           ),
                                         )
-                                      : const Icon(Icons.print_rounded),
+                                      : Icon(
+                                          _hasPrinted
+                                              ? Icons.check_circle_outline_rounded
+                                              : Icons.print_rounded,
+                                        ),
                                   label: Text(
                                     _isPrinting
-                                        ? 'Préparation du reçu...'
-                                        : 'Imprimer le reçu',
+                                        ? 'Impression en cours...'
+                                        : _hasPrinted
+                                            ? 'Réimprimer le reçu'
+                                            : 'Imprimer le reçu (Optionnel)',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -408,7 +420,7 @@ class _SuccessScreenState extends ConsumerState<SuccessScreen>
                               ),
                               const SizedBox(height: Spacing.xs),
                               Text(
-                                '${strings.backToKiosk}...',
+                                "Prêt pour l'employé suivant...",
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),

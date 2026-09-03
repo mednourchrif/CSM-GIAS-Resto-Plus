@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/theme/spacing.dart';
 import '../../../../../shared/widgets/error_state.dart';
 import '../../../../../shared/widgets/shimmer_loading.dart';
+import '../../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/statistics_provider.dart';
 import '../providers/statistics_state.dart';
 import '../widgets/charts.dart';
@@ -25,10 +26,23 @@ class StatisticsDashboardScreen extends ConsumerStatefulWidget {
 
 class _StatisticsDashboardScreenState
     extends ConsumerState<StatisticsDashboardScreen> {
+  Timer? _liveTimer;
+
   @override
   void initState() {
     super.initState();
     Future.microtask(() => ref.read(statisticsProvider.notifier).load());
+    _liveTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (mounted) {
+        ref.read(statisticsProvider.notifier).load(silent: true);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _liveTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _onRefresh() async {
@@ -58,6 +72,7 @@ class _StatisticsDashboardScreenState
     final pagePadding = EdgeInsets.all(
       isLandscapeTablet ? Spacing.lg : Spacing.md,
     );
+    final isChef = ref.watch(authStateProvider).user?.isChef ?? false;
 
     if (state.isLoading && state.stats == null) {
       return SingleChildScrollView(
@@ -219,7 +234,7 @@ class _StatisticsDashboardScreenState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                flex: 3,
+                flex: isChef ? 1 : 3,
                 child: _SectionCard(
                   title: 'Activité récente',
                   child: SizedBox(
@@ -230,19 +245,21 @@ class _StatisticsDashboardScreenState
                   ),
                 ),
               ),
-              const SizedBox(width: Spacing.md),
-              Expanded(
-                flex: 2,
-                child: _SectionCard(
-                  title: 'Accès rapides',
-                  child: SizedBox(
-                    height: isLandscapeTablet ? 210 : 240,
-                    child: QuickActions(
-                      onSectionTap: widget.onSectionTap ?? _navigateTo,
+              if (!isChef) ...[
+                const SizedBox(width: Spacing.md),
+                Expanded(
+                  flex: 2,
+                  child: _SectionCard(
+                    title: 'Accès rapides',
+                    child: SizedBox(
+                      height: isLandscapeTablet ? 210 : 240,
+                      child: QuickActions(
+                        onSectionTap: widget.onSectionTap ?? _navigateTo,
+                      ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ],
           ),
         ] else ...[
@@ -253,15 +270,16 @@ class _StatisticsDashboardScreenState
               child: RecentActivityWidget(items: stats.recentRegistrations),
             ),
           ),
-          _SectionCard(
-            title: 'Accès rapides',
-            child: SizedBox(
-              height: isLandscapeTablet ? 210 : 240,
-              child: QuickActions(
-                onSectionTap: widget.onSectionTap ?? _navigateTo,
+          if (!isChef)
+            _SectionCard(
+              title: 'Accès rapides',
+              child: SizedBox(
+                height: isLandscapeTablet ? 210 : 240,
+                child: QuickActions(
+                  onSectionTap: widget.onSectionTap ?? _navigateTo,
+                ),
               ),
             ),
-          ),
         ],
       ],
     );
@@ -329,6 +347,37 @@ class _IntroBanner extends StatelessWidget {
                     subtitle,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.green.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: Colors.green,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  const Text(
+                    'EN DIRECT',
+                    style: TextStyle(
+                      color: Colors.green,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ],

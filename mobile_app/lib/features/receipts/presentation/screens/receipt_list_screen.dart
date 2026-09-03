@@ -20,17 +20,26 @@ class ReceiptListScreen extends ConsumerStatefulWidget {
 class _ReceiptListScreenState extends ConsumerState<ReceiptListScreen> {
   final _searchController = TextEditingController();
   Timer? _debounce;
+  Timer? _liveTimer;
 
   @override
   void initState() {
     super.initState();
     Future.microtask(() => ref.read(receiptProvider.notifier).load(page: 1));
+    _liveTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (!mounted) return;
+      final currentState = ref.read(receiptProvider);
+      if (currentState.page == 1) {
+        ref.read(receiptProvider.notifier).load(silent: true);
+      }
+    });
   }
 
   @override
   void dispose() {
     _searchController.dispose();
     _debounce?.cancel();
+    _liveTimer?.cancel();
     super.dispose();
   }
 
@@ -50,6 +59,38 @@ class _ReceiptListScreenState extends ConsumerState<ReceiptListScreen> {
       appBar: AppBar(
         title: const Text('Reçus de repas'),
         actions: [
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.green.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: Colors.green,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                const Text(
+                  'EN DIRECT',
+                  style: TextStyle(
+                    color: Colors.green,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
           IconButton(
             onPressed: () => ref.read(receiptProvider.notifier).load(),
             icon: const Icon(Icons.refresh_rounded),

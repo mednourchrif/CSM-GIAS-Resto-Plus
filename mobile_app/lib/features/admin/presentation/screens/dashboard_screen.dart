@@ -22,6 +22,7 @@ import '../../../admin/visitors/presentation/screens/visitor_list_screen.dart';
 import '../../audit/presentation/screens/audit_log_list_screen.dart';
 import '../widgets/admin_drawer.dart';
 import '../widgets/admin_navigation_rail.dart';
+import '../../../../shared/widgets/network_status_badge.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -34,6 +35,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   int _selectedIndex = -1;
 
   void _onDestinationSelected(int index) {
+    final isChef = ref.read(authStateProvider).user?.isChef ?? false;
+    if (isChef) {
+      final receiptsIndex = AdminSection.values.indexOf(AdminSection.receipts);
+      if (index != -1 && index != receiptsIndex) {
+        setState(() => _selectedIndex = -1);
+        return;
+      }
+    }
     setState(() => _selectedIndex = index);
   }
 
@@ -53,9 +62,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   Widget get _body {
-    if (_isOnDashboard) {
+    final isChef = ref.watch(authStateProvider).user?.isChef ?? false;
+    final receiptsIndex = AdminSection.values.indexOf(AdminSection.receipts);
+    if (_isOnDashboard || (isChef && _selectedIndex != receiptsIndex)) {
       return StatisticsDashboardScreen(
-        onSectionTap: (index) => setState(() => _selectedIndex = index),
+        onSectionTap: isChef
+            ? null
+            : (index) => _onDestinationSelected(index),
       );
     }
     return switch (AdminSection.values[_selectedIndex]) {
@@ -80,6 +93,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
+    final isChef = authState.user?.isChef ?? false;
     final theme = Theme.of(context);
     final screenWidth = MediaQuery.sizeOf(context).width;
     final isDesktop = screenWidth >= Spacing.tabletBreakpoint;
@@ -104,6 +118,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           selectedIndex: _selectedIndex,
           onDestinationSelected: _onDestinationSelected,
           onLogout: _onLogout,
+          isChef: isChef,
         ),
         body: _body,
       );
@@ -118,10 +133,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           children: [
             AdminNavigationRail(
               selectedIndex: _selectedIndex + 1,
-              onDestinationSelected: (index) {
-                setState(() => _selectedIndex = index - 1);
-              },
+              onDestinationSelected: (index) => _onDestinationSelected(index - 1),
               extended: screenWidth >= Spacing.desktopBreakpoint,
+              isChef: isChef,
             ),
 
             Expanded(
@@ -205,7 +219,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               ),
                               const SizedBox(height: Spacing.xs),
                               Text(
-                                strings.management,
+                                isChef
+                                    ? 'Espace Chef de restaurant (New Rest)'
+                                    : strings.management,
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),
@@ -213,6 +229,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             ],
                           ),
                         ),
+                        const SizedBox(width: Spacing.md),
+                        const NetworkStatusBadge(),
                         const SizedBox(width: Spacing.md),
                         if (screenWidth >= 1100)
                           Container(

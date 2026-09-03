@@ -57,7 +57,9 @@ Failure mapDioError(DioException e, {String resourceName = 'Ressource'}) {
   }
 
   if (statusCode == 401) {
-    return const UnauthorizedFailure();
+    return UnauthorizedFailure(
+      message: message ?? 'Session expirée. Veuillez vous reconnecter.',
+    );
   }
 
   if (statusCode == 403) {

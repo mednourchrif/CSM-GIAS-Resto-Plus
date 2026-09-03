@@ -31,6 +31,12 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     db_healthy = True if settings.is_testing else check_database_health()
     if db_healthy:
         logger.info("Database connection - OK")
+        if not settings.is_testing:
+            try:
+                from scripts.seed import seed
+                seed()
+            except Exception as err:
+                logger.warning("Automatic database seed at startup encountered: {}", err)
     else:
         if settings.is_production:
             raise RuntimeError("Database connection unavailable at startup")

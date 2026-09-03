@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 
+import '../../../../core/errors/failures.dart';
 import '../../../../core/theme/colors.dart';
 import '../../../../core/theme/spacing.dart';
 import '../../../../core/localization/app_strings.dart';
@@ -19,7 +20,9 @@ import '../../../face_recognition/presentation/widgets/face_scan_overlay.dart';
 import '../../../identification/domain/entities/identification_grant.dart';
 import '../../../identification/presentation/providers/identification_provider.dart';
 import '../../../identification/presentation/providers/kiosk_flow_provider.dart';
+import '../../../meal_registration/presentation/providers/meal_registration_provider.dart';
 import '../../../../shared/services/mlkit_camera_image.dart';
+import '../../../../shared/widgets/network_status_badge.dart';
 
 class KioskCameraScreen extends ConsumerStatefulWidget {
   const KioskCameraScreen({super.key});
@@ -454,6 +457,15 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
       _showError(AppStrings.of(context).qrNotRegistered);
       return;
     }
+
+    final manifestService = ref.read(offlineManifestServiceProvider);
+    final hasEaten = await manifestService.hasMealToday(qrToken);
+    if (hasEaten) {
+      if (_isDisposed || !mounted) return;
+      _showError(AppStrings.of(context).mealAlreadyRegisteredMessage, allowRetry: false);
+      return;
+    }
+
     setState(() => _guidanceMessage = AppStrings.of(context).validatingQr);
     final result = await ref
         .read(identificationRepositoryProvider)
@@ -462,7 +474,19 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
 
     result.when(
       success: _completeIdentification,
-      failure: (failure) => _showError(failure.message),
+      failure: (failure) async {
+        if (failure is NetworkFailure) {
+          // Offline mode fallback: continue flow with offline grant
+          final offlineGrant = IdentificationGrant(
+            token: 'OFFLINE_$qrToken',
+            type: 'QR_OFFLINE',
+            expiresAt: DateTime.now().add(const Duration(minutes: 5)),
+          );
+          _completeIdentification(offlineGrant);
+          return;
+        }
+        _showError(failure.message);
+      },
     );
   }
 
@@ -484,43 +508,9 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
   // ─── Timeout ─────────────────────────────────────────────────────────────
 
   void _startTimeout() {
+    // Continuous kiosk mode: camera stays active indefinitely without timing out
+    // awaiting the next employee's face or QR code.
     _timeoutTimer?.cancel();
-    final appSettings = ref.read(appSettingsProvider);
-    final timeout = appSettings.faceDetectionTimeout;
-    _timeoutTimer = Timer(Duration(seconds: timeout), () {
-      if (_isDisposed || !mounted) return;
-      _showTimeout();
-    });
-  }
-
-  void _showTimeout() {
-    final strings = AppStrings.of(context);
-    _isProcessing = true;
-    ref.read(resetKioskFlowProvider)();
-    _stopCameraStream();
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        icon: const Icon(
-          Icons.hourglass_empty_rounded,
-          color: Colors.orange,
-          size: 64,
-        ),
-        title: Text(strings.timeoutTitle),
-        content: Text(strings.timeoutMessage, textAlign: TextAlign.center),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              context.go('/home');
-            },
-            child: Text(strings.back),
-          ),
-        ],
-      ),
-    );
   }
 
   // ─── Error dialogs ───────────────────────────────────────────────────────
@@ -755,6 +745,11 @@ class _KioskCameraScreenState extends ConsumerState<KioskCameraScreen>
                       ),
                     ),
                   ),
+                Positioned(
+                  top: MediaQuery.of(context).padding.top + Spacing.md,
+                  left: Spacing.lg,
+                  child: const NetworkStatusBadge(),
+                ),
                 Positioned(
                   bottom: MediaQuery.of(context).padding.bottom + Spacing.xxl,
                   left: 0,

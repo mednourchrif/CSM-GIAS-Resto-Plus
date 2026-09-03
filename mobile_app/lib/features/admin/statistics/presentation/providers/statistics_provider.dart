@@ -12,14 +12,18 @@ class StatisticsNotifier extends StateNotifier<StatisticsState> {
 
   StatisticsNotifier(this._getDashboardStats) : super(const StatisticsState());
 
-  Future<void> load() async {
+  Future<void> load({bool silent = false}) async {
     if (state.isLoading) return;
-    state = state.copyWith(isLoading: true);
+    if (!silent) {
+      state = state.copyWith(isLoading: true);
+    }
     try {
       final stats = await _getDashboardStats();
-      state = state.copyWith(stats: stats, isLoading: false);
+      state = state.copyWith(stats: stats, isLoading: false, clearError: true);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      if (!silent) {
+        state = state.copyWith(isLoading: false, error: e.toString());
+      }
     }
   }
 }

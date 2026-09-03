@@ -8,7 +8,7 @@ from app.models.admin import Admin
 from app.models.receipt import Receipt
 from app.schemas.receipt import ReceiptFilterParams, ReceiptQrRequest, ReceiptResponse
 from app.schemas.response import PaginatedResponse, SuccessResponse
-from app.security.dependencies import require_admin, require_kiosk_access
+from app.security.dependencies import require_admin_or_chef, require_kiosk_access
 from app.services.receipt_service import ReceiptService
 from app.utils.receipt_qr import make_receipt_token, parse_receipt_token
 from app.core.exceptions import BusinessException
@@ -27,7 +27,7 @@ def _response(receipt: Receipt) -> ReceiptResponse:
 async def list_receipts(
     params: ReceiptFilterParams = Depends(),
     db: Session = Depends(get_db),
-    _admin: Admin = Depends(require_admin),
+    _admin: Admin = Depends(require_admin_or_chef),
 ) -> PaginatedResponse[ReceiptResponse]:
     result = _service.list(db, params)
     return PaginatedResponse(
@@ -43,7 +43,7 @@ async def list_receipts(
 async def get_receipt(
     uuid: str,
     db: Session = Depends(get_db),
-    _admin: Admin = Depends(require_admin),
+    _admin: Admin = Depends(require_admin_or_chef),
 ) -> SuccessResponse[ReceiptResponse]:
     return SuccessResponse(data=_response(_service.get(db, uuid)))
 

@@ -15,6 +15,7 @@ import '../../../identification/presentation/providers/identification_provider.d
 import '../../../identification/presentation/providers/kiosk_flow_provider.dart';
 import '../../domain/enums/meal_type.dart';
 import '../providers/selection_providers.dart';
+import '../../../../shared/widgets/network_status_badge.dart';
 import '../widgets/administration_button.dart';
 import '../widgets/home_header.dart';
 import '../widgets/meal_card.dart';
@@ -133,6 +134,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     offlineQueueCount,
                   ),
           ),
+          const Positioned(
+            top: Spacing.md,
+            left: Spacing.lg,
+            child: NetworkStatusBadge(),
+          ),
           if (registrationState.isLoading) ...[
             const ModalBarrier(dismissible: false, color: Colors.black38),
             const Center(child: CircularProgressIndicator()),
@@ -177,6 +183,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                             ),
                           ),
                         ),
+                        if (offlineQueueCount > 0) ...[
+                          const SizedBox(height: Spacing.xs),
+                          TextButton.icon(
+                            onPressed: () async {
+                              final synced = await ref
+                                  .read(mealSyncServiceProvider)
+                                  .syncNow();
+                              if (context.mounted && synced > 0) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      '$synced repas synchronisé(s) avec succès.',
+                                    ),
+                                    backgroundColor: AppColors.success,
+                                  ),
+                                );
+                              }
+                            },
+                            icon: const Icon(Icons.sync_rounded, size: 16),
+                            label: Text(
+                              'Synchroniser ($offlineQueueCount en attente)',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
                         SizedBox(
                           height: constraints.maxHeight < 720
                               ? Spacing.lg
@@ -253,6 +287,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         offlineQueueCount,
                       ),
                     ),
+                    if (offlineQueueCount > 0) ...[
+                      const SizedBox(height: Spacing.xs),
+                      TextButton.icon(
+                        onPressed: () async {
+                          final synced = await ref
+                              .read(mealSyncServiceProvider)
+                              .syncNow();
+                          if (context.mounted && synced > 0) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  '$synced repas synchronisé(s) avec succès.',
+                                ),
+                                backgroundColor: AppColors.success,
+                              ),
+                            );
+                          }
+                        },
+                        icon: const Icon(Icons.sync_rounded, size: 16),
+                        label: Text(
+                          'Synchroniser ($offlineQueueCount en attente)',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: Spacing.lg),
                     const AdministrationButton(),
                   ],

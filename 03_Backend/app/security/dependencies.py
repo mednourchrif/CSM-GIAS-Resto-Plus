@@ -190,13 +190,31 @@ def _is_private_client(request: Request) -> bool:
 def require_admin(admin: Admin = Depends(get_current_admin)) -> Admin:
     """Require that the authenticated user is an ``Administrateur``.
 
-    This is the baseline authorisation for all admin-area endpoints.
-    Since ``get_current_admin`` already guarantees the user is an ``Admin``,
-    this dependency exists primarily for documentation & future flexibility.
+    Full administrators have read and write access across all management
+    modules. The Chef Resto role is restricted from mutating operations.
     """
     if admin.type != TypeUtilisateur.ADMINISTRATEUR:
         raise ForbiddenException(
             message="Accès réservé aux administrateurs.",
+        )
+    if admin.role is not None and admin.role.nom in ("CHEF_RESTO", "CHEF"):
+        raise ForbiddenException(
+            message=(
+                "Accès non autorisé pour le rôle Chef. Ce compte dispose "
+                "uniquement d'un accès en lecture au tableau de bord et aux reçus."
+            ),
+        )
+    return admin
+
+
+def require_admin_or_chef(admin: Admin = Depends(get_current_admin)) -> Admin:
+    """Require that the authenticated user is an Administrator or Chef Resto.
+
+    Grants access to dashboard statistics and receipt history/reprints.
+    """
+    if admin.type != TypeUtilisateur.ADMINISTRATEUR:
+        raise ForbiddenException(
+            message="Accès réservé au personnel autorisé.",
         )
     return admin
 

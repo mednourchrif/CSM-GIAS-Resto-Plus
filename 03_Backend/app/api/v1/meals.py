@@ -21,6 +21,11 @@ from app.schemas.meal import (
     MealRegisterRequest,
     MealRegisterResponse,
     MealResponse,
+    OfflineManifestResponse,
+    OfflineMealSyncRequest,
+    OfflineMealSyncResponse,
+    OfflineSyncItemResult,
+    OfflineUserManifestItem,
 )
 from app.schemas.pagination import MealFilterParams
 from app.schemas.receipt import ReceiptResponse
@@ -173,6 +178,111 @@ async def register_meal(
                 update={"qr_token": make_receipt_token(receipt.uuid, receipt.numero)}
             ),
         ),
+    )
+
+
+@router.get(
+    "/offline-manifest",
+    summary="Manifeste hors-ligne pour la borne",
+    description="Retourne les catégories et les empreintes QR des utilisateurs actifs pour le mode hors-ligne.",
+    response_model=SuccessResponse[OfflineManifestResponse],
+)
+async def get_offline_manifest(
+    db: Session = Depends(get_db),
+    _kiosk_identity: Admin | None = Depends(require_kiosk_access),
+) -> SuccessResponse[OfflineManifestResponse]:
+    """Retrieve categories and active user QR hashes for offline kiosk operation."""
+    categories, users = _service.get_offline_manifest(db)
+    return SuccessResponse(
+        data=OfflineManifestResponse(
+            categories=[
+                MealCategoryResponse(
+                    id=c.id,
+                    uuid=c.uuid,
+                    created_at=c.created_at,
+                    updated_at=c.updated_at,
+                    nom=c.nom,
+                    description=c.description,
+                )
+                for c in categories
+            ],
+            users=[
+                OfflineUserManifestItem(
+                    qr_hash=u["qr_hash"],
+                    user_uuid=u["user_uuid"],
+                    nom=u["nom"],
+                    prenom=u["prenom"],
+                    matricule=u["matricule"],
+                    type=u["type"],
+                )
+                for u in users
+            ],
+        )
+    )
+
+
+@router.post(
+    "/sync-offline",
+    summary="Synchroniser les repas enregistrés hors-ligne",
+    description="Synchronise un lot de repas validés en local par la borne durant une coupure réseau.",
+    response_model=SuccessResponse[OfflineMealSyncResponse],
+)
+async def sync_offline_meals(
+    body: OfflineMealSyncRequest,
+    db: Session = Depends(get_db),
+    _kiosk_identity: Admin | None = Depends(require_kiosk_access),
+) -> SuccessResponse[OfflineMealSyncResponse]:
+    """Synchronize a batch of meals queued offline on the kiosk."""
+    results: list[OfflineSyncItemResult] = []
+    synced_count = 0
+    failed_count = 0
+
+    for item in body.items:
+        statut, meal, message = _service.register_offline_meal(
+            db,
+            token=item.qr_token,
+            categorie_uuid=item.categorie_uuid,
+            registered_at=item.registered_at,
+            identification_type=item.identification_type,
+            admin=_kiosk_identity,
+        )
+        if statut == "SYNCED" and meal:
+            synced_count += 1
+            receipt = _receipt_service.get_by_meal(db, meal.uuid)
+            results.append(
+                OfflineSyncItemResult(
+                    offline_id=item.offline_id,
+                    statut="SYNCED",
+                    meal_uuid=meal.uuid,
+                    receipt_number=receipt.numero if receipt else None,
+                )
+            )
+        elif statut == "ALREADY_REGISTERED":
+            # Idempotent success: already recorded earlier
+            synced_count += 1
+            results.append(
+                OfflineSyncItemResult(
+                    offline_id=item.offline_id,
+                    statut="ALREADY_REGISTERED",
+                    message=message,
+                )
+            )
+        else:
+            failed_count += 1
+            results.append(
+                OfflineSyncItemResult(
+                    offline_id=item.offline_id,
+                    statut="ERROR",
+                    message=message,
+                )
+            )
+
+    return SuccessResponse(
+        data=OfflineMealSyncResponse(
+            synced_count=synced_count,
+            failed_count=failed_count,
+            results=results,
+        )
     )
 
 

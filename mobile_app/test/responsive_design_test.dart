@@ -212,5 +212,5 @@ class _TestReceiptNotifier extends ReceiptNotifier {
   }
 
   @override
-  Future<void> load({int? page}) async {}
+  Future<void> load({int? page, bool silent = false}) async {}
 }

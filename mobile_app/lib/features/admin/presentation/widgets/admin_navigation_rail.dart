@@ -11,12 +11,14 @@ class AdminNavigationRail extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onDestinationSelected;
   final bool extended;
+  final bool isChef;
 
   const AdminNavigationRail({
     super.key,
     required this.selectedIndex,
     required this.onDestinationSelected,
     this.extended = false,
+    this.isChef = false,
   });
 
   @override
@@ -97,19 +99,37 @@ class AdminNavigationRail extends StatelessWidget {
                   onTap: () => onDestinationSelected(0),
                 ),
                 const SizedBox(height: Spacing.xs),
-                for (int index = 0; index < AdminSection.values.length; index++)
+                if (isChef) ...[
                   Padding(
                     padding: const EdgeInsets.only(bottom: 3),
                     child: _RailDestination(
-                      icon: AdminSection.values[index].icon,
+                      icon: AdminSection.receipts.icon,
                       label: strings.adminSectionLabel(
-                        AdminSection.values[index].name,
+                        AdminSection.receipts.name,
                       ),
-                      selected: selectedIndex == index + 1,
+                      selected: selectedIndex ==
+                          AdminSection.values.indexOf(AdminSection.receipts) + 1,
                       extended: extended,
-                      onTap: () => onDestinationSelected(index + 1),
+                      onTap: () => onDestinationSelected(
+                        AdminSection.values.indexOf(AdminSection.receipts) + 1,
+                      ),
                     ),
                   ),
+                ] else ...[
+                  for (int index = 0; index < AdminSection.values.length; index++)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 3),
+                      child: _RailDestination(
+                        icon: AdminSection.values[index].icon,
+                        label: strings.adminSectionLabel(
+                          AdminSection.values[index].name,
+                        ),
+                        selected: selectedIndex == index + 1,
+                        extended: extended,
+                        onTap: () => onDestinationSelected(index + 1),
+                      ),
+                    ),
+                ],
               ],
             ),
           ),

@@ -75,7 +75,7 @@ class TestSeedEmptyDatabase:
     def test_creates_roles(self, db_session: Session) -> None:
         seed(db_session)
         count = db_session.execute(select(func.count()).select_from(Role)).scalar()
-        assert count == 2
+        assert count == 3
 
     def test_creates_admin(self, db_session: Session) -> None:
         seed(db_session)
@@ -125,7 +125,7 @@ class TestSeedIdempotent:
         seed(db_session)
         seed(db_session)
         count = db_session.execute(select(func.count()).select_from(Role)).scalar()
-        assert count == 2
+        assert count == 3
 
     def test_double_seed_does_not_duplicate_admin(self, db_session: Session) -> None:
         seed(db_session)

@@ -28,6 +28,7 @@ from app.models.employee import Employee
 from app.models.intern import Intern
 from app.models.meal import Meal
 from app.models.meal_category import MealCategory
+from app.models.qr_code import QrCode
 from app.models.user import StatutUtilisateur, User
 from app.models.visitor import Visitor
 from app.repositories.meal import MealRepository, MealStats
@@ -206,6 +207,85 @@ class MealService:
             _now=_now,
         )
 
+    def register_offline_meal(
+        self,
+        db: Session,
+        *,
+        token: str,
+        categorie_uuid: str,
+        registered_at: datetime,
+        identification_type: str = "QR",
+        admin: Admin | None = None,
+    ) -> tuple[str, Meal | None, str | None]:
+        """Register an offline queued meal with historical timestamp.
+
+        Returns (status, meal, message) where status is 'SYNCED', 'ALREADY_REGISTERED', or 'ERROR'.
+        """
+        validation = self._qr_service.validate(db, token)
+        if validation.statut.name != "VALID" or validation.proprietaire_uuid is None:
+            return (
+                "ERROR",
+                None,
+                f"QR code invalide : {validation.message or validation.statut.value}",
+            )
+
+        meal_date = today_local(registered_at)
+        existing_count = self._meal_repo.get_today_count_by_user(
+            db, validation.proprietaire_uuid, meal_date
+        )
+        if existing_count > 0:
+            return (
+                "ALREADY_REGISTERED",
+                None,
+                "Repas déjà enregistré pour cette date.",
+            )
+
+        try:
+            meal = self._register(
+                db=db,
+                user_uuid=validation.proprietaire_uuid,
+                categorie_uuid=categorie_uuid,
+                qr_uuid=validation.qr_uuid,
+                type_identification=identification_type,
+                admin=admin,
+                _now=registered_at,
+                enforce_opening_hours=False,
+            )
+            return ("SYNCED", meal, None)
+        except Exception as e:
+            return ("ERROR", None, str(e))
+
+    def get_offline_manifest(self, db: Session) -> tuple[list[MealCategory], list[dict]]:
+        """Return categories and active users with their active QR hash."""
+        cat_stmt = select(MealCategory).order_by(MealCategory.nom)
+        categories = list(db.execute(cat_stmt).scalars().all())
+
+        stmt = (
+            select(
+                QrCode.qr_hash,
+                User,
+            )
+            .join(User, QrCode.proprietaire_uuid == User.uuid)
+            .where(
+                QrCode.statut == "ACTIF",
+                User.statut == StatutUtilisateur.ACTIF,
+                User.date_suppression.is_(None),
+            )
+        )
+        rows = db.execute(stmt).all()
+        users = [
+            {
+                "qr_hash": r[0],
+                "user_uuid": r[1].uuid,
+                "nom": r[1].nom,
+                "prenom": r[1].prenom,
+                "matricule": getattr(r[1], "matricule", None),
+                "type": str(r[1].type.value if hasattr(r[1].type, "value") else r[1].type),
+            }
+            for r in rows
+        ]
+        return categories, users
+
     def _register(
         self,
         db: Session,
@@ -215,6 +295,7 @@ class MealService:
         type_identification: str = "QR",
         admin: Admin | None = None,
         _now: datetime | None = None,
+        enforce_opening_hours: bool = True,
     ) -> Meal:
         """Core registration logic shared by all identification methods.
 
@@ -224,11 +305,12 @@ class MealService:
         3. User has not already eaten today.
 
         :param _now: Internal override for testing time-dependent logic.
+        :param enforce_opening_hours: Whether opening hours are strictly enforced.
         """
         now = _now or datetime.now(UTC)
         opening, closing = self._restaurant_hours(db)
 
-        if not is_restaurant_open(now, opening, closing):
+        if enforce_opening_hours and not is_restaurant_open(now, opening, closing):
             raise BusinessException(
                 message=(
                     "Le restaurant est fermé. "

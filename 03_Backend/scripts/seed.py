@@ -43,6 +43,7 @@ from app.utils.password import hash_password
 ROLE_DEFINITIONS: list[dict[str, str | None]] = [
     {"nom": "ADMIN", "description": "Administrateur système"},
     {"nom": "RECEPTION", "description": "Agent de réception"},
+    {"nom": "CHEF_RESTO", "description": "Chef de restaurant (New Rest)"},
 ]
 
 ADMIN_EMAIL = os.getenv("SEED_ADMIN_EMAIL", "admin@csm-gias.tn")
@@ -50,6 +51,9 @@ ADMIN_PASSWORD = os.getenv("SEED_ADMIN_PASSWORD", "Admin@123")
 
 RECEPTION_EMAIL = os.getenv("SEED_RECEPTION_EMAIL", "reception@csm-gias.tn")
 RECEPTION_PASSWORD = os.getenv("SEED_RECEPTION_PASSWORD", "Reception@123")
+
+CHEF_EMAIL = os.getenv("SEED_CHEF_EMAIL", "chef@newrest.tn")
+CHEF_PASSWORD = os.getenv("SEED_CHEF_PASSWORD", "Chef@123")
 
 # =========================================================================
 # Seed implementation
@@ -85,6 +89,7 @@ def seed(db: Session | None = None) -> dict[str, Sequence[str]]:
         results["Roles"] = _seed_roles(db)
         results["Administrateur"] = _seed_admin(db)
         results["R\u00e9ception"] = _seed_receptionist(db)
+        results["Chef Resto"] = _seed_chef(db)
         results["Cat\u00e9gories"] = _seed_categories(db)
 
         db.commit()
@@ -157,6 +162,31 @@ def _seed_receptionist(db: Session) -> list[str]:
     db.add(receptionist)
     db.flush()
     return ["R\u00e9ception: Cr\u00e9\u00e9"]
+
+
+def _seed_chef(db: Session) -> list[str]:
+    """Create default restaurant chef (New Rest) if absent."""
+    chef_role = RoleRepository().get_by_nom(db, "CHEF_RESTO")
+    password_hash = hash_password(CHEF_PASSWORD)
+    emails = [CHEF_EMAIL, "chef@csm-gias.tn"]
+    created_any = False
+
+    for email in emails:
+        stmt = select(User).where(User.email == email)
+        existing = db.execute(stmt).scalar_one_or_none()
+        if existing is None:
+            chef = Admin(
+                nom="Chef",
+                prenom="New Rest",
+                email=email,
+                mot_de_passe=password_hash,
+                statut=StatutUtilisateur.ACTIF,
+                role_id=chef_role.id if chef_role is not None else None,
+            )
+            db.add(chef)
+            created_any = True
+    db.flush()
+    return ["Chef Resto: Créé"] if created_any else ["Chef Resto: Existe"]
 
 
 def _seed_categories(db: Session) -> list[str]:

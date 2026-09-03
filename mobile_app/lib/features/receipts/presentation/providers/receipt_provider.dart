@@ -81,18 +81,20 @@ class ReceiptNotifier extends StateNotifier<ReceiptState> {
 
   ReceiptNotifier(this._dio) : super(const ReceiptState());
 
-  Future<void> load({int? page}) async {
+  Future<void> load({int? page, bool silent = false}) async {
     final version = ++_requestVersion;
-    state = state.copyWith(
-      isLoading: true,
-      clearError: true,
-      page: page ?? state.page,
-    );
+    if (!silent) {
+      state = state.copyWith(
+        isLoading: true,
+        clearError: true,
+        page: page ?? state.page,
+      );
+    }
     try {
       final response = await _dio.get<Map<String, dynamic>>(
         '/receipts',
         queryParameters: {
-          'page': state.page,
+          'page': page ?? state.page,
           'page_size': 20,
           if (state.search.isNotEmpty) 'search': state.search,
           if (state.dateFrom != null)
@@ -109,6 +111,7 @@ class ReceiptNotifier extends StateNotifier<ReceiptState> {
       final body = response.data!;
       state = state.copyWith(
         isLoading: false,
+        clearError: true,
         receipts: (body['data'] as List<dynamic>)
             .map((item) => Receipt.fromJson(item as Map<String, dynamic>))
             .toList(),
@@ -118,13 +121,23 @@ class ReceiptNotifier extends StateNotifier<ReceiptState> {
       );
     } on DioException catch (error) {
       if (version != _requestVersion) return;
-      final body = error.response?.data;
-      state = state.copyWith(
-        isLoading: false,
-        error: body is Map<String, dynamic>
-            ? body['message'] as String? ?? 'Impossible de charger les reçus.'
-            : 'Impossible de charger les reçus.',
-      );
+      if (!silent) {
+        final body = error.response?.data;
+        state = state.copyWith(
+          isLoading: false,
+          error: body is Map<String, dynamic>
+              ? body['message'] as String? ?? 'Impossible de charger les reçus.'
+              : 'Erreur de communication.',
+        );
+      }
+    } catch (e) {
+      if (version != _requestVersion) return;
+      if (!silent) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Erreur inattendue: $e',
+        );
+      }
     }
   }
 

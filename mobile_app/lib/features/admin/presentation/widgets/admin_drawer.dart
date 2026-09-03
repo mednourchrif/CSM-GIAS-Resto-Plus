@@ -10,12 +10,14 @@ class AdminDrawer extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onDestinationSelected;
   final VoidCallback onLogout;
+  final bool isChef;
 
   const AdminDrawer({
     super.key,
     required this.selectedIndex,
     required this.onDestinationSelected,
     required this.onLogout,
+    this.isChef = false,
   });
 
   @override
@@ -65,7 +67,9 @@ class AdminDrawer extends StatelessWidget {
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
                       child: Text(
-                        '${strings.administration.toUpperCase()} RESTO+',
+                        isChef
+                            ? 'ESPACE CHEF RESTO+'
+                            : '${strings.administration.toUpperCase()} RESTO+',
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.w700,
@@ -91,33 +95,45 @@ class AdminDrawer extends StatelessWidget {
                       Navigator.of(context).pop();
                     },
                   ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      Spacing.md,
-                      Spacing.sm,
-                      Spacing.md,
-                      Spacing.xs,
-                    ),
-                    child: Text(
-                      strings.management,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant.withValues(
-                          alpha: 0.6,
-                        ),
-                        letterSpacing: 1.0,
-                      ),
-                    ),
-                  ),
-                  for (int i = 0; i < sections.length; i++)
+                  if (isChef) ...[
                     _DrawerItem(
-                      icon: sections[i].icon,
-                      label: strings.adminSectionLabel(sections[i].name),
-                      isSelected: selectedIndex == i,
+                      icon: AdminSection.receipts.icon,
+                      label: strings.adminSectionLabel(AdminSection.receipts.name),
+                      isSelected: selectedIndex == sections.indexOf(AdminSection.receipts),
                       onTap: () {
-                        onDestinationSelected(i);
+                        onDestinationSelected(sections.indexOf(AdminSection.receipts));
                         Navigator.of(context).pop();
                       },
                     ),
+                  ] else ...[
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        Spacing.md,
+                        Spacing.sm,
+                        Spacing.md,
+                        Spacing.xs,
+                      ),
+                      child: Text(
+                        strings.management,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.6,
+                          ),
+                          letterSpacing: 1.0,
+                        ),
+                      ),
+                    ),
+                    for (int i = 0; i < sections.length; i++)
+                      _DrawerItem(
+                        icon: sections[i].icon,
+                        label: strings.adminSectionLabel(sections[i].name),
+                        isSelected: selectedIndex == i,
+                        onTap: () {
+                          onDestinationSelected(i);
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                  ],
                 ],
               ),
             ),
