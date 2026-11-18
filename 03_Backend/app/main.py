@@ -79,6 +79,18 @@ def create_app() -> FastAPI:
     # ── Routers ──────────────────────────────────────────────────────────
     application.include_router(api_v1_router, prefix=API_V1_PREFIX)
 
+    @application.get("/", include_in_schema=False)
+    @application.get(f"{API_V1_PREFIX}", include_in_schema=False)
+    @application.get(f"{API_V1_PREFIX}/", include_in_schema=False)
+    async def root():
+        return {
+            "name": APP_NAME,
+            "version": APP_VERSION,
+            "status": "running",
+            "docs": f"{API_DOCS_PREFIX}" if settings.API_DOCS_ENABLED else None,
+            "health": f"{API_V1_PREFIX}/health",
+        }
+
     logger.info("Application factory completed — {} v{}", APP_NAME, APP_VERSION)
 
     return application
