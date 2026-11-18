@@ -7,12 +7,20 @@ class MaintenanceSection extends StatelessWidget {
   final SettingsGroup group;
   final VoidCallback onReset;
   final bool isResetting;
+  final Future<void> Function({
+    required String password,
+    required String confirmation,
+    required bool purgeAuditLogs,
+  })? onPurge;
+  final bool isPurging;
 
   const MaintenanceSection({
     super.key,
     required this.group,
     required this.onReset,
     this.isResetting = false,
+    this.onPurge,
+    this.isPurging = false,
   });
 
   @override
@@ -86,6 +94,30 @@ class MaintenanceSection extends StatelessWidget {
                 );
               },
             ),
+            if (onPurge != null) ...[
+              const Divider(height: 8),
+              _ActionTile(
+                icon: Icons.delete_forever_rounded,
+                iconColor: theme.colorScheme.error,
+                title: strings.purgeDatabase,
+                subtitle: strings.purgeDatabaseSubtitle,
+                loading: isPurging,
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => _PurgeDatabaseDialog(
+                      onConfirm: (password, confirmation, purgeAuditLogs) {
+                        onPurge!(
+                          password: password,
+                          confirmation: confirmation,
+                          purgeAuditLogs: purgeAuditLogs,
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
+            ],
           ],
         ),
       ),
@@ -93,8 +125,158 @@ class MaintenanceSection extends StatelessWidget {
   }
 }
 
+class _PurgeDatabaseDialog extends StatefulWidget {
+  final void Function(
+    String password,
+    String confirmation,
+    bool purgeAuditLogs,
+  ) onConfirm;
+
+  const _PurgeDatabaseDialog({required this.onConfirm});
+
+  @override
+  State<_PurgeDatabaseDialog> createState() => _PurgeDatabaseDialogState();
+}
+
+class _PurgeDatabaseDialogState extends State<_PurgeDatabaseDialog> {
+  final _passwordController = TextEditingController();
+  final _confirmationController = TextEditingController();
+  bool _purgeAuditLogs = false;
+  bool _obscurePassword = true;
+
+  @override
+  void dispose() {
+    _passwordController.dispose();
+    _confirmationController.dispose();
+    super.dispose();
+  }
+
+  bool get _isValid =>
+      _confirmationController.text.trim() == 'PURGER' &&
+      _passwordController.text.isNotEmpty;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final strings = AppStrings.of(context);
+
+    return AlertDialog(
+      title: Row(
+        children: [
+          Icon(Icons.warning_amber_rounded, color: theme.colorScheme.error),
+          const SizedBox(width: 8),
+          Expanded(child: Text(strings.purgeDialogTitle)),
+        ],
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.errorContainer.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: theme.colorScheme.error.withValues(alpha: 0.3)),
+              ),
+              child: Text(
+                strings.purgeDialogWarning,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onErrorContainer,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+              value: _purgeAuditLogs,
+              title: Text(strings.purgeIncludeAuditLogsLabel),
+              onChanged: (val) {
+                setState(() {
+                  _purgeAuditLogs = val ?? false;
+                });
+              },
+            ),
+            const SizedBox(height: 12),
+            Text(
+              strings.purgeTypeConfirmInstruction,
+              style: theme.textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 6),
+            TextField(
+              controller: _confirmationController,
+              decoration: const InputDecoration(
+                hintText: 'PURGER',
+                border: OutlineInputBorder(),
+                isDense: true,
+              ),
+              onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              strings.purgePasswordLabel,
+              style: theme.textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 6),
+            TextField(
+              controller: _passwordController,
+              obscureText: _obscurePassword,
+              decoration: InputDecoration(
+                border: const OutlineInputBorder(),
+                isDense: true,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscurePassword
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _obscurePassword = !_obscurePassword;
+                    });
+                  },
+                ),
+              ),
+              onChanged: (_) => setState(() {}),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(strings.cancel),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: theme.colorScheme.error,
+            foregroundColor: theme.colorScheme.onError,
+          ),
+          onPressed: _isValid
+              ? () {
+                  final pwd = _passwordController.text;
+                  final conf = _confirmationController.text.trim();
+                  final purgeLogs = _purgeAuditLogs;
+                  Navigator.of(context).pop();
+                  widget.onConfirm(pwd, conf, purgeLogs);
+                }
+              : null,
+          child: Text(strings.purgeConfirmButton),
+        ),
+      ],
+    );
+  }
+}
+
 class _ActionTile extends StatelessWidget {
   final IconData icon;
+  final Color? iconColor;
   final String title;
   final String subtitle;
   final bool loading;
@@ -102,6 +284,7 @@ class _ActionTile extends StatelessWidget {
 
   const _ActionTile({
     required this.icon,
+    this.iconColor,
     required this.title,
     required this.subtitle,
     this.loading = false,
@@ -117,7 +300,11 @@ class _ActionTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: Row(
           children: [
-            Icon(icon, size: 24, color: Theme.of(context).colorScheme.primary),
+            Icon(
+              icon,
+              size: 24,
+              color: iconColor ?? Theme.of(context).colorScheme.primary,
+            ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(

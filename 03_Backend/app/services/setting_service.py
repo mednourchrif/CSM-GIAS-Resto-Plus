@@ -9,6 +9,7 @@ from app.core.exceptions import ValidationException
 from app.database.base import Base
 from app.repositories.setting import SettingRepository
 from app.schemas.setting import (
+    DatabasePurgeResponse,
     DatabaseStatusResponse,
     SettingResponse,
     SettingsGroupResponse,
@@ -474,4 +475,76 @@ class SettingService(BaseService[SettingRepository]):
             status=status,
             total_tables=total_tables,
             total_records=total_records,
+        )
+
+    def purge_operational_data(
+        self,
+        db: Session,
+        *,
+        admin: Any,
+        mot_de_passe: str,
+        confirmation: str,
+        purger_audit_logs: bool = False,
+    ) -> DatabasePurgeResponse:
+        from app.models.audit_log import AuditLog
+        from app.models.identification_grant import IdentificationGrant
+        from app.models.meal import Meal
+        from app.models.receipt import Receipt
+        from app.services.audit_service import AuditLogService
+        from app.utils.password import verify_password
+
+        if confirmation.strip().upper() != "PURGER":
+            raise ValidationException(
+                message="Confirmation invalide. Vous devez taper 'PURGER' pour confirmer la purge.",
+            )
+
+        admin_password_hash = getattr(admin, "mot_de_passe", None)
+        if not admin_password_hash or not verify_password(mot_de_passe, admin_password_hash):
+            raise ValidationException(
+                message="Mot de passe administrateur incorrect.",
+            )
+
+        # Count records before deletion
+        recus_count = db.query(Receipt).count()
+        repas_count = db.query(Meal).count()
+        grants_count = db.query(IdentificationGrant).count()
+        audit_count = db.query(AuditLog).count() if purger_audit_logs else 0
+
+        # Delete dependent operational records in strict foreign-key order
+        db.query(Receipt).delete(synchronize_session=False)
+        db.query(Meal).delete(synchronize_session=False)
+        db.query(IdentificationGrant).delete(synchronize_session=False)
+        if purger_audit_logs:
+            db.query(AuditLog).delete(synchronize_session=False)
+
+        db.commit()
+
+        # Log this administrative action in audit trail
+        audit_service = AuditLogService()
+        audit_service.log(
+            db,
+            action="DATABASE_PURGE",
+            user_name=f"{getattr(admin, 'prenom', '')} {getattr(admin, 'nom', '')}".strip() or "Administrateur",
+            user_role="ADMIN",
+            user_uuid=getattr(admin, "uuid", None),
+            entity_type="DATABASE",
+            entity_name="operational_data",
+            description=(
+                f"Purge des données effectuée: {repas_count} repas, {recus_count} reçus, "
+                f"{grants_count} grants"
+                f"{f', {audit_count} journaux d audit' if purger_audit_logs else ''} supprimés. "
+                "Comptes et utilisateurs conservés."
+            ),
+        )
+
+        return DatabasePurgeResponse(
+            repas_supprimes=repas_count,
+            recus_supprimes=recus_count,
+            grants_supprimes=grants_count,
+            audit_logs_supprimes=audit_count,
+            message=(
+                f"Purge réussie : {repas_count} repas, {recus_count} reçus, "
+                f"{grants_count} grants supprimés. Les comptes, employés, "
+                "stagiaires et visiteurs ont été conservés intacts."
+            ),
         )

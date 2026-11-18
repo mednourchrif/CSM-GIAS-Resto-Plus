@@ -1,7 +1,7 @@
 from datetime import date
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class PaginationParams(BaseModel):
@@ -29,6 +29,8 @@ class MealFilterParams(PaginationParams):
 
 
 class PaginatedResult[T](BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     items: list[T]
     total: int
     page: int

@@ -70,3 +70,19 @@ class DatabaseStatus {
 
   bool get isConnected => status == 'connected';
 }
+
+class DatabasePurgeResult {
+  final int repasSupprimes;
+  final int recusSupprimes;
+  final int grantsSupprimes;
+  final int auditLogsSupprimes;
+  final String message;
+
+  const DatabasePurgeResult({
+    required this.repasSupprimes,
+    required this.recusSupprimes,
+    required this.grantsSupprimes,
+    required this.auditLogsSupprimes,
+    required this.message,
+  });
+}

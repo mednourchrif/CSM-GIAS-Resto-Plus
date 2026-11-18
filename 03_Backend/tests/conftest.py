@@ -18,6 +18,10 @@ import os
 # TestClient host or select a non-test environment.
 os.environ["APP_ENVIRONMENT"] = "testing"
 os.environ["TRUSTED_HOSTS"] = '["testserver","localhost","127.0.0.1"]'
+os.environ.setdefault("APP_SECRET_KEY", "testing-secret-key-32-characters-long-minimum")
+os.environ.setdefault("JWT_SECRET_KEY", "testing-jwt-secret-key-32-characters-long-minimum")
+os.environ.setdefault("TABLET_API_KEY", "test-tablet-key")
+os.environ.setdefault("BIOMETRIC_ENCRYPTION_KEY", "gS3UAO4OBD-I-W4t1v1hPsY32-kRS3rWynTRm4_ABKM=")
 
 from collections.abc import Generator
 from typing import Any

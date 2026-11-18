@@ -8,4 +8,9 @@ abstract class SettingsRepository {
   Future<Result<AppSettings>> resetToDefaults();
   Future<Result<VersionInfo>> getVersion();
   Future<Result<DatabaseStatus>> getDatabaseStatus();
+  Future<Result<DatabasePurgeResult>> purgeDatabase({
+    required String password,
+    required String confirmation,
+    bool purgeAuditLogs = false,
+  });
 }

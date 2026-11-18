@@ -45,3 +45,17 @@ class VersionInfoResponse(BaseSchema):
     application_version: str
     backend_version: str
     environment: str
+
+
+class DatabasePurgeRequest(BaseSchema):
+    mot_de_passe: str = Field(..., min_length=1, description="Mot de passe administrateur")
+    confirmation: str = Field(..., description="Phrase de confirmation, doit être 'PURGER'")
+    purger_audit_logs: bool = Field(False, description="Supprimer également les journaux d'audit")
+
+
+class DatabasePurgeResponse(BaseSchema):
+    repas_supprimes: int
+    recus_supprimes: int
+    grants_supprimes: int
+    audit_logs_supprimes: int
+    message: str

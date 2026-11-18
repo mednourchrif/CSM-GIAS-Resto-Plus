@@ -616,6 +616,54 @@ class AppStrings {
     _ => 'Cache vidé avec succès.',
   };
 
+  String get purgeDatabase => switch (_code) {
+    'en' => 'Purge operational data',
+    'ar' => 'تفريغ البيانات التشغيلية',
+    _ => 'Purger les données opérationnelles',
+  };
+
+  String get purgeDatabaseSubtitle => switch (_code) {
+    'en' => 'Delete periodic records (meals, receipts) and keep accounts and identities',
+    'ar' => 'حذف السجلات الدورية (الوجبات والإيصالات) مع الاحتفاظ بالحسابات والبيانات الأساسية',
+    _ => 'Supprimer l\'historique périodique (repas, reçus) en préservant comptes et identités',
+  };
+
+  String get purgeDialogTitle => switch (_code) {
+    'en' => 'Confirm database purge',
+    'ar' => 'تأكيد تفريغ قاعدة البيانات',
+    _ => 'Confirmation de la purge',
+  };
+
+  String get purgeDialogWarning => switch (_code) {
+    'en' => 'This action will irreversibly delete all meals, receipts, and temporary identification grants. Accounts, users (employees, interns, visitors), facial biometrics, QR badges, and settings will NOT be touched.',
+    'ar' => 'سيؤدي هذا الإجراء إلى حذف دائم لجميع الوجبات والإيصالات وتصاريح الهوية المؤقتة. لن يتم المساس بالحسابات أو المستخدمين أو البصمات أو الرموز أو الإعدادات.',
+    _ => 'Cette action supprimera définitivement tous les repas enregistrés, reçus et autorisations temporaires. Les comptes, utilisateurs (employés, stagiaires, visiteurs), données biométriques, badges QR et paramètres seront conservés.',
+  };
+
+  String get purgeTypeConfirmInstruction => switch (_code) {
+    'en' => 'Type "PURGER" to confirm:',
+    'ar' => 'اكتب "PURGER" للتأكيد:',
+    _ => 'Tapez "PURGER" pour confirmer :',
+  };
+
+  String get purgeIncludeAuditLogsLabel => switch (_code) {
+    'en' => 'Also purge audit logs',
+    'ar' => 'تفريغ سجلات التدقيق أيضاً',
+    _ => 'Purger également les journaux d\'audit',
+  };
+
+  String get purgePasswordLabel => switch (_code) {
+    'en' => 'Admin password',
+    'ar' => 'كلمة مرور المشرف',
+    _ => 'Mot de passe administrateur',
+  };
+
+  String get purgeConfirmButton => switch (_code) {
+    'en' => 'Purge database',
+    'ar' => 'تفريغ الآن',
+    _ => 'Purger définitivement',
+  };
+
   String settingsGroupLabel(String category, String fallback) =>
       switch (_code) {
         'en' => switch (category) {

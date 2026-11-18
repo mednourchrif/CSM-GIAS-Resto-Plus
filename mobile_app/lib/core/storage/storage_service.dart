@@ -1,8 +1,6 @@
-import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-import '../errors/exceptions.dart';
-import '../errors/failures.dart';
+import 'web_storage.dart';
 
 abstract class StorageService {
   Future<void> write({required String key, required String value});
@@ -36,31 +34,26 @@ final class SecureStorageService implements StorageService {
   Future<void> write({required String key, required String value}) async {
     try {
       await _storage.write(key: key, value: value);
-    } on MissingPluginException {
-      _ephemeralFallback[key] = value;
-    } on PlatformException catch (e) {
-      throw CacheException(
-        CacheFailure(
-          message: 'Impossible de sécuriser la session sur cet appareil.',
-          originalError: e,
-        ),
-      );
+    } catch (_) {
+      final webStorage = getWebStorage();
+      if (webStorage != null) {
+        webStorage[key] = value;
+      } else {
+        _ephemeralFallback[key] = value;
+      }
     }
   }
 
   @override
   Future<String?> read({required String key}) async {
     try {
-      return await _storage.read(key: key);
-    } on MissingPluginException {
-      return _ephemeralFallback[key];
-    } on PlatformException catch (e) {
-      throw CacheException(
-        CacheFailure(
-          message: 'Impossible de lire la session sécurisée.',
-          originalError: e,
-        ),
-      );
+      final val = await _storage.read(key: key);
+      if (val != null) return val;
+      final webStorage = getWebStorage();
+      return webStorage?[key] ?? _ephemeralFallback[key];
+    } catch (_) {
+      final webStorage = getWebStorage();
+      return webStorage?[key] ?? _ephemeralFallback[key];
     }
   }
 
@@ -68,32 +61,18 @@ final class SecureStorageService implements StorageService {
   Future<void> delete({required String key}) async {
     try {
       await _storage.delete(key: key);
-    } on MissingPluginException {
-      _ephemeralFallback.remove(key);
-    } on PlatformException catch (e) {
-      throw CacheException(
-        CacheFailure(
-          message: 'Impossible de supprimer la session sécurisée.',
-          originalError: e,
-        ),
-      );
-    }
+    } catch (_) {}
+    getWebStorage()?.remove(key);
+    _ephemeralFallback.remove(key);
   }
 
   @override
   Future<void> deleteAll() async {
     try {
       await _storage.deleteAll();
-    } on MissingPluginException {
-      _ephemeralFallback.clear();
-    } on PlatformException catch (e) {
-      throw CacheException(
-        CacheFailure(
-          message: 'Impossible de réinitialiser le stockage sécurisé.',
-          originalError: e,
-        ),
-      );
-    }
+    } catch (_) {}
+    getWebStorage()?.clear();
+    _ephemeralFallback.clear();
   }
 }
 

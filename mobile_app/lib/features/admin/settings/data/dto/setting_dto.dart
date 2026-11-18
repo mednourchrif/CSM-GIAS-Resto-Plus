@@ -143,3 +143,36 @@ class DatabaseStatusDto {
     totalRecords: totalRecords,
   );
 }
+
+class DatabasePurgeResponseDto {
+  final int repasSupprimes;
+  final int recusSupprimes;
+  final int grantsSupprimes;
+  final int auditLogsSupprimes;
+  final String message;
+
+  const DatabasePurgeResponseDto({
+    required this.repasSupprimes,
+    required this.recusSupprimes,
+    required this.grantsSupprimes,
+    required this.auditLogsSupprimes,
+    required this.message,
+  });
+
+  factory DatabasePurgeResponseDto.fromJson(Map<String, dynamic> json) =>
+      DatabasePurgeResponseDto(
+        repasSupprimes: json['repas_supprimes'] as int? ?? 0,
+        recusSupprimes: json['recus_supprimes'] as int? ?? 0,
+        grantsSupprimes: json['grants_supprimes'] as int? ?? 0,
+        auditLogsSupprimes: json['audit_logs_supprimes'] as int? ?? 0,
+        message: json['message'] as String? ?? 'Purge effectuée avec succès.',
+      );
+
+  DatabasePurgeResult toDomain() => DatabasePurgeResult(
+    repasSupprimes: repasSupprimes,
+    recusSupprimes: recusSupprimes,
+    grantsSupprimes: grantsSupprimes,
+    auditLogsSupprimes: auditLogsSupprimes,
+    message: message,
+  );
+}

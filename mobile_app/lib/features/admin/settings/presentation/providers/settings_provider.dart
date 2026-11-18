@@ -114,6 +114,33 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     );
   }
 
+  Future<bool> purgeDatabase({
+    required String password,
+    required String confirmation,
+    bool purgeAuditLogs = false,
+  }) async {
+    state = state.copyWith(isPurging: true, clearError: true);
+    final result = await _repository.purgeDatabase(
+      password: password,
+      confirmation: confirmation,
+      purgeAuditLogs: purgeAuditLogs,
+    );
+    return result.when(
+      success: (purgeResult) {
+        state = state.copyWith(
+          isPurging: false,
+          successMessage: purgeResult.message,
+        );
+        loadDatabaseStatus();
+        return true;
+      },
+      failure: (failure) {
+        state = state.copyWith(isPurging: false, error: failure.message);
+        return false;
+      },
+    );
+  }
+
   void clearError() {
     state = state.copyWith(clearError: true);
   }

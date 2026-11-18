@@ -47,4 +47,21 @@ class SettingsRemoteDataSource {
     final data = response.data!['data'] as Map<String, dynamic>;
     return DatabaseStatusDto.fromJson(data);
   }
+
+  Future<DatabasePurgeResponseDto> purgeDatabase({
+    required String password,
+    required String confirmation,
+    bool purgeAuditLogs = false,
+  }) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/settings/purge',
+      data: {
+        'mot_de_passe': password,
+        'confirmation': confirmation,
+        'purger_audit_logs': purgeAuditLogs,
+      },
+    );
+    final data = response.data!['data'] as Map<String, dynamic>;
+    return DatabasePurgeResponseDto.fromJson(data);
+  }
 }

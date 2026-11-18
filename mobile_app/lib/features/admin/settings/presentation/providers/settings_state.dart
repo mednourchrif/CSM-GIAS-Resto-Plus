@@ -10,6 +10,7 @@ class SettingsState {
   final String? error;
   final String? successMessage;
   final bool isResetting;
+  final bool isPurging;
 
   const SettingsState({
     this.isLoading = false,
@@ -21,6 +22,7 @@ class SettingsState {
     this.error,
     this.successMessage,
     this.isResetting = false,
+    this.isPurging = false,
   });
 
   bool get hasUnsavedChanges => pendingChanges.isNotEmpty;
@@ -38,6 +40,7 @@ class SettingsState {
     String? successMessage,
     bool clearSuccessMessage = false,
     bool? isResetting,
+    bool? isPurging,
   }) {
     return SettingsState(
       isLoading: isLoading ?? this.isLoading,
@@ -53,6 +56,7 @@ class SettingsState {
           ? null
           : (successMessage ?? this.successMessage),
       isResetting: isResetting ?? this.isResetting,
+      isPurging: isPurging ?? this.isPurging,
     );
   }
 }

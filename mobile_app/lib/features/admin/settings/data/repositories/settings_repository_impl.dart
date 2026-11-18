@@ -99,4 +99,26 @@ class SettingsRepositoryImpl implements SettingsRepository {
       );
     }
   }
+
+  @override
+  Future<Result<DatabasePurgeResult>> purgeDatabase({
+    required String password,
+    required String confirmation,
+    bool purgeAuditLogs = false,
+  }) async {
+    try {
+      final dto = await _dataSource.purgeDatabase(
+        password: password,
+        confirmation: confirmation,
+        purgeAuditLogs: purgeAuditLogs,
+      );
+      return Success(dto.toDomain());
+    } on DioException catch (e) {
+      return Fail(mapDioError(e, resourceName: 'purge de la base de données'));
+    } catch (e) {
+      return const Fail(
+        ApiFailure(message: 'Erreur lors de la purge de la base de données.'),
+      );
+    }
+  }
 }

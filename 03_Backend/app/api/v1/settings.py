@@ -7,6 +7,8 @@ from app.core.dependencies import get_db
 from app.models.admin import Admin
 from app.schemas.response import SuccessResponse
 from app.schemas.setting import (
+    DatabasePurgeRequest,
+    DatabasePurgeResponse,
     DatabaseStatusResponse,
     SettingsBatchUpdate,
     SettingsResponse,
@@ -123,4 +125,25 @@ async def get_database_status(
     admin: Admin = Depends(require_admin),
 ) -> SuccessResponse[DatabaseStatusResponse]:
     result = _service.get_database_status(db)
+    return SuccessResponse(data=result)
+
+
+@router.post(
+    "/purge",
+    summary="Purge operational database data",
+    description="Purge operational data (meals, receipts, kiosk grants) while keeping persistent data (users, employees, interns, visitors, categories, settings). Requires admin password and confirmation.",
+    response_model=SuccessResponse[DatabasePurgeResponse],
+)
+async def purge_database(
+    body: DatabasePurgeRequest,
+    db: Session = Depends(get_db),
+    admin: Admin = Depends(require_admin),
+) -> SuccessResponse[DatabasePurgeResponse]:
+    result = _service.purge_operational_data(
+        db,
+        admin=admin,
+        mot_de_passe=body.mot_de_passe,
+        confirmation=body.confirmation,
+        purger_audit_logs=body.purger_audit_logs,
+    )
     return SuccessResponse(data=result)

@@ -33,13 +33,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     ref.listen(settingsProvider, (previous, next) {
       if (next.successMessage != null) {
+        final msg = next.successMessage!;
+        final displayText = msg.contains('réinitialisés')
+            ? strings.settingsReset
+            : (msg.contains('enregistrés') ? strings.settingsSaved : msg);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              next.successMessage!.contains('réinitialisés')
-                  ? strings.settingsReset
-                  : strings.settingsSaved,
-            ),
+            content: Text(displayText),
             backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
           ),
@@ -167,6 +167,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 onReset: () =>
                     ref.read(settingsProvider.notifier).resetToDefaults(),
                 isResetting: state.isResetting,
+                onPurge: ({
+                  required password,
+                  required confirmation,
+                  required purgeAuditLogs,
+                }) => ref.read(settingsProvider.notifier).purgeDatabase(
+                  password: password,
+                  confirmation: confirmation,
+                  purgeAuditLogs: purgeAuditLogs,
+                ),
+                isPurging: state.isPurging,
               );
             }
             return SettingsGroupCard(
